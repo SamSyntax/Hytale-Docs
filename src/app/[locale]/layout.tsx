@@ -108,14 +108,20 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
-        {process.env.NEXT_PUBLIC_ADSENSE_ID && (
-          <Script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_ID}`}
-            crossOrigin="anonymous"
-            strategy="lazyOnload"
-          />
-        )}
+        {/* Google AdSense */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4389631952462736"
+          crossOrigin="anonymous"
+          strategy="lazyOnload"
+        />
+        {/* Umami Analytics */}
+        <Script
+          defer
+          src="https://umami.3de-scs.tech/script.js"
+          data-website-id="749f7e31-1125-4e87-bf50-b10dce51adce"
+          strategy="lazyOnload"
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
