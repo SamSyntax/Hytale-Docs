@@ -1,0 +1,230 @@
+import type { MDXComponents } from "mdx/types";
+import Link from "next/link";
+import { InfoBox } from "./info-box";
+import { FeatureCard } from "./feature-card";
+import { ApiEndpoint } from "./api-endpoint";
+import { VersionBadge } from "./version-badge";
+import { CodeBlock } from "./code-block";
+import { DocCard } from "./doc-card";
+import { Mermaid } from "./mermaid";
+import { FileTree } from "./file-tree";
+import { cn } from "@/lib/utils";
+
+// Detect if code content looks like a file tree
+function isFileTreeContent(code: string): boolean {
+  const lines = code.trim().split("\n");
+  if (lines.length < 2) return false;
+
+  // Check if it contains tree-like characters or folder structure patterns
+  const hasTreeChars = lines.some(line => /[├└│─]/.test(line));
+  const hasFolderPatterns = lines.some(line => /^\s*[a-zA-Z0-9_-]+\/\s*$/.test(line.replace(/[├└│─\s]/g, "")));
+  const startsWithFolder = /^[a-zA-Z0-9_-]+\/$/.test(lines[0].trim());
+
+  return hasTreeChars || (hasFolderPatterns && startsWithFolder);
+}
+
+// Map Docusaurus CSS classes to Tailwind
+function mapDocusaurusClasses(className?: string): string {
+  if (!className) return "";
+
+  const mappings: Record<string, string> = {
+    row: "grid grid-cols-1 md:grid-cols-2 gap-4",
+    "col--6": "",
+    "col--4": "",
+    "col--12": "",
+    col: "",
+    "margin-bottom--lg": "mb-6",
+    "margin-bottom--md": "mb-4",
+    "margin-top--lg": "mt-6",
+    "margin-top--md": "mt-4",
+  };
+
+  return className
+    .split(" ")
+    .map((cls) => mappings[cls] || cls)
+    .filter(Boolean)
+    .join(" ");
+}
+
+export const mdxComponents: MDXComponents = {
+  // Custom components
+  InfoBox,
+  FeatureCard,
+  ApiEndpoint,
+  VersionBadge,
+  DocCard,
+  FileTree,
+
+  // Override div to handle Docusaurus classes
+  div: ({ className, ...props }) => (
+    <div className={mapDocusaurusClasses(className)} {...props} />
+  ),
+
+  // HTML element overrides
+  // Hide h1 from MDX content - the page title is already rendered by the page component
+  h1: () => null,
+  h2: ({ className, ...props }) => (
+    <h2
+      className={cn(
+        "mt-10 scroll-m-20 border-b border-border pb-2 text-2xl font-semibold tracking-tight first:mt-0",
+        className
+      )}
+      {...props}
+    />
+  ),
+  h3: ({ className, ...props }) => (
+    <h3
+      className={cn(
+        "mt-8 scroll-m-20 text-xl font-semibold tracking-tight",
+        className
+      )}
+      {...props}
+    />
+  ),
+  h4: ({ className, ...props }) => (
+    <h4
+      className={cn(
+        "mt-6 scroll-m-20 text-lg font-semibold tracking-tight",
+        className
+      )}
+      {...props}
+    />
+  ),
+  p: ({ className, ...props }) => (
+    <p
+      className={cn("leading-7 [&:not(:first-child)]:mt-4", className)}
+      {...props}
+    />
+  ),
+  ul: ({ className, ...props }) => (
+    <ul className={cn("my-4 ml-6 list-disc", className)} {...props} />
+  ),
+  ol: ({ className, ...props }) => (
+    <ol className={cn("my-4 ml-6 list-decimal", className)} {...props} />
+  ),
+  li: ({ className, ...props }) => (
+    <li className={cn("mt-2", className)} {...props} />
+  ),
+  blockquote: ({ className, ...props }) => (
+    <blockquote
+      className={cn(
+        "mt-4 border-l-4 border-primary pl-4 italic text-muted-foreground",
+        className
+      )}
+      {...props}
+    />
+  ),
+  hr: ({ ...props }) => <hr className="my-8 border-border" {...props} />,
+  table: ({ className, ...props }) => (
+    <div className="my-8 w-full overflow-x-auto">
+      <table className={cn("w-full border-collapse text-sm", className)} {...props} />
+    </div>
+  ),
+  thead: ({ className, ...props }) => (
+    <thead className={cn("", className)} {...props} />
+  ),
+  tbody: ({ className, ...props }) => (
+    <tbody className={cn("", className)} {...props} />
+  ),
+  tr: ({ className, ...props }) => (
+    <tr
+      className={cn(
+        "border-b border-border transition-colors hover:bg-primary/5",
+        className
+      )}
+      {...props}
+    />
+  ),
+  th: ({ className, ...props }) => (
+    <th
+      className={cn(
+        "px-5 py-4 text-left font-bold text-primary uppercase tracking-wider text-xs bg-muted/50 first:rounded-tl-lg last:rounded-tr-lg [&[align=center]]:text-center [&[align=right]]:text-right",
+        className
+      )}
+      {...props}
+    />
+  ),
+  td: ({ className, ...props }) => (
+    <td
+      className={cn(
+        "px-5 py-4 text-foreground [&[align=center]]:text-center [&[align=right]]:text-right",
+        className
+      )}
+      {...props}
+    />
+  ),
+  pre: ({ children, className, ...props }: any) => {
+    // Check if this is a mermaid code block
+    const childProps = children?.props;
+    const childClassName = childProps?.className || "";
+    const code = childProps?.children || "";
+
+    // Handle mermaid diagrams
+    if (childClassName.includes("language-mermaid")) {
+      return <Mermaid chart={code} />;
+    }
+
+    // Handle explicit file tree language
+    if (childClassName.includes("language-filetree") || childClassName.includes("language-tree")) {
+      return <FileTree>{code}</FileTree>;
+    }
+
+    // Auto-detect file tree structure (for unlabeled code blocks)
+    if (!childClassName && typeof code === "string" && isFileTreeContent(code)) {
+      return <FileTree>{code}</FileTree>;
+    }
+
+    return <CodeBlock className={className} {...props}>{children}</CodeBlock>;
+  },
+  code: ({ className, ...props }) => {
+    // Inline code (not in a pre block)
+    const isInline = !className?.includes("language-");
+    if (isInline) {
+      return (
+        <code
+          className={cn(
+            "relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm",
+            className
+          )}
+          {...props}
+        />
+      );
+    }
+    return <code className={className} {...props} />;
+  },
+  a: ({ className, href, ...props }) => {
+    const isExternal = href?.startsWith("http");
+    if (isExternal) {
+      return (
+        <a
+          href={href}
+          className={cn(
+            "font-medium text-primary underline underline-offset-4 hover:text-primary/80",
+            className
+          )}
+          target="_blank"
+          rel="noopener noreferrer"
+          {...props}
+        />
+      );
+    }
+    return (
+      <Link
+        href={href || "#"}
+        className={cn(
+          "font-medium text-primary underline underline-offset-4 hover:text-primary/80",
+          className
+        )}
+        {...props}
+      />
+    );
+  },
+  img: ({ className, alt, ...props }) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      className={cn("rounded-lg border border-border", className)}
+      alt={alt}
+      {...props}
+    />
+  ),
+};
