@@ -278,5 +278,16 @@
     "previous": "Previous",
     "next": "Next",
     "learnMore": "Learn more"
+  },
+  "cookies": {
+    "title": "We use cookies",
+    "description": "We use cookies to enhance your browsing experience and analyze site traffic. By clicking \"Accept All\", you consent to our use of cookies.",
+    "acceptAll": "Accept All",
+    "essentialOnly": "Essential Only"
+  },
+  "adblock": {
+    "title": "Support HytaleDocs",
+    "message": "We noticed you're using an ad blocker. Ads help us keep this documentation free and updated. Consider disabling it for our site!",
+    "dismiss": "I understand"
   }
 }

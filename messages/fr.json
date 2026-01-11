@@ -278,5 +278,16 @@
     "previous": "Précédent",
     "next": "Suivant",
     "learnMore": "En savoir plus"
+  },
+  "cookies": {
+    "title": "Nous utilisons des cookies",
+    "description": "Nous utilisons des cookies pour ameliorer votre experience de navigation et analyser le trafic du site. En cliquant sur \"Tout accepter\", vous consentez a notre utilisation des cookies.",
+    "acceptAll": "Tout accepter",
+    "essentialOnly": "Essentiels uniquement"
+  },
+  "adblock": {
+    "title": "Soutenez HytaleDocs",
+    "message": "Nous avons remarque que vous utilisez un bloqueur de publicites. Les pubs nous aident a garder cette documentation gratuite et a jour. Pensez a le desactiver pour notre site !",
+    "dismiss": "J'ai compris"
   }
 }
