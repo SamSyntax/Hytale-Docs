@@ -127,7 +127,7 @@ export function Navbar() {
               asChild
             >
               <a
-                href="https://github.com/hytale"
+                href="https://github.com/timiliris/Hytale-Docs"
                 target="_blank"
                 rel="noopener noreferrer"
               >

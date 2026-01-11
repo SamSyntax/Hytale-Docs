@@ -9,16 +9,9 @@ export function CommunitySection() {
 
   const communityLinks = [
     {
-      title: "Discord",
-      description: t("discordDesc"),
-      href: "https://discord.gg/hytale",
-      icon: MessageCircle,
-      color: "#5865F2",
-    },
-    {
       title: "GitHub",
       description: t("githubDesc"),
-      href: "https://github.com/hytale",
+      href: "https://github.com/timiliris/Hytale-Docs",
       icon: Github,
       color: "#e2e8f0",
     },
@@ -94,7 +87,7 @@ export function CommunitySection() {
             asChild
           >
             <a
-              href="https://github.com/hytale/wiki"
+              href="https://github.com/timiliris/Hytale-Docs"
               target="_blank"
               rel="noopener noreferrer"
               className="gap-2"

@@ -22,7 +22,6 @@ export function OrganizationJsonLd({
     description,
     sameAs: [
       "https://github.com/timiliris/Hytale-Docs",
-      "https://discord.gg/hytale",
     ],
   };
 

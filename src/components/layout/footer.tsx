@@ -6,9 +6,8 @@ import { Github, MessageCircle, Twitter } from "lucide-react";
 import { FooterAd } from "@/components/ads";
 
 const socialLinks = [
-  { title: "Discord", href: "https://discord.gg/hytale", icon: MessageCircle },
   { title: "Twitter", href: "https://twitter.com/Hytale", icon: Twitter },
-  { title: "GitHub", href: "https://github.com/hytale", icon: Github },
+  { title: "GitHub", href: "https://github.com/timiliris/Hytale-Docs", icon: Github },
 ];
 
 export function Footer() {
