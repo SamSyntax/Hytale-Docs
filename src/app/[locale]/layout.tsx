@@ -94,12 +94,11 @@ export async function generateMetadata({
     },
     icons: {
       icon: [
-        { url: "/favicon.ico", sizes: "any" },
-        { url: "/icon.png", type: "image/png" },
         { url: "/logo-h.png", type: "image/png", sizes: "512x512" },
+        { url: "/icon.png", type: "image/png" },
       ],
       apple: [{ url: "/apple-icon.png", type: "image/png" }],
-      shortcut: "/favicon.ico",
+      shortcut: "/logo-h.png",
     },
     openGraph: {
       title: titles[locale] || titles.en,
