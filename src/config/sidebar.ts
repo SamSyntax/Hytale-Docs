@@ -161,6 +161,18 @@ export const sidebarConfig: SidebarItem[] = [
     items: [
       { titleKey: "overview", href: "/docs/api/overview" },
       {
+        titleKey: "serverInternals",
+        items: [
+          { titleKey: "serverInternalsOverview", href: "/docs/api/server-internals" },
+          { titleKey: "pluginSystem", href: "/docs/api/server-internals/plugins" },
+          { titleKey: "eventSystem", href: "/docs/api/server-internals/events" },
+          { titleKey: "commandSystem", href: "/docs/api/server-internals/commands" },
+          { titleKey: "ecsSystem", href: "/docs/api/server-internals/ecs" },
+          { titleKey: "dataTypes", href: "/docs/api/server-internals/types" },
+          { titleKey: "networkPackets", href: "/docs/api/server-internals/packets" },
+        ],
+      },
+      {
         titleKey: "officialApi",
         items: [
           { titleKey: "endpoints", href: "/docs/api/official/endpoints" },

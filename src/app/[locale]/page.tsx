@@ -1,6 +1,7 @@
 import { setRequestLocale } from "next-intl/server";
 import { Navbar, Footer } from "@/components/layout";
 import {
+  AnnouncementBanner,
   HeroSection,
   StatsSection,
   NavCardsSection,
@@ -18,6 +19,7 @@ export default async function HomePage({
 
   return (
     <div className="flex min-h-screen flex-col">
+      <AnnouncementBanner />
       <Navbar />
       <main className="flex-1">
         <HeroSection />

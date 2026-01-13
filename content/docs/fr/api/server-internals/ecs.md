@@ -1,0 +1,1103 @@
+---
+id: ecs
+title: Systeme ECS (Entity Component System)
+sidebar_label: ECS
+sidebar_position: 6
+description: Documentation complete du systeme ECS du serveur Hytale
+---
+
+# Entity Component System (ECS)
+
+:::caution Documentation v1
+Cette documentation est une premiere version basee sur l'analyse du code decompile. Elle sera mise a jour regulierement.
+:::
+
+Cette documentation decrit le systeme ECS (Entity Component System) utilise par le serveur Hytale. Ce systeme est responsable de la gestion des entites, de leurs composants et des systemes qui les traitent.
+
+## Architecture Generale
+
+```
++-----------------------------------------------------------------------------------+
+|                              ComponentRegistry                                     |
+|  +-------------+  +-------------+  +-------------+  +-------------+               |
+|  | ComponentType|  | SystemType  |  | SystemGroup |  | ResourceType|               |
+|  +-------------+  +-------------+  +-------------+  +-------------+               |
++-----------------------------------------------------------------------------------+
+                                    |
+                                    v
++-----------------------------------------------------------------------------------+
+|                                  Store                                             |
+|  +-----------------+  +-----------------+  +-----------------+                     |
+|  | ArchetypeChunk  |  | ArchetypeChunk  |  | ArchetypeChunk  |  (groupes entites)  |
+|  | [Entity,Entity] |  | [Entity,Entity] |  | [Entity,Entity] |                     |
+|  +-----------------+  +-----------------+  +-----------------+                     |
+|                                                                                    |
+|  +-----------------+  +-----------------+  +-----------------+                     |
+|  |    Resource     |  |    Resource     |  |    Resource     |  (donnees globales) |
+|  +-----------------+  +-----------------+  +-----------------+                     |
++-----------------------------------------------------------------------------------+
+                                    |
+                                    v
++-----------------------------------------------------------------------------------+
+|                                 Systems                                            |
+|  +-----------------+  +-----------------+  +-----------------+                     |
+|  | TickingSystem   |  | RefSystem       |  | EventSystem     |                     |
+|  +-----------------+  +-----------------+  +-----------------+                     |
++-----------------------------------------------------------------------------------+
+```
+
+## Concepts Fondamentaux
+
+### 1. Component
+
+Un `Component` est une unite de donnees attachee a une entite. Il ne contient pas de logique, seulement des donnees.
+
+```java
+public interface Component<ECS_TYPE> extends Cloneable {
+    @Nullable
+    Component<ECS_TYPE> clone();
+
+    @Nullable
+    default Component<ECS_TYPE> cloneSerializable() {
+        return this.clone();
+    }
+}
+```
+
+**Exemple de composant simple:**
+
+```java
+public class TransformComponent implements Component<EntityStore> {
+    private final Vector3d position = new Vector3d();
+    private final Vector3f rotation = new Vector3f();
+
+    public static final BuilderCodec<TransformComponent> CODEC =
+        BuilderCodec.builder(TransformComponent.class, TransformComponent::new)
+            .append(new KeyedCodec<>("Position", Vector3d.CODEC),
+                    (o, i) -> o.position.assign(i), o -> o.position)
+            .add()
+            .append(new KeyedCodec<>("Rotation", Vector3f.ROTATION),
+                    (o, i) -> o.rotation.assign(i), o -> o.rotation)
+            .add()
+            .build();
+
+    @Nonnull
+    public Vector3d getPosition() {
+        return this.position;
+    }
+
+    @Nonnull
+    @Override
+    public Component<EntityStore> clone() {
+        return new TransformComponent(this.position, this.rotation);
+    }
+}
+```
+
+### 2. ComponentType
+
+Le `ComponentType` est un identifiant unique pour un type de composant dans le registre.
+
+```java
+public class ComponentType<ECS_TYPE, T extends Component<ECS_TYPE>>
+    implements Comparable<ComponentType<ECS_TYPE, ?>>, Query<ECS_TYPE> {
+
+    private ComponentRegistry<ECS_TYPE> registry;
+    private Class<? super T> tClass;
+    private int index;  // Index unique dans le registre
+
+    public int getIndex() { return this.index; }
+    public Class<? super T> getTypeClass() { return this.tClass; }
+}
+```
+
+### 3. Archetype
+
+Un `Archetype` represente un ensemble unique de types de composants. Toutes les entites partageant le meme archetype sont stockees ensemble pour optimiser les performances.
+
+```java
+public class Archetype<ECS_TYPE> implements Query<ECS_TYPE> {
+    private final int minIndex;
+    private final int count;
+    private final ComponentType<ECS_TYPE, ?>[] componentTypes;
+
+    // Creer un archetype
+    public static <ECS_TYPE> Archetype<ECS_TYPE> of(ComponentType<ECS_TYPE, ?>... componentTypes);
+
+    // Ajouter un composant a l'archetype
+    public static <ECS_TYPE, T extends Component<ECS_TYPE>> Archetype<ECS_TYPE> add(
+        Archetype<ECS_TYPE> archetype, ComponentType<ECS_TYPE, T> componentType);
+
+    // Supprimer un composant de l'archetype
+    public static <ECS_TYPE, T extends Component<ECS_TYPE>> Archetype<ECS_TYPE> remove(
+        Archetype<ECS_TYPE> archetype, ComponentType<ECS_TYPE, T> componentType);
+
+    // Verifier si l'archetype contient un type de composant
+    public boolean contains(ComponentType<ECS_TYPE, ?> componentType);
+}
+```
+
+### 4. ArchetypeChunk
+
+Un `ArchetypeChunk` stocke toutes les entites qui partagent le meme archetype. C'est une structure de donnees optimisee pour l'acces cache.
+
+```java
+public class ArchetypeChunk<ECS_TYPE> {
+    protected final Store<ECS_TYPE> store;
+    protected final Archetype<ECS_TYPE> archetype;
+    protected int entitiesSize;
+    protected Ref<ECS_TYPE>[] refs;           // References aux entites
+    protected Component<ECS_TYPE>[][] components;  // Donnees des composants
+
+    // Obtenir un composant pour une entite a un index donne
+    public <T extends Component<ECS_TYPE>> T getComponent(
+        int index, ComponentType<ECS_TYPE, T> componentType);
+
+    // Definir un composant
+    public <T extends Component<ECS_TYPE>> void setComponent(
+        int index, ComponentType<ECS_TYPE, T> componentType, T component);
+
+    // Ajouter une entite
+    public int addEntity(Ref<ECS_TYPE> ref, Holder<ECS_TYPE> holder);
+
+    // Supprimer une entite
+    public Holder<ECS_TYPE> removeEntity(int entityIndex, Holder<ECS_TYPE> target);
+}
+```
+
+### 5. Holder (EntityHolder)
+
+Le `Holder` est un conteneur temporaire pour les composants d'une entite avant qu'elle ne soit ajoutee au Store.
+
+```java
+public class Holder<ECS_TYPE> {
+    private Archetype<ECS_TYPE> archetype;
+    private Component<ECS_TYPE>[] components;
+
+    // Ajouter un composant
+    public <T extends Component<ECS_TYPE>> void addComponent(
+        ComponentType<ECS_TYPE, T> componentType, T component);
+
+    // Obtenir un composant
+    public <T extends Component<ECS_TYPE>> T getComponent(
+        ComponentType<ECS_TYPE, T> componentType);
+
+    // Supprimer un composant
+    public <T extends Component<ECS_TYPE>> void removeComponent(
+        ComponentType<ECS_TYPE, T> componentType);
+
+    // S'assurer qu'un composant existe (le creer si absent)
+    public <T extends Component<ECS_TYPE>> void ensureComponent(
+        ComponentType<ECS_TYPE, T> componentType);
+}
+```
+
+### 6. Ref (Entity Reference)
+
+`Ref` est une reference a une entite dans le Store. Elle contient l'index de l'entite et peut etre invalidee.
+
+```java
+public class Ref<ECS_TYPE> {
+    private final Store<ECS_TYPE> store;
+    private volatile int index;
+
+    public Store<ECS_TYPE> getStore() { return this.store; }
+    public int getIndex() { return this.index; }
+
+    public boolean isValid() { return this.index != Integer.MIN_VALUE; }
+    public void validate() {
+        if (!isValid()) throw new IllegalStateException("Invalid entity reference!");
+    }
+}
+```
+
+### 7. Store
+
+Le `Store` est le conteneur principal qui gere toutes les entites et leurs composants.
+
+```java
+public class Store<ECS_TYPE> implements ComponentAccessor<ECS_TYPE> {
+    private final ComponentRegistry<ECS_TYPE> registry;
+    private final ECS_TYPE externalData;
+    private Ref<ECS_TYPE>[] refs;
+    private ArchetypeChunk<ECS_TYPE>[] archetypeChunks;
+    private Resource<ECS_TYPE>[] resources;
+
+    // Ajouter une entite
+    public Ref<ECS_TYPE> addEntity(Holder<ECS_TYPE> holder, AddReason reason);
+
+    // Supprimer une entite
+    public void removeEntity(Ref<ECS_TYPE> ref, RemoveReason reason);
+
+    // Obtenir un composant
+    public <T extends Component<ECS_TYPE>> T getComponent(
+        Ref<ECS_TYPE> ref, ComponentType<ECS_TYPE, T> componentType);
+
+    // Obtenir l'archetype d'une entite
+    public Archetype<ECS_TYPE> getArchetype(Ref<ECS_TYPE> ref);
+
+    // Obtenir une ressource globale
+    public <T extends Resource<ECS_TYPE>> T getResource(ResourceType<ECS_TYPE, T> resourceType);
+}
+```
+
+### 8. Resource
+
+Une `Resource` est une donnee globale partagee par tout le Store (contrairement aux Components qui sont par entite).
+
+```java
+public interface Resource<ECS_TYPE> extends Cloneable {
+    Resource<ECS_TYPE> clone();
+}
+```
+
+---
+
+## ComponentRegistry
+
+Le `ComponentRegistry` est le registre central qui gere tous les types de composants, systemes et ressources.
+
+```
++------------------------------------------------------------------+
+|                        ComponentRegistry                          |
+|                                                                   |
+|  Components:                                                      |
+|  +------------------+  +------------------+  +------------------+ |
+|  | ComponentType[0] |  | ComponentType[1] |  | ComponentType[2] | |
+|  | TransformComp    |  | BoundingBox      |  | UUIDComponent    | |
+|  +------------------+  +------------------+  +------------------+ |
+|                                                                   |
+|  Resources:                                                       |
+|  +------------------+  +------------------+                       |
+|  | ResourceType[0]  |  | ResourceType[1]  |                       |
+|  | SpatialResource  |  | WorldResource    |                       |
+|  +------------------+  +------------------+                       |
+|                                                                   |
+|  SystemTypes:                                                     |
+|  +------------------+  +------------------+  +------------------+ |
+|  | TickingSystem    |  | RefSystem        |  | QuerySystem      | |
+|  +------------------+  +------------------+  +------------------+ |
+|                                                                   |
+|  Systems (tries par dependance):                                  |
+|  +------------------+  +------------------+  +------------------+ |
+|  | System[0]        |  | System[1]        |  | System[2]        | |
+|  +------------------+  +------------------+  +------------------+ |
++------------------------------------------------------------------+
+```
+
+### Enregistrement des Composants
+
+```java
+// Composant sans serialisation
+ComponentType<EntityStore, MyComponent> MY_COMPONENT =
+    registry.registerComponent(MyComponent.class, MyComponent::new);
+
+// Composant avec serialisation (Codec)
+ComponentType<EntityStore, TransformComponent> TRANSFORM =
+    registry.registerComponent(TransformComponent.class, "Transform", TransformComponent.CODEC);
+```
+
+### Enregistrement des Resources
+
+```java
+// Resource sans serialisation
+ResourceType<EntityStore, MyResource> MY_RESOURCE =
+    registry.registerResource(MyResource.class, MyResource::new);
+
+// Resource avec serialisation
+ResourceType<EntityStore, MyResource> MY_RESOURCE =
+    registry.registerResource(MyResource.class, "MyResource", MyResource.CODEC);
+```
+
+### Composants Built-in Speciaux
+
+```java
+// Marque une entite comme ne devant pas etre tickee
+ComponentType<ECS_TYPE, NonTicking<ECS_TYPE>> nonTickingComponentType;
+
+// Marque une entite comme ne devant pas etre serialisee
+ComponentType<ECS_TYPE, NonSerialized<ECS_TYPE>> nonSerializedComponentType;
+
+// Stocke les composants inconnus lors de la deserialisation
+ComponentType<ECS_TYPE, UnknownComponents<ECS_TYPE>> unknownComponentType;
+```
+
+---
+
+## Creer un Composant Personnalise
+
+### Etape 1: Definir la classe du composant
+
+```java
+public class HealthComponent implements Component<EntityStore> {
+
+    // Codec pour la serialisation
+    public static final BuilderCodec<HealthComponent> CODEC =
+        BuilderCodec.builder(HealthComponent.class, HealthComponent::new)
+            .append(new KeyedCodec<>("MaxHealth", Codec.FLOAT),
+                    (c, v) -> c.maxHealth = v, c -> c.maxHealth)
+            .add()
+            .append(new KeyedCodec<>("CurrentHealth", Codec.FLOAT),
+                    (c, v) -> c.currentHealth = v, c -> c.currentHealth)
+            .add()
+            .build();
+
+    private float maxHealth = 100.0f;
+    private float currentHealth = 100.0f;
+
+    public HealthComponent() {}
+
+    public HealthComponent(float maxHealth, float currentHealth) {
+        this.maxHealth = maxHealth;
+        this.currentHealth = currentHealth;
+    }
+
+    // Getters et setters
+    public float getMaxHealth() { return maxHealth; }
+    public void setMaxHealth(float maxHealth) { this.maxHealth = maxHealth; }
+    public float getCurrentHealth() { return currentHealth; }
+    public void setCurrentHealth(float currentHealth) { this.currentHealth = currentHealth; }
+
+    public void damage(float amount) {
+        this.currentHealth = Math.max(0, this.currentHealth - amount);
+    }
+
+    public void heal(float amount) {
+        this.currentHealth = Math.min(this.maxHealth, this.currentHealth + amount);
+    }
+
+    public boolean isDead() {
+        return this.currentHealth <= 0;
+    }
+
+    // OBLIGATOIRE: Implementation de clone()
+    @Override
+    public Component<EntityStore> clone() {
+        return new HealthComponent(this.maxHealth, this.currentHealth);
+    }
+}
+```
+
+### Etape 2: Enregistrer le composant
+
+```java
+// Dans votre module ou systeme d'initialisation
+public class MyModule {
+    private static ComponentType<EntityStore, HealthComponent> HEALTH_COMPONENT_TYPE;
+
+    public static void init(ComponentRegistry<EntityStore> registry) {
+        // Enregistrement avec serialisation
+        HEALTH_COMPONENT_TYPE = registry.registerComponent(
+            HealthComponent.class,
+            "Health",           // ID unique pour la serialisation
+            HealthComponent.CODEC
+        );
+    }
+
+    public static ComponentType<EntityStore, HealthComponent> getHealthComponentType() {
+        return HEALTH_COMPONENT_TYPE;
+    }
+}
+```
+
+### Etape 3: Utiliser le composant
+
+```java
+// Creer une entite avec le composant
+Holder<EntityStore> holder = registry.newHolder();
+holder.addComponent(MyModule.getHealthComponentType(), new HealthComponent(100, 100));
+Ref<EntityStore> entityRef = store.addEntity(holder, AddReason.SPAWN);
+
+// Acceder au composant
+HealthComponent health = store.getComponent(entityRef, MyModule.getHealthComponentType());
+health.damage(25);
+
+// Verifier si l'entite a le composant
+Archetype<EntityStore> archetype = store.getArchetype(entityRef);
+if (archetype.contains(MyModule.getHealthComponentType())) {
+    // L'entite a un composant Health
+}
+```
+
+---
+
+## Systeme de Queries
+
+Les Queries permettent de filtrer les entites en fonction de leurs composants.
+
+### Interface Query
+
+```java
+public interface Query<ECS_TYPE> {
+    // Teste si un archetype correspond a la query
+    boolean test(Archetype<ECS_TYPE> archetype);
+
+    // Verifie si la query depend d'un type de composant specifique
+    boolean requiresComponentType(ComponentType<ECS_TYPE, ?> componentType);
+
+    // Methodes de creation (factory methods)
+    static <ECS_TYPE> AnyQuery<ECS_TYPE> any();           // Correspond a tout
+    static <ECS_TYPE> NotQuery<ECS_TYPE> not(Query<ECS_TYPE> query);  // Negation
+    static <ECS_TYPE> AndQuery<ECS_TYPE> and(Query<ECS_TYPE>... queries);  // ET logique
+    static <ECS_TYPE> OrQuery<ECS_TYPE> or(Query<ECS_TYPE>... queries);   // OU logique
+}
+```
+
+### Types de Queries
+
+```
+Query (interface)
+  |
+  +-- Archetype (un archetype est aussi une query)
+  |
+  +-- ComponentType (un ComponentType est aussi une query)
+  |
+  +-- AnyQuery (correspond a tout)
+  |
+  +-- NotQuery (negation)
+  |
+  +-- AndQuery (ET logique)
+  |
+  +-- OrQuery (OU logique)
+  |
+  +-- ExactArchetypeQuery (archetype exact)
+  |
+  +-- ReadWriteArchetypeQuery (interface)
+       |
+       +-- ReadWriteQuery (implementation)
+```
+
+### ReadWriteQuery
+
+La `ReadWriteQuery` distingue les composants en lecture seule des composants modifies.
+
+```java
+public class ReadWriteQuery<ECS_TYPE> implements ReadWriteArchetypeQuery<ECS_TYPE> {
+    private final Archetype<ECS_TYPE> read;   // Composants lus
+    private final Archetype<ECS_TYPE> write;  // Composants modifies
+
+    public ReadWriteQuery(Archetype<ECS_TYPE> read, Archetype<ECS_TYPE> write) {
+        this.read = read;
+        this.write = write;
+    }
+
+    @Override
+    public boolean test(Archetype<ECS_TYPE> archetype) {
+        return archetype.contains(this.read) && archetype.contains(this.write);
+    }
+}
+```
+
+### Exemples d'utilisation
+
+```java
+// Query simple: toutes les entites avec TransformComponent
+Query<EntityStore> hasTransform = TransformComponent.getComponentType();
+
+// Query combinee: entites avec Transform ET Health
+Query<EntityStore> query = Query.and(
+    TransformComponent.getComponentType(),
+    MyModule.getHealthComponentType()
+);
+
+// Query avec negation: entites avec Transform mais SANS Health
+Query<EntityStore> query = Query.and(
+    TransformComponent.getComponentType(),
+    Query.not(MyModule.getHealthComponentType())
+);
+
+// Archetype comme query
+Archetype<EntityStore> archetype = Archetype.of(
+    TransformComponent.getComponentType(),
+    BoundingBox.getComponentType()
+);
+// Teste si une entite a AU MOINS ces composants
+
+// ReadWriteQuery pour un systeme qui lit Transform et modifie Health
+ReadWriteQuery<EntityStore> query = new ReadWriteQuery<>(
+    Archetype.of(TransformComponent.getComponentType()),  // Lecture
+    Archetype.of(MyModule.getHealthComponentType())       // Ecriture
+);
+```
+
+---
+
+## Systems et SystemGroups
+
+### Hierarchie des Systems
+
+```
+ISystem (interface)
+  |
+  +-- System (classe de base abstraite)
+       |
+       +-- QuerySystem (interface) - systemes qui filtrent par archetype
+       |    |
+       |    +-- RefSystem - callback sur ajout/suppression d'entites
+       |    |
+       |    +-- HolderSystem - callback sur holder avant ajout
+       |    |
+       |    +-- TickingSystem
+       |         |
+       |         +-- ArchetypeTickingSystem
+       |              |
+       |              +-- EntityTickingSystem
+       |
+       +-- EventSystem
+            |
+            +-- EntityEventSystem - evenements sur entites
+            |
+            +-- WorldEventSystem - evenements globaux
+```
+
+### ISystem
+
+Interface de base pour tous les systemes.
+
+```java
+public interface ISystem<ECS_TYPE> {
+    // Callbacks de cycle de vie
+    default void onSystemRegistered() {}
+    default void onSystemUnregistered() {}
+
+    // Groupe auquel appartient ce systeme
+    default SystemGroup<ECS_TYPE> getGroup() { return null; }
+
+    // Dependances pour l'ordre d'execution
+    default Set<Dependency<ECS_TYPE>> getDependencies() {
+        return Collections.emptySet();
+    }
+}
+```
+
+### System (classe de base)
+
+```java
+public abstract class System<ECS_TYPE> implements ISystem<ECS_TYPE> {
+
+    // Enregistrer un composant lie a ce systeme
+    protected <T extends Component<ECS_TYPE>> ComponentType<ECS_TYPE, T> registerComponent(
+        Class<? super T> tClass, Supplier<T> supplier);
+
+    protected <T extends Component<ECS_TYPE>> ComponentType<ECS_TYPE, T> registerComponent(
+        Class<? super T> tClass, String id, BuilderCodec<T> codec);
+
+    // Enregistrer une resource liee a ce systeme
+    public <T extends Resource<ECS_TYPE>> ResourceType<ECS_TYPE, T> registerResource(
+        Class<? super T> tClass, Supplier<T> supplier);
+}
+```
+
+### TickingSystem
+
+Systeme execute a chaque tick.
+
+```java
+public abstract class TickingSystem<ECS_TYPE> extends System<ECS_TYPE>
+    implements TickableSystem<ECS_TYPE> {
+
+    // dt = delta time (temps ecoule), systemIndex = index du systeme
+    public abstract void tick(float dt, int systemIndex, Store<ECS_TYPE> store);
+}
+```
+
+### ArchetypeTickingSystem
+
+Systeme tick qui filtre par archetype.
+
+```java
+public abstract class ArchetypeTickingSystem<ECS_TYPE> extends TickingSystem<ECS_TYPE>
+    implements QuerySystem<ECS_TYPE> {
+
+    // Query pour filtrer les entites
+    public abstract Query<ECS_TYPE> getQuery();
+
+    // Tick sur chaque ArchetypeChunk correspondant
+    public abstract void tick(
+        float dt,
+        ArchetypeChunk<ECS_TYPE> archetypeChunk,
+        Store<ECS_TYPE> store,
+        CommandBuffer<ECS_TYPE> commandBuffer
+    );
+}
+```
+
+### EntityTickingSystem
+
+Systeme tick qui itere sur chaque entite.
+
+```java
+public abstract class EntityTickingSystem<ECS_TYPE> extends ArchetypeTickingSystem<ECS_TYPE> {
+
+    // Tick sur une entite specifique
+    public abstract void tick(
+        float dt,
+        int index,                         // Index dans l'ArchetypeChunk
+        ArchetypeChunk<ECS_TYPE> archetypeChunk,
+        Store<ECS_TYPE> store,
+        CommandBuffer<ECS_TYPE> commandBuffer
+    );
+
+    // Support du parallelisme
+    public boolean isParallel(int archetypeChunkSize, int taskCount) {
+        return false;
+    }
+}
+```
+
+### RefSystem
+
+Systeme qui reagit a l'ajout/suppression d'entites.
+
+```java
+public abstract class RefSystem<ECS_TYPE> extends System<ECS_TYPE>
+    implements QuerySystem<ECS_TYPE> {
+
+    // Query pour filtrer les entites concernees
+    public abstract Query<ECS_TYPE> getQuery();
+
+    // Appele quand une entite correspondant a la query est ajoutee
+    public abstract void onEntityAdded(
+        Ref<ECS_TYPE> ref,
+        AddReason reason,
+        Store<ECS_TYPE> store,
+        CommandBuffer<ECS_TYPE> commandBuffer
+    );
+
+    // Appele quand une entite correspondant a la query est supprimee
+    public abstract void onEntityRemove(
+        Ref<ECS_TYPE> ref,
+        RemoveReason reason,
+        Store<ECS_TYPE> store,
+        CommandBuffer<ECS_TYPE> commandBuffer
+    );
+}
+```
+
+### SystemGroup
+
+Groupe de systemes pour organiser l'ordre d'execution.
+
+```java
+public class SystemGroup<ECS_TYPE> {
+    private final ComponentRegistry<ECS_TYPE> registry;
+    private final int index;
+    private final Set<Dependency<ECS_TYPE>> dependencies;
+}
+```
+
+### Dependencies (Ordre d'execution)
+
+```java
+public enum Order {
+    BEFORE,  // Execute avant la dependance
+    AFTER    // Execute apres la dependance
+}
+
+public abstract class Dependency<ECS_TYPE> {
+    protected final Order order;
+    protected final int priority;
+
+    public Dependency(Order order, int priority);
+    public Dependency(Order order, OrderPriority priority);
+}
+
+// Types de dependances
+// - SystemDependency: dependance sur un systeme specifique
+// - SystemTypeDependency: dependance sur un type de systeme
+// - SystemGroupDependency: dependance sur un groupe de systemes
+// - RootDependency: dependance racine
+```
+
+---
+
+## Exemple Complet: Creer un System
+
+```java
+public class HealthRegenSystem extends EntityTickingSystem<EntityStore> {
+
+    private static ComponentType<EntityStore, HealthComponent> HEALTH;
+
+    // Query: entites avec Health
+    private final Query<EntityStore> query;
+
+    public HealthRegenSystem() {
+        HEALTH = this.registerComponent(
+            HealthComponent.class,
+            "Health",
+            HealthComponent.CODEC
+        );
+        this.query = HEALTH;
+    }
+
+    @Override
+    public Query<EntityStore> getQuery() {
+        return this.query;
+    }
+
+    @Override
+    public Set<Dependency<EntityStore>> getDependencies() {
+        // Executer apres le systeme de dommages
+        return Set.of(
+            new SystemTypeDependency<>(Order.AFTER, DamageSystem.class)
+        );
+    }
+
+    @Override
+    public void tick(
+        float dt,
+        int index,
+        ArchetypeChunk<EntityStore> chunk,
+        Store<EntityStore> store,
+        CommandBuffer<EntityStore> buffer
+    ) {
+        // Obtenir le composant Health pour cette entite
+        HealthComponent health = chunk.getComponent(index, HEALTH);
+
+        // Regenerer 1 HP par seconde
+        if (!health.isDead()) {
+            health.heal(dt * 1.0f);
+        }
+    }
+}
+```
+
+---
+
+## Entites: Entity, LivingEntity, Player
+
+### Hierarchie des Entites
+
+```
+Component<EntityStore> (interface)
+  |
+  +-- Entity (abstraite)
+       |
+       +-- LivingEntity (abstraite)
+       |    |
+       |    +-- Player
+       |    |
+       |    +-- (autres entites vivantes)
+       |
+       +-- BlockEntity
+       |
+       +-- (autres types d'entites)
+```
+
+### Entity
+
+Classe de base pour toutes les entites du jeu.
+
+```java
+public abstract class Entity implements Component<EntityStore> {
+    protected int networkId = -1;
+    protected World world;
+    protected Ref<EntityStore> reference;
+    protected final AtomicBoolean wasRemoved = new AtomicBoolean();
+
+    // Codec pour la serialisation
+    public static final BuilderCodec<Entity> CODEC =
+        BuilderCodec.abstractBuilder(Entity.class)
+            .legacyVersioned()
+            .codecVersion(5)
+            .append(DISPLAY_NAME, ...)
+            .append(UUID, ...)
+            .build();
+
+    // Supprimer l'entite du monde
+    public boolean remove();
+
+    // Charger l'entite dans un monde
+    public void loadIntoWorld(World world);
+
+    // Reference a l'entite dans l'ECS
+    public Ref<EntityStore> getReference();
+
+    // Convertir en Holder pour serialisation/copie
+    public Holder<EntityStore> toHolder();
+}
+```
+
+### LivingEntity
+
+Entite avec un inventaire et des statistiques.
+
+```java
+public abstract class LivingEntity extends Entity {
+    private final StatModifiersManager statModifiersManager = new StatModifiersManager();
+    private Inventory inventory;
+    protected double currentFallDistance;
+
+    public static final BuilderCodec<LivingEntity> CODEC =
+        BuilderCodec.abstractBuilder(LivingEntity.class, Entity.CODEC)
+            .append(new KeyedCodec<>("Inventory", Inventory.CODEC), ...)
+            .build();
+
+    // Creer l'inventaire par defaut
+    protected abstract Inventory createDefaultInventory();
+
+    // Gestion de l'inventaire
+    public Inventory getInventory();
+    public Inventory setInventory(Inventory inventory);
+
+    // Gestion des degats de chute
+    public double getCurrentFallDistance();
+
+    // Modificateurs de statistiques
+    public StatModifiersManager getStatModifiersManager();
+}
+```
+
+### Player
+
+Le joueur connecte.
+
+```java
+public class Player extends LivingEntity implements CommandSender, PermissionHolder {
+    private PlayerRef playerRef;
+    private PlayerConfigData data;
+    private final WorldMapTracker worldMapTracker;
+    private final WindowManager windowManager;
+    private final PageManager pageManager;
+    private final HudManager hudManager;
+    private HotbarManager hotbarManager;
+    private GameMode gameMode;
+
+    public static final BuilderCodec<Player> CODEC =
+        BuilderCodec.builder(Player.class, Player::new, LivingEntity.CODEC)
+            .append(PLAYER_CONFIG_DATA, ...)
+            .append(GameMode, ...)
+            .build();
+
+    // ComponentType pour identifier les joueurs
+    public static ComponentType<EntityStore, Player> getComponentType() {
+        return EntityModule.get().getPlayerComponentType();
+    }
+
+    // Initialisation du joueur
+    public void init(UUID uuid, PlayerRef playerRef);
+
+    // Gestion du GameMode
+    public GameMode getGameMode();
+    public void setGameMode(GameMode gameMode);
+
+    // Gestionnaires d'interface utilisateur
+    public WindowManager getWindowManager();
+    public PageManager getPageManager();
+    public HudManager getHudManager();
+}
+```
+
+---
+
+## Composants Built-in Importants
+
+### TransformComponent
+
+Position et rotation de l'entite.
+
+```java
+public class TransformComponent implements Component<EntityStore> {
+    private final Vector3d position = new Vector3d();
+    private final Vector3f rotation = new Vector3f();
+
+    public static ComponentType<EntityStore, TransformComponent> getComponentType();
+
+    public Vector3d getPosition();
+    public Vector3f getRotation();
+    public Transform getTransform();
+}
+```
+
+### BoundingBox
+
+Boite de collision de l'entite.
+
+```java
+public class BoundingBox implements Component<EntityStore> {
+    private final Box boundingBox = new Box();
+
+    public static ComponentType<EntityStore, BoundingBox> getComponentType();
+
+    public Box getBoundingBox();
+    public void setBoundingBox(Box boundingBox);
+}
+```
+
+### UUIDComponent
+
+Identifiant unique persistant de l'entite.
+
+```java
+public final class UUIDComponent implements Component<EntityStore> {
+    private UUID uuid;
+
+    public static ComponentType<EntityStore, UUIDComponent> getComponentType();
+
+    public UUID getUuid();
+
+    public static UUIDComponent generateVersion3UUID();
+    public static UUIDComponent randomUUID();
+}
+```
+
+### NonTicking
+
+Marque une entite pour qu'elle ne soit pas traitee par les TickingSystems.
+
+```java
+public class NonTicking<ECS_TYPE> implements Component<ECS_TYPE> {
+    private static final NonTicking<?> INSTANCE = new NonTicking();
+
+    public static <ECS_TYPE> NonTicking<ECS_TYPE> get();
+}
+
+// Utilisation: ajouter ce composant pour desactiver le tick
+holder.addComponent(registry.getNonTickingComponentType(), NonTicking.get());
+```
+
+### NonSerialized
+
+Marque une entite pour qu'elle ne soit pas sauvegardee.
+
+```java
+public class NonSerialized<ECS_TYPE> implements Component<ECS_TYPE> {
+    private static final NonSerialized<?> INSTANCE = new NonSerialized();
+
+    public static <ECS_TYPE> NonSerialized<ECS_TYPE> get();
+}
+
+// Utilisation: ajouter ce composant pour empecher la sauvegarde
+holder.addComponent(registry.getNonSerializedComponentType(), NonSerialized.get());
+```
+
+### Autres Composants Importants
+
+| Composant | Description |
+|-----------|-------------|
+| `Velocity` | Vitesse de l'entite |
+| `CollisionResultComponent` | Resultat des collisions |
+| `ModelComponent` | Modele 3D de l'entite |
+| `DisplayNameComponent` | Nom affiche |
+| `MovementStatesComponent` | Etats de mouvement (au sol, en vol, etc.) |
+| `KnockbackComponent` | Recul apres un coup |
+| `DamageDataComponent` | Donnees de dommages recus |
+| `ProjectileComponent` | Composant pour les projectiles |
+| `EffectControllerComponent` | Effets actifs sur l'entite |
+
+---
+
+## CommandBuffer
+
+Le `CommandBuffer` permet de modifier le Store de maniere differee (thread-safe).
+
+```java
+public class CommandBuffer<ECS_TYPE> implements ComponentAccessor<ECS_TYPE> {
+    private final Store<ECS_TYPE> store;
+    private final Deque<Consumer<Store<ECS_TYPE>>> queue;
+
+    // Ajouter une action a executer plus tard
+    public void run(Consumer<Store<ECS_TYPE>> consumer);
+
+    // Ajouter une entite
+    public Ref<ECS_TYPE> addEntity(Holder<ECS_TYPE> holder, AddReason reason);
+
+    // Supprimer une entite
+    public void removeEntity(Ref<ECS_TYPE> ref, RemoveReason reason);
+
+    // Lire un composant (acces immediat)
+    public <T extends Component<ECS_TYPE>> T getComponent(
+        Ref<ECS_TYPE> ref, ComponentType<ECS_TYPE, T> componentType);
+
+    // Ajouter un composant a une entite
+    public <T extends Component<ECS_TYPE>> void addComponent(
+        Ref<ECS_TYPE> ref, ComponentType<ECS_TYPE, T> componentType, T component);
+
+    // Supprimer un composant d'une entite
+    public <T extends Component<ECS_TYPE>> void removeComponent(
+        Ref<ECS_TYPE> ref, ComponentType<ECS_TYPE, T> componentType);
+
+    // Dispatcher un evenement
+    public <T extends EcsEvent> void dispatchEntityEvent(
+        EntityEventType<ECS_TYPE, T> eventType, Ref<ECS_TYPE> ref, T event);
+
+    public <T extends EcsEvent> void dispatchWorldEvent(
+        WorldEventType<ECS_TYPE, T> eventType, T event);
+}
+```
+
+---
+
+## AddReason et RemoveReason
+
+Enumerations indiquant pourquoi une entite est ajoutee ou supprimee.
+
+```java
+public enum AddReason {
+    SPAWN,  // Nouvelle entite creee
+    LOAD    // Entite chargee depuis la sauvegarde
+}
+
+public enum RemoveReason {
+    REMOVE,  // Entite supprimee definitivement
+    UNLOAD   // Entite dechargee (sauvegardee)
+}
+```
+
+---
+
+## Flux de Donnees
+
+```
+1. CREATION D'ENTITE
+   +---------------+     +---------+     +--------+     +--------------+
+   | Creer Holder  | --> | Ajouter | --> | Store  | --> | RefSystems   |
+   | avec Components|     | au Store|     | assigne|     | onEntityAdded|
+   +---------------+     +---------+     | Ref    |     +--------------+
+                                          +--------+
+
+2. TICK
+   +--------+     +-----------------+     +------------------+
+   | Store  | --> | Pour chaque     | --> | Pour chaque      |
+   | .tick()|     | System (trie)   |     | ArchetypeChunk   |
+   +--------+     +-----------------+     | correspondant    |
+                                          +------------------+
+                                                   |
+                                                   v
+                                          +------------------+
+                                          | System.tick()    |
+                                          | (avec buffer)    |
+                                          +------------------+
+
+3. MODIFICATION D'ARCHETYPE (ajout/suppression de composant)
+   +-------------+     +------------------+     +------------------+
+   | CommandBuffer| --> | Retirer de       | --> | Ajouter au nouvel|
+   | .addComponent|     | l'ancien Chunk   |     | ArchetypeChunk   |
+   +-------------+     +------------------+     +------------------+
+
+4. SUPPRESSION D'ENTITE
+   +-------------+     +--------------+     +------------------+
+   | CommandBuffer| --> | RefSystems   | --> | Retirer de       |
+   | .removeEntity|     | onEntityRemove|     | l'ArchetypeChunk |
+   +-------------+     +--------------+     +------------------+
+```
+
+---
+
+## Bonnes Pratiques
+
+1. **Composants simples**: Gardez les composants comme de simples conteneurs de donnees sans logique complexe.
+
+2. **Un System par responsabilite**: Chaque System devrait avoir une seule responsabilite claire.
+
+3. **Utilisez le CommandBuffer**: Ne modifiez jamais directement le Store pendant un tick. Utilisez toujours le CommandBuffer.
+
+4. **Queries efficaces**: Utilisez des Archetypes plutot que des queries complexes quand c'est possible.
+
+5. **NonTicking pour les entites statiques**: Ajoutez `NonTicking` aux entites qui n'ont pas besoin d'etre mises a jour.
+
+6. **NonSerialized pour les entites temporaires**: Ajoutez `NonSerialized` aux entites qui ne doivent pas etre sauvegardees.
+
+7. **Dependances explicites**: Declarez toujours les dependances entre systemes pour garantir l'ordre d'execution correct.
+
+8. **Clone() obligatoire**: Implementez toujours correctement `clone()` pour les composants qui doivent etre copies.

@@ -10,6 +10,14 @@ export function UpdatesSection() {
 
   const updates = [
     {
+      title: t("serverInternals"),
+      description: t("serverInternalsDesc"),
+      href: "/docs/api/server-internals",
+      date: "2026-01-13",
+      badge: "v1",
+      badgeColor: "#e6a33e",
+    },
+    {
       title: t("serverCalculator"),
       description: t("serverCalculatorDesc"),
       href: "/tools/server-calculator",

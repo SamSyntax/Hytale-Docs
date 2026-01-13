@@ -1,4 +1,9 @@
 {
+  "announcement": {
+    "title": "Server Internal Documentation",
+    "subtitle": "Plugins, Events, ECS, Packets and more",
+    "cta": "Explore"
+  },
   "sidebar": {
     "introduction": "Introduction",
     "playerGuide": "Player Guide",
@@ -56,6 +61,14 @@
     "docker": "Docker",
     "cloudProviders": "Cloud Providers",
     "apiReference": "API Reference",
+    "serverInternals": "Server Internals",
+    "serverInternalsOverview": "Overview",
+    "pluginSystem": "Plugin System",
+    "eventSystem": "Event System",
+    "commandSystem": "Command System",
+    "ecsSystem": "ECS System",
+    "dataTypes": "Data Types",
+    "networkPackets": "Network Packets",
     "officialApi": "Official API",
     "endpoints": "Endpoints",
     "authentication": "Authentication",
@@ -157,6 +170,8 @@
   "updates": {
     "title": "LATEST UPDATES",
     "subtitle": "Recent additions and changes to the documentation",
+    "serverInternals": "Server Internal Documentation",
+    "serverInternalsDesc": "Technical v1 documentation of the Hytale server - Plugins, Events, ECS, Packets and more",
     "serverCalculator": "Server Calculator",
     "serverCalculatorDesc": "Calculate recommended RAM, CPU and storage for your server",
     "projectGenerator": "Project Generator",
