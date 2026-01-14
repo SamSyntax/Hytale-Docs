@@ -29,10 +29,11 @@ public class ChunkPreLoadProcessEvent extends ChunkEvent implements IProcessedEv
    @Nonnull
    private final Holder<ChunkStore> holder;
 
-   public ChunkPreLoadProcessEvent(@Nonnull WorldChunk chunk, boolean newlyGenerated,
-                                    @Nonnull Holder<ChunkStore> holder) {
+   public ChunkPreLoadProcessEvent(@Nonnull Holder<ChunkStore> holder, @Nonnull WorldChunk chunk,
+                                    boolean newlyGenerated, long lastDispatchNanos) {
       super(chunk);
       this.newlyGenerated = newlyGenerated;
+      this.lastDispatchNanos = lastDispatchNanos;
       this.holder = holder;
    }
 
@@ -50,8 +51,16 @@ public class ChunkPreLoadProcessEvent extends ChunkEvent implements IProcessedEv
    }
 
    @Override
-   public void processEvent(@Nonnull String handlerName) {
-      // Appele apres que chaque handler traite l'événement
+   public void processEvent(@Nonnull String hookName) {
+      // Suivi des performances - journalise si le handler prend plus de temps que le tick step
+   }
+
+   @Nonnull
+   @Override
+   public String toString() {
+      return "ChunkPreLoadProcessEvent{newlyGenerated=" + this.newlyGenerated
+         + ", lastDispatchNanos=" + this.lastDispatchNanos
+         + ", didLog=" + this.didLog + "} " + super.toString();
    }
 }
 ```

@@ -24,6 +24,12 @@ L'événement `AllWorldsLoadedEvent` est déclenché une fois que tous les monde
 public class AllWorldsLoadedEvent implements IEvent<Void> {
    public AllWorldsLoadedEvent() {
    }
+
+   @Nonnull
+   @Override
+   public String toString() {
+      return "AllWorldsLoadedEvent{}";
+   }
 }
 ```
 

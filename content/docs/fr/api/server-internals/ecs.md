@@ -291,8 +291,11 @@ public class Store<ECS_TYPE> implements ComponentAccessor<ECS_TYPE> {
     // Ajouter une entite
     public Ref<ECS_TYPE> addEntity(Holder<ECS_TYPE> holder, AddReason reason);
 
-    // Supprimer une entite
-    public void removeEntity(Ref<ECS_TYPE> ref, RemoveReason reason);
+    // Supprimer une entite (retourne les composants de l'entite dans le holder)
+    public Holder<ECS_TYPE> removeEntity(Ref<ECS_TYPE> ref, RemoveReason reason);
+
+    // Supprimer une entite avec holder cible
+    public Holder<ECS_TYPE> removeEntity(Ref<ECS_TYPE> ref, Holder<ECS_TYPE> holder, RemoveReason reason);
 
     // Obtenir un composant
     public <T extends Component<ECS_TYPE>> T getComponent(
@@ -1082,10 +1085,14 @@ public void execute(InteractionContext context) {
 }
 ```
 
-3. **Via Store.forEach** - lors de l'iteration des entites:
+3. **Via Store.forEachChunk** - lors de l'iteration des archetype chunks:
 ```java
-store.forEach(MySystem.getSystemType(), (ref, buffer) -> {
-    // buffer est fourni par entite
+store.forEachChunk(query, (archetypeChunk, buffer) -> {
+    // buffer est fourni par chunk
+    for (int i = 0; i < archetypeChunk.size(); i++) {
+        Ref<EntityStore> ref = archetypeChunk.getReferenceTo(i);
+        // traiter l'entite
+    }
 });
 ```
 
@@ -1117,12 +1124,19 @@ public class CommandBuffer<ECS_TYPE> implements ComponentAccessor<ECS_TYPE> {
     public <T extends Component<ECS_TYPE>> void removeComponent(
         Ref<ECS_TYPE> ref, ComponentType<ECS_TYPE, T> componentType);
 
-    // Dispatcher un evenement
-    public <T extends EcsEvent> void dispatchEntityEvent(
-        EntityEventType<ECS_TYPE, T> eventType, Ref<ECS_TYPE> ref, T event);
+    // Invoquer un evenement sur une entite (utilise le type d'evenement de l'annotation)
+    public <Event extends EcsEvent> void invoke(Ref<ECS_TYPE> ref, Event event);
 
-    public <T extends EcsEvent> void dispatchWorldEvent(
-        WorldEventType<ECS_TYPE, T> eventType, T event);
+    // Invoquer un evenement sur une entite avec type explicite
+    public <Event extends EcsEvent> void invoke(
+        EntityEventType<ECS_TYPE, Event> eventType, Ref<ECS_TYPE> ref, Event event);
+
+    // Invoquer un evenement monde (utilise le type d'evenement de l'annotation)
+    public <Event extends EcsEvent> void invoke(Event event);
+
+    // Invoquer un evenement monde avec type explicite
+    public <Event extends EcsEvent> void invoke(
+        WorldEventType<ECS_TYPE, Event> eventType, Event event);
 }
 ```
 

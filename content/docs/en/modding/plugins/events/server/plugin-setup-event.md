@@ -38,13 +38,19 @@ public abstract class PluginEvent implements IEvent<Class<? extends PluginBase>>
     @Nonnull
     private final PluginBase plugin;
 
-    protected PluginEvent(@Nonnull PluginBase plugin) {
+    public PluginEvent(@Nonnull PluginBase plugin) {
         this.plugin = plugin;
     }
 
     @Nonnull
     public PluginBase getPlugin() {
         return this.plugin;
+    }
+
+    @Nonnull
+    @Override
+    public String toString() {
+        return "PluginEvent{}";
     }
 }
 ```

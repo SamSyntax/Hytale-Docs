@@ -37,6 +37,7 @@ public class AllNPCsLoadedEvent implements IEvent<Void> {
 |---------|-----------|-------------|
 | `getAllNPCs` | `@Nonnull public Int2ObjectMap<BuilderInfo> getAllNPCs()` | Retourne une carte non modifiable contenant toutes les informations de construction de PNJ enregistrees |
 | `getLoadedNPCs` | `@Nonnull public Int2ObjectMap<BuilderInfo> getLoadedNPCs()` | Retourne une carte non modifiable des PNJ charges dans cette operation de chargement specifique |
+| `toString` | `@Nonnull public String toString()` | Retourne une representation en chaine de l'evenement avec les deux cartes de PNJ |
 
 ## Exemple d'utilisation
 

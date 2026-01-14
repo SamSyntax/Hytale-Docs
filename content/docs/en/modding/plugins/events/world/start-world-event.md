@@ -24,6 +24,12 @@ public class StartWorldEvent extends WorldEvent {
    public StartWorldEvent(@Nonnull World world) {
       super(world);
    }
+
+   @Nonnull
+   @Override
+   public String toString() {
+      return "StartWorldEvent{} " + super.toString();
+   }
 }
 ```
 

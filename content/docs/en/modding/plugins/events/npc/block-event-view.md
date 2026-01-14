@@ -47,11 +47,11 @@ public class BlockEventView extends EventView<BlockEventView, BlockEventType, Ev
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `getUpdatedView` | `public BlockEventView getUpdatedView(Ref<EntityStore> ref, ComponentAccessor<EntityStore> componentAccessor)` | Returns the view for the entity's current world |
-| `initialiseEntity` | `public void initialiseEntity(Ref<EntityStore> ref, NPCEntity npcComponent)` | Registers an NPC's block event listeners |
-| `onEvent` | `protected void onEvent(int senderTypeId, double x, double y, double z, Ref<EntityStore> initiator, Ref<EntityStore> skip, ComponentAccessor<EntityStore> componentAccessor, BlockEventType type)` | Processes and dispatches a block event (adds 0.5 offset to center on block) |
-| `onEntityDamageBlock` | `public void onEntityDamageBlock(Ref<EntityStore> ref, DamageBlockEvent event)` | Handles block damage events |
-| `onEntityBreakBlock` | `public void onEntityBreakBlock(Ref<EntityStore> ref, BreakBlockEvent event)` | Handles block destruction events |
+| `getUpdatedView` | `public BlockEventView getUpdatedView(@Nonnull Ref<EntityStore> ref, @Nonnull ComponentAccessor<EntityStore> componentAccessor)` | Returns the view for the entity's current world |
+| `initialiseEntity` | `public void initialiseEntity(@Nonnull Ref<EntityStore> ref, @Nonnull NPCEntity npcComponent)` | Registers an NPC's block event listeners |
+| `onEvent` | `protected void onEvent(int senderTypeId, double x, double y, double z, Ref<EntityStore> initiator, Ref<EntityStore> skip, @Nonnull ComponentAccessor<EntityStore> componentAccessor, BlockEventType type)` | Processes and dispatches a block event (adds 0.5 offset to center on block) |
+| `onEntityDamageBlock` | `public void onEntityDamageBlock(@Nonnull Ref<EntityStore> ref, @Nonnull DamageBlockEvent event)` | Handles block damage events |
+| `onEntityBreakBlock` | `public void onEntityBreakBlock(@Nonnull Ref<EntityStore> ref, @Nonnull BreakBlockEvent event)` | Handles block destruction events |
 
 ## Key Features
 

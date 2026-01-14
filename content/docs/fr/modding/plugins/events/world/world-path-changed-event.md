@@ -22,6 +22,23 @@ Declenche lorsque la configuration du chemin du monde change. Cet evenement est 
 
 ```java
 public class WorldPathChangedEvent implements IEvent<Void> {
+   private WorldPath worldPath;
+
+   public WorldPathChangedEvent(WorldPath worldPath) {
+      Objects.requireNonNull(worldPath, "World path must not be null in an event");
+      this.worldPath = worldPath;
+   }
+
+   public WorldPath getWorldPath() {
+      return this.worldPath;
+   }
+
+   @Nonnull
+   @Override
+   public String toString() {
+      return "WorldPathChangedEvent{worldPath=" + this.worldPath + "}";
+   }
+}
 ```
 
 ## Champs

@@ -922,8 +922,8 @@ Dechargement d'un chunk.
 
 | Champ | Type | Description |
 |-------|------|-------------|
-| `x` | int | Coordonnee X |
-| `y` | int | Coordonnee Y |
+| `chunkX` | int | Coordonnee X du chunk |
+| `chunkZ` | int | Coordonnee Z du chunk |
 
 **Taille**: 8 bytes (fixe)
 
@@ -2035,7 +2035,7 @@ Pointeur laser.
 
 ### Compression
 
-Les packets marques comme compresses utilisent un algorithme de compression (probablement LZ4 ou similaire) pour reduire la bande passante. La compression est appliquee apres la serialisation.
+Les packets marques comme compresses utilisent **Zstd (Zstandard)** pour reduire la bande passante. La compression est appliquee apres la serialisation.
 
 ### Validation
 

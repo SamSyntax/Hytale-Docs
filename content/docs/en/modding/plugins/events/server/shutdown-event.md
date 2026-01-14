@@ -28,6 +28,12 @@ public class ShutdownEvent implements IEvent<Void> {
 
     public ShutdownEvent() {
     }
+
+    @Nonnull
+    @Override
+    public String toString() {
+        return "ShutdownEvent{}";
+    }
 }
 ```
 

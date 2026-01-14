@@ -47,10 +47,10 @@ public class EntityEventView extends EventView<EntityEventView, EntityEventType,
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `getUpdatedView` | `public EntityEventView getUpdatedView(Ref<EntityStore> ref, ComponentAccessor<EntityStore> componentAccessor)` | Returns the view for the entity's current world |
-| `initialiseEntity` | `public void initialiseEntity(Ref<EntityStore> ref, NPCEntity npcComponent)` | Registers an NPC's event listeners |
-| `onEvent` | `protected void onEvent(int senderTypeId, double x, double y, double z, Ref<EntityStore> initiator, Ref<EntityStore> skip, ComponentAccessor<EntityStore> componentAccessor, EntityEventType type)` | Processes and dispatches an entity event |
-| `processAttackedEvent` | `public void processAttackedEvent(Ref<EntityStore> victim, Ref<EntityStore> attacker, ComponentAccessor<EntityStore> componentAccessor, EntityEventType eventType)` | Handles damage and death events |
+| `getUpdatedView` | `public EntityEventView getUpdatedView(@Nonnull Ref<EntityStore> ref, @Nonnull ComponentAccessor<EntityStore> componentAccessor)` | Returns the view for the entity's current world |
+| `initialiseEntity` | `public void initialiseEntity(@Nonnull Ref<EntityStore> ref, @Nonnull NPCEntity npcComponent)` | Registers an NPC's event listeners |
+| `onEvent` | `protected void onEvent(int senderTypeId, double x, double y, double z, Ref<EntityStore> initiator, @Nonnull Ref<EntityStore> skip, @Nonnull ComponentAccessor<EntityStore> componentAccessor, EntityEventType type)` | Processes and dispatches an entity event (sets flock reference) |
+| `processAttackedEvent` | `public void processAttackedEvent(@Nonnull Ref<EntityStore> victim, @Nonnull Ref<EntityStore> attacker, @Nonnull ComponentAccessor<EntityStore> componentAccessor, EntityEventType eventType)` | Handles damage and death events |
 
 ## Key Features
 

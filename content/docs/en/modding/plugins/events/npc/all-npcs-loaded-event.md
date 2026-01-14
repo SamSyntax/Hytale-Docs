@@ -37,6 +37,7 @@ public class AllNPCsLoadedEvent implements IEvent<Void> {
 |--------|-----------|-------------|
 | `getAllNPCs` | `@Nonnull public Int2ObjectMap<BuilderInfo> getAllNPCs()` | Returns an unmodifiable map containing all registered NPC builder information |
 | `getLoadedNPCs` | `@Nonnull public Int2ObjectMap<BuilderInfo> getLoadedNPCs()` | Returns an unmodifiable map of NPCs loaded in this specific loading operation |
+| `toString` | `@Nonnull public String toString()` | Returns a string representation of the event with both NPC maps |
 
 ## Usage Example
 

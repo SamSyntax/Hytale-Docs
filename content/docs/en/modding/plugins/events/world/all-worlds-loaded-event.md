@@ -23,6 +23,12 @@ The `AllWorldsLoadedEvent` is fired once all configured worlds have been loaded 
 public class AllWorldsLoadedEvent implements IEvent<Void> {
    public AllWorldsLoadedEvent() {
    }
+
+   @Nonnull
+   @Override
+   public String toString() {
+      return "AllWorldsLoadedEvent{}";
+   }
 }
 ```
 

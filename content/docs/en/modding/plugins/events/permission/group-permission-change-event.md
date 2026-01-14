@@ -60,7 +60,7 @@ Fired when permissions are added to a group.
 ```java
 public static class Added extends GroupPermissionChangeEvent {
     @Nonnull
-    private final Set<String> permissions;
+    private final Set<String> addedPermissions;
 
     public Added(@Nonnull String groupName, @Nonnull Set<String> addedPermissions) {
         super(groupName);

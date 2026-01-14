@@ -922,8 +922,8 @@ Chunk unloading.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `x` | int | X coordinate |
-| `y` | int | Y coordinate |
+| `chunkX` | int | Chunk X coordinate |
+| `chunkZ` | int | Chunk Z coordinate |
 
 **Size**: 8 bytes (fixed)
 

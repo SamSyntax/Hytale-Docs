@@ -24,6 +24,12 @@ L'événement `BootEvent` est déclenché lorsque le serveur Hytale commence sa 
 public class BootEvent implements IEvent<Void> {
     public BootEvent() {
     }
+
+    @Nonnull
+    @Override
+    public String toString() {
+        return "BootEvent{}";
+    }
 }
 ```
 

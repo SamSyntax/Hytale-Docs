@@ -291,8 +291,11 @@ public class Store<ECS_TYPE> implements ComponentAccessor<ECS_TYPE> {
     // Add an entity
     public Ref<ECS_TYPE> addEntity(Holder<ECS_TYPE> holder, AddReason reason);
 
-    // Remove an entity
-    public void removeEntity(Ref<ECS_TYPE> ref, RemoveReason reason);
+    // Remove an entity (returns the entity's components in the holder)
+    public Holder<ECS_TYPE> removeEntity(Ref<ECS_TYPE> ref, RemoveReason reason);
+
+    // Remove an entity with target holder
+    public Holder<ECS_TYPE> removeEntity(Ref<ECS_TYPE> ref, Holder<ECS_TYPE> holder, RemoveReason reason);
 
     // Get a component
     public <T extends Component<ECS_TYPE>> T getComponent(
@@ -1082,10 +1085,14 @@ public void execute(InteractionContext context) {
 }
 ```
 
-3. **Via Store.forEach** - when iterating entities:
+3. **Via Store.forEachChunk** - when iterating archetype chunks:
 ```java
-store.forEach(MySystem.getSystemType(), (ref, buffer) -> {
-    // buffer is provided per-entity
+store.forEachChunk(query, (archetypeChunk, buffer) -> {
+    // buffer is provided per-chunk
+    for (int i = 0; i < archetypeChunk.size(); i++) {
+        Ref<EntityStore> ref = archetypeChunk.getReferenceTo(i);
+        // process entity
+    }
 });
 ```
 
@@ -1117,12 +1124,19 @@ public class CommandBuffer<ECS_TYPE> implements ComponentAccessor<ECS_TYPE> {
     public <T extends Component<ECS_TYPE>> void removeComponent(
         Ref<ECS_TYPE> ref, ComponentType<ECS_TYPE, T> componentType);
 
-    // Dispatch an event
-    public <T extends EcsEvent> void dispatchEntityEvent(
-        EntityEventType<ECS_TYPE, T> eventType, Ref<ECS_TYPE> ref, T event);
+    // Invoke an event on an entity (uses event type from annotation)
+    public <Event extends EcsEvent> void invoke(Ref<ECS_TYPE> ref, Event event);
 
-    public <T extends EcsEvent> void dispatchWorldEvent(
-        WorldEventType<ECS_TYPE, T> eventType, T event);
+    // Invoke an event on an entity with explicit event type
+    public <Event extends EcsEvent> void invoke(
+        EntityEventType<ECS_TYPE, Event> eventType, Ref<ECS_TYPE> ref, Event event);
+
+    // Invoke a world event (uses event type from annotation)
+    public <Event extends EcsEvent> void invoke(Event event);
+
+    // Invoke a world event with explicit event type
+    public <Event extends EcsEvent> void invoke(
+        WorldEventType<ECS_TYPE, Event> eventType, Event event);
 }
 ```
 

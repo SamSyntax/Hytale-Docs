@@ -47,10 +47,10 @@ public class EntityEventView extends EventView<EntityEventView, EntityEventType,
 
 | Methode | Signature | Description |
 |---------|-----------|-------------|
-| `getUpdatedView` | `public EntityEventView getUpdatedView(...)` | Retourne la vue pour le monde actuel de l'entite |
-| `initialiseEntity` | `public void initialiseEntity(...)` | Enregistre les ecouteurs d'evenements d'un PNJ |
-| `onEvent` | `protected void onEvent(...)` | Traite et distribue un evenement d'entite |
-| `processAttackedEvent` | `public void processAttackedEvent(...)` | Gere les evenements de degats et de mort |
+| `getUpdatedView` | `public EntityEventView getUpdatedView(@Nonnull Ref<EntityStore> ref, @Nonnull ComponentAccessor<EntityStore> componentAccessor)` | Retourne la vue pour le monde actuel de l'entite |
+| `initialiseEntity` | `public void initialiseEntity(@Nonnull Ref<EntityStore> ref, @Nonnull NPCEntity npcComponent)` | Enregistre les ecouteurs d'evenements d'un PNJ |
+| `onEvent` | `protected void onEvent(int senderTypeId, double x, double y, double z, Ref<EntityStore> initiator, @Nonnull Ref<EntityStore> skip, @Nonnull ComponentAccessor<EntityStore> componentAccessor, EntityEventType type)` | Traite et distribue un evenement d'entite (definit la reference du troupeau) |
+| `processAttackedEvent` | `public void processAttackedEvent(@Nonnull Ref<EntityStore> victim, @Nonnull Ref<EntityStore> attacker, @Nonnull ComponentAccessor<EntityStore> componentAccessor, EntityEventType eventType)` | Gere les evenements de degats et de mort |
 
 ## Caracteristiques cles
 

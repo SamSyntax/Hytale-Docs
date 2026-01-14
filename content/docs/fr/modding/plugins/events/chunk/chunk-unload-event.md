@@ -26,7 +26,7 @@ L'événement `ChunkUnloadEvent` est déclenché lorsqu'un chunk est sur le poin
 public class ChunkUnloadEvent extends CancellableEcsEvent {
    @Nonnull
    private final WorldChunk chunk;
-   private boolean resetKeepAlive;
+   private boolean resetKeepAlive = true;
 
    public ChunkUnloadEvent(@Nonnull WorldChunk chunk) {
       this.chunk = chunk;
@@ -37,12 +37,12 @@ public class ChunkUnloadEvent extends CancellableEcsEvent {
       return this.chunk;
    }
 
-   public boolean willResetKeepAlive() {
-      return this.resetKeepAlive;
-   }
-
    public void setResetKeepAlive(boolean willResetKeepAlive) {
       this.resetKeepAlive = willResetKeepAlive;
+   }
+
+   public boolean willResetKeepAlive() {
+      return this.resetKeepAlive;
    }
 }
 ```

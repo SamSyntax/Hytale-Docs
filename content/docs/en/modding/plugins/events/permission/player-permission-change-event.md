@@ -119,7 +119,7 @@ public static class PermissionsAdded extends PlayerPermissionChangeEvent {
 
     @Nonnull
     public Set<String> getAddedPermissions() {
-        return this.addedPermissions;
+        return Collections.unmodifiableSet(this.addedPermissions);
     }
 }
 ```
@@ -144,7 +144,7 @@ public static class PermissionsRemoved extends PlayerPermissionChangeEvent {
 
     @Nonnull
     public Set<String> getRemovedPermissions() {
-        return this.removedPermissions;
+        return Collections.unmodifiableSet(this.removedPermissions);
     }
 }
 ```

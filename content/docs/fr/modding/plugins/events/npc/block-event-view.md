@@ -47,11 +47,11 @@ public class BlockEventView extends EventView<BlockEventView, BlockEventType, Ev
 
 | Methode | Signature | Description |
 |---------|-----------|-------------|
-| `getUpdatedView` | `public BlockEventView getUpdatedView(...)` | Retourne la vue pour le monde actuel de l'entite |
-| `initialiseEntity` | `public void initialiseEntity(...)` | Enregistre les ecouteurs d'evenements de bloc d'un PNJ |
-| `onEvent` | `protected void onEvent(...)` | Traite et distribue un evenement de bloc (ajoute un decalage de 0.5 pour centrer sur le bloc) |
-| `onEntityDamageBlock` | `public void onEntityDamageBlock(...)` | Gere les evenements de degats de bloc |
-| `onEntityBreakBlock` | `public void onEntityBreakBlock(...)` | Gere les evenements de destruction de bloc |
+| `getUpdatedView` | `public BlockEventView getUpdatedView(@Nonnull Ref<EntityStore> ref, @Nonnull ComponentAccessor<EntityStore> componentAccessor)` | Retourne la vue pour le monde actuel de l'entite |
+| `initialiseEntity` | `public void initialiseEntity(@Nonnull Ref<EntityStore> ref, @Nonnull NPCEntity npcComponent)` | Enregistre les ecouteurs d'evenements de bloc d'un PNJ |
+| `onEvent` | `protected void onEvent(int senderTypeId, double x, double y, double z, Ref<EntityStore> initiator, Ref<EntityStore> skip, @Nonnull ComponentAccessor<EntityStore> componentAccessor, BlockEventType type)` | Traite et distribue un evenement de bloc (ajoute un decalage de 0.5 pour centrer sur le bloc) |
+| `onEntityDamageBlock` | `public void onEntityDamageBlock(@Nonnull Ref<EntityStore> ref, @Nonnull DamageBlockEvent event)` | Gere les evenements de degats de bloc |
+| `onEntityBreakBlock` | `public void onEntityBreakBlock(@Nonnull Ref<EntityStore> ref, @Nonnull BreakBlockEvent event)` | Gere les evenements de destruction de bloc |
 
 ## Caracteristiques cles
 

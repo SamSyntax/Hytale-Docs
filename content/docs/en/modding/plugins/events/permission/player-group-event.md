@@ -25,7 +25,7 @@ public class PlayerGroupEvent extends PlayerPermissionChangeEvent {
     @Nonnull
     private final String groupName;
 
-    protected PlayerGroupEvent(@Nonnull UUID playerUuid, @Nonnull String groupName) {
+    public PlayerGroupEvent(@Nonnull UUID playerUuid, @Nonnull String groupName) {
         super(playerUuid);
         this.groupName = groupName;
     }

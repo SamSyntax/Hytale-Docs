@@ -31,23 +31,34 @@ public class RemoveWorldEvent extends WorldEvent implements ICancellable {
       this.removalReason = removalReason;
    }
 
-   public boolean isCancelled() {
-      return this.cancelled;
-   }
-
-   public void setCancelled(boolean cancelled) {
-      // Conditional cancellation based on removal reason
-      this.cancelled = cancelled;
-   }
-
    @Nonnull
    public RemoveWorldEvent.RemovalReason getRemovalReason() {
       return this.removalReason;
    }
 
+   @Override
+   public boolean isCancelled() {
+      // EXCEPTIONAL removals cannot be cancelled - always returns false
+      return this.removalReason == RemoveWorldEvent.RemovalReason.EXCEPTIONAL ? false : this.cancelled;
+   }
+
+   @Override
+   public void setCancelled(boolean cancelled) {
+      this.cancelled = cancelled;
+   }
+
+   @Nonnull
+   @Override
+   public String toString() {
+      return "RemoveWorldEvent{cancelled=" + this.cancelled + "} " + super.toString();
+   }
+
    public static enum RemovalReason {
       GENERAL,
       EXCEPTIONAL;
+
+      private RemovalReason() {
+      }
    }
 }
 ```

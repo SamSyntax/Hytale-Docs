@@ -25,7 +25,7 @@ The `ChunkUnloadEvent` is fired when a chunk is about to be unloaded from memory
 public class ChunkUnloadEvent extends CancellableEcsEvent {
    @Nonnull
    private final WorldChunk chunk;
-   private boolean resetKeepAlive;
+   private boolean resetKeepAlive = true;
 
    public ChunkUnloadEvent(@Nonnull WorldChunk chunk) {
       this.chunk = chunk;
@@ -36,12 +36,12 @@ public class ChunkUnloadEvent extends CancellableEcsEvent {
       return this.chunk;
    }
 
-   public boolean willResetKeepAlive() {
-      return this.resetKeepAlive;
-   }
-
    public void setResetKeepAlive(boolean willResetKeepAlive) {
       this.resetKeepAlive = willResetKeepAlive;
+   }
+
+   public boolean willResetKeepAlive() {
+      return this.resetKeepAlive;
    }
 }
 ```

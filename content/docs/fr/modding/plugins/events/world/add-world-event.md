@@ -23,16 +23,24 @@ L'événement `AddWorldEvent` est déclenché lorsqu'un nouveau monde est en cou
 
 ```java
 public class AddWorldEvent extends WorldEvent implements ICancellable {
-   private boolean cancelled;
+   private boolean cancelled = false;
 
    public AddWorldEvent(@Nonnull World world) {
       super(world);
    }
 
+   @Nonnull
+   @Override
+   public String toString() {
+      return "AddWorldEvent{cancelled=" + this.cancelled + "} " + super.toString();
+   }
+
+   @Override
    public boolean isCancelled() {
       return this.cancelled;
    }
 
+   @Override
    public void setCancelled(boolean cancelled) {
       this.cancelled = cancelled;
    }

@@ -35,6 +35,7 @@ public class LoadedNPCEvent implements IEvent<Void> {
 | Methode | Signature | Description |
 |---------|-----------|-------------|
 | `getBuilderInfo` | `public BuilderInfo getBuilderInfo()` | Retourne les informations de construction contenant les donnees de definition du PNJ |
+| `toString` | `@Nonnull public String toString()` | Retourne une representation en chaine de l'evenement avec les informations du builder |
 
 ## Validation
 
