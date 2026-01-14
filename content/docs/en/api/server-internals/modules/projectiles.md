@@ -436,7 +436,6 @@ public class ProjectilePlugin extends JavaPlugin {
       PlayerRef playerRef = event.getPlayerRef();
       World world = event.getWorld();
       Store<EntityStore> store = world.getEntityStore().getStore();
-      CommandBuffer<EntityStore> commandBuffer = store.getCommandBuffer();
 
       // Get player look direction
       TransformComponent transform = store.getComponent(
@@ -456,16 +455,19 @@ public class ProjectilePlugin extends JavaPlugin {
          ProjectileConfig config = ProjectileConfig.getAssetMap().getAsset("my_projectile");
 
          if (config != null) {
-            // Spawn the projectile
-            Ref<EntityStore> projectileRef = ProjectileModule.get().spawnProjectile(
-               playerRef.getReference(),
-               commandBuffer,
-               config,
-               position,
-               direction
-            );
-
-            getLogger().info("Spawned projectile: " + projectileRef);
+            // Spawn the projectile using Store.forEach which provides CommandBuffer
+            store.forEach(PlayerSystem.getSystemType(), (ref, buffer) -> {
+               if (ref.equals(playerRef.getReference())) {
+                  Ref<EntityStore> projectileRef = ProjectileModule.get().spawnProjectile(
+                     ref,
+                     buffer,
+                     config,
+                     position,
+                     direction
+                  );
+                  getLogger().info("Spawned projectile: " + projectileRef);
+               }
+            });
          }
       }
    }

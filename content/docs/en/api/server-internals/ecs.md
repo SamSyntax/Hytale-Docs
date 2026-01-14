@@ -1056,6 +1056,33 @@ holder.addComponent(registry.getNonSerializedComponentType(), NonSerialized.get(
 
 The `CommandBuffer` allows deferred (thread-safe) modifications to the Store.
 
+### How to Obtain a CommandBuffer
+
+**Important:** There is no `store.getCommandBuffer()` method. CommandBuffer is obtained through:
+
+1. **In ECS Systems** - passed as parameter to tick methods:
+```java
+public void tick(Ref<EntityStore> ref, float dt, CommandBuffer<EntityStore> buffer) {
+    // buffer is provided by the system
+}
+```
+
+2. **In InteractionContext** - when handling interactions:
+```java
+public void execute(InteractionContext context) {
+    CommandBuffer<EntityStore> buffer = context.getCommandBuffer();
+}
+```
+
+3. **Via Store.forEach** - when iterating entities:
+```java
+store.forEach(MySystem.getSystemType(), (ref, buffer) -> {
+    // buffer is provided per-entity
+});
+```
+
+### Class Definition
+
 ```java
 public class CommandBuffer<ECS_TYPE> implements ComponentAccessor<ECS_TYPE> {
     private final Store<ECS_TYPE> store;
