@@ -12,8 +12,8 @@ This section documents the Hytale APIs available for developers.
 
 ## Server Internal Documentation
 
-:::tip New - v1 Documentation
-A first version of the server internal documentation is now available, based on decompiled source code analysis.
+:::tip New - v2 Documentation
+Version 2 of the server internal documentation is now available, featuring multi-agent verified documentation for improved accuracy and completeness.
 :::
 
 The documentation covers the internal systems of the Hytale server:

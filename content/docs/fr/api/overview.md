@@ -12,8 +12,8 @@ Cette section documente les APIs Hytale disponibles pour les developpeurs.
 
 ## Documentation Interne du Serveur
 
-:::tip Nouveau - Documentation v1
-Une premiere version de la documentation interne du serveur est maintenant disponible, basee sur l'analyse du code source decompile.
+:::tip Nouveau - Documentation v2
+La version 2 de la documentation interne du serveur est maintenant disponible, avec une documentation verifiee par multi-agents pour une precision et une exhaustivite ameliorees.
 :::
 
 La documentation couvre les systemes internes du serveur Hytale :

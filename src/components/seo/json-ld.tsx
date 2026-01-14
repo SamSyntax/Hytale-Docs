@@ -1,5 +1,3 @@
-"use client";
-
 interface OrganizationJsonLdProps {
   name: string;
   url: string;
@@ -109,18 +107,18 @@ export function ArticleJsonLd({
   title,
   description,
   url,
-  datePublished = new Date().toISOString(),
-  dateModified = new Date().toISOString(),
+  datePublished,
+  dateModified,
   authorName = "HytaleDocs Community",
 }: ArticleJsonLdProps) {
-  const jsonLd = {
+  const jsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     headline: title,
     description,
     url,
-    datePublished,
-    dateModified,
+    ...(datePublished && { datePublished }),
+    ...(dateModified && { dateModified }),
     author: {
       "@type": "Organization",
       name: authorName,

@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { Folder, FolderOpen, FileText, FileCode, FileJson, File, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -12,8 +13,12 @@ interface FileTreeItem {
 }
 
 // Parse a text-based file tree structure
-function parseFileTree(content: string): FileTreeItem[] {
-  const lines = content.trim().split("\n");
+function parseFileTree(content: string | React.ReactNode): FileTreeItem[] {
+  // Handle non-string content
+  const text = typeof content === "string" ? content : String(content || "");
+  if (!text.trim()) return [];
+
+  const lines = text.trim().split("\n");
   const root: FileTreeItem[] = [];
   const stack: { item: FileTreeItem; indent: number }[] = [];
 
@@ -174,11 +179,15 @@ function FileTreeNode({ item, level, isLast, parentLines }: FileTreeNodeProps) {
 }
 
 interface FileTreeProps {
-  children: string;
+  children: React.ReactNode;
 }
 
 export function FileTree({ children }: FileTreeProps) {
   const items = parseFileTree(children);
+
+  if (items.length === 0) {
+    return null;
+  }
 
   return (
     <div className="my-6 rounded-xl border-2 border-border bg-card p-4 font-mono text-sm overflow-x-auto">

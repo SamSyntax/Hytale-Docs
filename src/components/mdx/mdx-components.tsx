@@ -1,4 +1,5 @@
 import type { MDXComponents } from "mdx/types";
+import * as React from "react";
 import Link from "next/link";
 import { InfoBox } from "./info-box";
 import { FeatureCard } from "./feature-card";
@@ -10,17 +11,49 @@ import { Mermaid } from "./mermaid";
 import { FileTree } from "./file-tree";
 import { cn } from "@/lib/utils";
 
+// Extract text content from React children (handles nested elements)
+function extractTextFromChildren(children: React.ReactNode): string {
+  if (children === null || children === undefined) {
+    return "";
+  }
+  if (typeof children === "string") {
+    return children;
+  }
+  if (typeof children === "number") {
+    return String(children);
+  }
+  if (Array.isArray(children)) {
+    return children.map(extractTextFromChildren).join("");
+  }
+  // Check if it's a React element with props
+  if (typeof children === "object" && "props" in children) {
+    const element = children as React.ReactElement;
+    return extractTextFromChildren(element.props?.children);
+  }
+  return "";
+}
+
 // Detect if code content looks like a file tree
-function isFileTreeContent(code: string): boolean {
+function isFileTreeContent(code: unknown): boolean {
+  if (typeof code !== "string") return false;
+
   const lines = code.trim().split("\n");
   if (lines.length < 2) return false;
 
-  // Check if it contains tree-like characters or folder structure patterns
-  const hasTreeChars = lines.some(line => /[├└│─]/.test(line));
+  // Check if it's ASCII art (box drawing) - NOT a file tree
+  // ASCII art uses corner characters like ┌┐└┘ and horizontal borders
+  const hasBoxCorners = lines.some(line => /[┌┐┘┬┴┼]/.test(line));
+  const hasHorizontalBorder = lines.some(line => /[─]{3,}/.test(line)); // 3+ horizontal lines = border
+  if (hasBoxCorners || hasHorizontalBorder) {
+    return false; // This is ASCII art, not a file tree
+  }
+
+  // File tree patterns: lines like "├── filename" or "└── folder/"
+  const hasFileTreePattern = lines.some(line => /^[\s│]*[├└]──\s+\S/.test(line));
   const hasFolderPatterns = lines.some(line => /^\s*[a-zA-Z0-9_-]+\/\s*$/.test(line.replace(/[├└│─\s]/g, "")));
   const startsWithFolder = /^[a-zA-Z0-9_-]+\/$/.test(lines[0].trim());
 
-  return hasTreeChars || (hasFolderPatterns && startsWithFolder);
+  return hasFileTreePattern || (hasFolderPatterns && startsWithFolder);
 }
 
 // Map Docusaurus CSS classes to Tailwind
@@ -157,12 +190,14 @@ export const mdxComponents: MDXComponents = {
     // Check if this is a mermaid code block
     const childProps = children?.props;
     const childClassName = childProps?.className || "";
-    const code = childProps?.children || "";
 
-    // Handle mermaid diagrams
+    // Handle mermaid diagrams - pass raw children, Mermaid will extract text
     if (childClassName.includes("language-mermaid")) {
-      return <Mermaid chart={code} />;
+      return <Mermaid chart={childProps?.children} />;
     }
+
+    // Extract text content for other special handlers
+    const code = extractTextFromChildren(childProps?.children);
 
     // Handle explicit file tree language
     if (childClassName.includes("language-filetree") || childClassName.includes("language-tree")) {
@@ -170,7 +205,7 @@ export const mdxComponents: MDXComponents = {
     }
 
     // Auto-detect file tree structure (for unlabeled code blocks)
-    if (!childClassName && typeof code === "string" && isFileTreeContent(code)) {
+    if (!childClassName && code && isFileTreeContent(code)) {
       return <FileTree>{code}</FileTree>;
     }
 

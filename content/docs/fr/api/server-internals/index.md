@@ -3,24 +3,40 @@ id: server-internals
 title: Documentation Interne du Serveur Hytale
 sidebar_label: Internals Serveur
 sidebar_position: 10
-description: Documentation technique v1 du serveur Hytale - Architecture, API, Packets et Systemes internes
+description: Documentation technique v2 du serveur Hytale - Architecture, API, Packets et Systemes internes
 ---
 
 # Documentation Interne du Serveur Hytale
 
 <div className="version-badge">
-  <span className="badge badge--warning">Version 1.0 - Documentation Experimentale</span>
+  <span className="badge badge--primary">Version 2.0 - Documentation Verifiee</span>
 </div>
 
-:::caution Documentation v1 - En cours de developpement
-Cette documentation est une **premiere version** generee par analyse du code source decompile du serveur Hytale. Elle peut contenir des inexactitudes et sera mise a jour regulierement.
+:::info Documentation v2 - Vérifiée par Multi-Agent
 
-**Derniere mise a jour :** 13 janvier 2026
+Cette documentation a été générée par un système d'analyse multi-agent qui :
+
+- Extrait les données directement du code source décompilé du serveur
+- Vérifie toutes les informations avec des références aux fichiers sources et numéros de ligne
+- Inclut de vrais extraits de code de la base de code réelle
+- Utilise des mesures anti-hallucination pour éviter la confusion avec les patterns Minecraft/Bukkit
+
 :::
 
 ## Qu'est-ce que cette documentation ?
 
 Cette documentation revele comment le serveur Hytale fonctionne **sous le capot**. Alors que les outils de modding officiels d'Hytale fournissent une interface conviviale pour creer du contenu, comprendre les systemes internes du serveur vous donne le pouvoir de creer des modifications plus sophistiquees et performantes.
+
+## Nouveautés de la v2
+
+La version 2.0 de cette documentation apporte des améliorations majeures :
+
+- **Système d'événements précis** : 50+ events documentés avec les vraies interfaces (IEvent, IAsyncEvent, ICancellable)
+- **Système de commandes complet** : Hiérarchie AbstractCommand, types d'arguments, méthodes d'enregistrement
+- **Protocole réseau** : Protocole QUIC/UDP, 268 paquets, documentation du flux de connexion
+- **API Plugin** : Méthodes de cycle de vie précises (preLoad, setup, start, shutdown), registres
+- **Références sources** : Chaque classe et méthode inclut les chemins des fichiers sources et numéros de ligne
+- **Exemples de code** : Code réel de BlockTickPlugin, BlockSpawnerPlugin et autres plugins builtin
 
 ### A qui s'adresse cette documentation ?
 

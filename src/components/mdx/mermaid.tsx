@@ -1,15 +1,28 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import mermaid from "mermaid";
+
+// Extract text from React children recursively
+function getTextContent(node: ReactNode): string {
+  if (node === null || node === undefined) return "";
+  if (typeof node === "string") return node;
+  if (typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(getTextContent).join("");
+  if (typeof node === "object" && "props" in node) {
+    return getTextContent((node as any).props?.children);
+  }
+  return "";
+}
 
 // Initialize mermaid with Hytale theme
 mermaid.initialize({
   startOnLoad: false,
   theme: "base",
+  securityLevel: "loose",
   themeVariables: {
     // Background colors
-    background: "#1e2b3d",
+    background: "transparent",
     primaryColor: "#253649",
     secondaryColor: "#1a2332",
     tertiaryColor: "#2d3f54",
@@ -19,10 +32,11 @@ mermaid.initialize({
     secondaryBorderColor: "#4a90a8",
     tertiaryBorderColor: "#3d5168",
 
-    // Text colors
+    // Text colors - ensure visibility
     primaryTextColor: "#e2e8f0",
     secondaryTextColor: "#94a3b8",
     tertiaryTextColor: "#64748b",
+    textColor: "#e2e8f0",
 
     // Line colors
     lineColor: "#4a90a8",
@@ -40,6 +54,7 @@ mermaid.initialize({
     // Label colors
     labelBackground: "#1a2332",
     labelTextColor: "#e2e8f0",
+    edgeLabelBackground: "#1a2332",
 
     // Arrow
     arrowheadColor: "#e8a849",
@@ -50,10 +65,11 @@ mermaid.initialize({
   },
   flowchart: {
     curve: "basis",
-    padding: 20,
-    nodeSpacing: 50,
-    rankSpacing: 50,
-    htmlLabels: true,
+    padding: 30,
+    nodeSpacing: 60,
+    rankSpacing: 60,
+    htmlLabels: false,
+    useMaxWidth: false,
   },
   sequence: {
     actorMargin: 50,
@@ -61,11 +77,12 @@ mermaid.initialize({
     boxTextMargin: 5,
     noteMargin: 10,
     messageMargin: 35,
+    useMaxWidth: false,
   },
 });
 
 interface MermaidProps {
-  chart: string;
+  chart: ReactNode;
 }
 
 export function Mermaid({ chart }: MermaidProps) {
@@ -73,41 +90,45 @@ export function Mermaid({ chart }: MermaidProps) {
   const [svg, setSvg] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
+  // Extract text content from React children (handles syntax highlighted spans)
+  const chartString = typeof chart === "string" ? chart : getTextContent(chart);
+
   useEffect(() => {
     const renderChart = async () => {
-      if (!containerRef.current) return;
+      if (!containerRef.current || !chartString.trim()) return;
 
       try {
         // Generate unique ID for this chart
         const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
 
         // Render the chart
-        const { svg } = await mermaid.render(id, chart);
+        const { svg } = await mermaid.render(id, chartString);
         setSvg(svg);
         setError(null);
       } catch (err) {
         console.error("Mermaid rendering error:", err);
+        console.error("Chart content:", chartString);
         setError("Failed to render diagram");
       }
     };
 
     renderChart();
-  }, [chart]);
+  }, [chartString]);
 
   if (error) {
     return (
       <div className="my-6 rounded-xl border-2 border-red-500/50 bg-red-500/10 p-4 text-red-400">
         <p className="text-sm font-medium">Diagram Error</p>
-        <pre className="mt-2 text-xs opacity-75">{chart}</pre>
+        <pre className="mt-2 text-xs opacity-75 whitespace-pre-wrap">{chartString}</pre>
       </div>
     );
   }
 
   return (
-    <div className="my-8 flex justify-center">
+    <div className="my-8 w-full">
       <div
         ref={containerRef}
-        className="mermaid-container rounded-xl border-2 border-border bg-card p-6 overflow-x-auto"
+        className="mermaid-container rounded-xl border-2 border-border bg-card/50 p-8 overflow-x-auto flex justify-center"
         dangerouslySetInnerHTML={{ __html: svg }}
       />
     </div>

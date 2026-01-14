@@ -1,0 +1,92 @@
+---
+id: player-connect-event
+title: PlayerConnectEvent
+sidebar_label: PlayerConnectEvent
+---
+
+# PlayerConnectEvent
+
+Déclenché lorsqu'un joueur se connecte avec succès au serveur et est en cours d'initialisation. Cet événement se produit apres que le joueur a termine la phase de configuration (PlayerSetupConnectEvent) et est maintenant entierement connecte.
+
+## Informations sur l'événement
+
+| Propriété | Valeur |
+|-----------|--------|
+| **Nom complet de la classe** | `com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent` |
+| **Classe parente** | `IEvent<Void>` |
+| **Annulable** | Non |
+| **Asynchrone** | Non |
+| **Fichier source** | `decompiled/com/hypixel/hytale/server/core/event/events/player/PlayerConnectEvent.java:12` |
+
+## Declaration
+
+```java
+public class PlayerConnectEvent implements IEvent<Void> {
+   private final Holder<EntityStore> holder;
+   private final PlayerRef playerRef;
+   @Nullable
+   private World world;
+```
+
+## Champs
+
+| Champ | Type | Accesseur | Description |
+|-------|------|-----------|-------------|
+| `holder` | `Holder<EntityStore>` | `getHolder()` | Le conteneur d'entite contenant le magasin d'entite du joueur |
+| `playerRef` | `PlayerRef` | `getPlayerRef()` | Référence vers le joueur qui se connecte |
+| `world` | `World` | `getWorld()` | Le monde dans lequel le joueur va apparaitre (nullable, peut etre défini) |
+
+## Méthodes
+
+| Méthode | Signature | Description |
+|---------|-----------|-------------|
+| `getHolder` | `public Holder<EntityStore> getHolder()` | Retourne le conteneur d'entite pour le joueur qui se connecte |
+| `getPlayerRef` | `public PlayerRef getPlayerRef()` | Retourne la reference du joueur qui se connecte |
+| `getPlayer` | `public Player getPlayer()` | **Obsolete** - Retourne l'objet Player directement |
+| `getWorld` | `public World getWorld()` | Retourne le monde dans lequel le joueur va apparaitre |
+| `setWorld` | `public void setWorld(@Nullable World world)` | Definit le monde ou le joueur va apparaitre |
+
+## Exemple d'utilisation
+
+```java
+// Enregistrer un handler pour quand les joueurs se connectent
+eventBus.register(PlayerConnectEvent.class, event -> {
+    PlayerRef player = event.getPlayerRef();
+
+    // Journaliser la connexion
+    logger.info("Player connected: " + player.getUsername());
+
+    // Optionnellement définir un monde d'apparition spécifique
+    World lobbyWorld = worldManager.getWorld("lobby");
+    if (lobbyWorld != null) {
+        event.setWorld(lobbyWorld);
+    }
+});
+
+// Enregistrer avec une priorite haute pour s'executer avant les autres handlers
+eventBus.register(EventPriority.FIRST, PlayerConnectEvent.class, event -> {
+    // Traiter la connexion en premier
+    Holder<EntityStore> holder = event.getHolder();
+    // Initialiser les donnees du joueur
+});
+```
+
+## Cas d'utilisation courants
+
+- Accueillir les joueurs avec un message personnalise
+- Configurer les donnees et l'etat initial du joueur
+- Rediriger les joueurs vers des mondes spécifiques a la connexion
+- Initialiser des plugins ou fonctionnalites spécifiques au joueur
+- Journaliser les connexions des joueurs pour les analyses
+- Charger les donnees sauvegardees du joueur depuis le stockage
+
+## Événements lies
+
+- [PlayerSetupConnectEvent](./player-setup-connect-event.md) - Déclenché plus tot pendant la configuration de connexion, avant cet événement
+- [PlayerDisconnectEvent](./player-disconnect-event.md) - Déclenché quand un joueur se deconnecte
+- [PlayerReadyEvent](./player-ready-event.md) - Déclenché quand le client du joueur est entierement pret
+- [AddPlayerToWorldEvent](./add-player-to-world-event.md) - Déclenché quand le joueur est ajoute a un monde
+
+## Référence source
+
+`decompiled/com/hypixel/hytale/server/core/event/events/player/PlayerConnectEvent.java:12`

@@ -8,8 +8,8 @@ description: Documentation complete du systeme d'evenements EventBus pour le ser
 
 # Systeme d'Evenements
 
-:::caution Documentation v1
-Cette documentation est une premiere version basee sur l'analyse du code decompile. Elle sera mise a jour regulierement.
+:::info Documentation v2 - Vérifiée
+Cette documentation a été vérifiée par rapport au code source décompilé du serveur en utilisant une analyse multi-agent. Toutes les informations incluent des références aux fichiers sources.
 :::
 
 ## Qu'est-ce qu'un systeme d'evenements ?

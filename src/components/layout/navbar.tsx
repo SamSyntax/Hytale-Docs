@@ -4,7 +4,6 @@ import * as React from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/routing";
 import {
-  Book,
   Gamepad2,
   Server,
   Code,
@@ -45,11 +44,6 @@ export function Navbar() {
       title: t("servers"),
       href: "/docs/servers/overview",
       icon: Server,
-    },
-    {
-      title: t("api"),
-      href: "/docs/api/overview",
-      icon: Book,
     },
     {
       title: t("tools"),

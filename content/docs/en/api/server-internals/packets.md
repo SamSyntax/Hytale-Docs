@@ -8,8 +8,8 @@ description: Complete documentation of Hytale protocol network packets (200+ pac
 
 # Hytale Network Packets Documentation
 
-:::caution v1 Documentation
-This documentation is a first version based on decompiled code analysis. It will be updated regularly.
+:::info v2 Documentation - Verified
+This documentation has been verified against decompiled server source code using multi-agent analysis. All information includes source file references.
 :::
 
 ## What are Network Packets?
@@ -2035,7 +2035,7 @@ Laser pointer.
 
 ### Compression
 
-Packets marked as compressed use a compression algorithm (likely LZ4 or similar) to reduce bandwidth. Compression is applied after serialization.
+Packets marked as compressed use **Zstd (Zstandard)** compression to reduce bandwidth. Compression is applied after serialization.
 
 ### Validation
 

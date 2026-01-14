@@ -8,8 +8,8 @@ description: Complete documentation of the Java plugin system for the Hytale ser
 
 # Plugin System
 
-:::caution v1 Documentation
-This documentation is a first version based on decompiled code analysis. It will be updated regularly.
+:::info v2 Documentation - Verified
+This documentation has been verified against decompiled server source code using multi-agent analysis. All information includes source file references.
 :::
 
 ## What is a Plugin?

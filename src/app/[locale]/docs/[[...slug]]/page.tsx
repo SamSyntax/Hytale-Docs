@@ -5,6 +5,7 @@ import { MDXRemote } from "next-mdx-remote/rsc";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import remarkGfm from "remark-gfm";
 import rehypeSlug from "rehype-slug";
+import rehypePrismPlus from "rehype-prism-plus";
 import { getTranslations } from "next-intl/server";
 import { getDocBySlug, getAllDocSlugs, getDocNavigation } from "@/lib/docs";
 import { mdxComponents } from "@/components/mdx";
@@ -153,7 +154,7 @@ export default async function DocPage({ params }: DocPageProps) {
           options={{
             mdxOptions: {
               remarkPlugins: [remarkGfm, remarkAdmonitions],
-              rehypePlugins: [rehypeSlug],
+              rehypePlugins: [rehypeSlug, [rehypePrismPlus, { ignoreMissing: true }]],
             },
           }}
         />

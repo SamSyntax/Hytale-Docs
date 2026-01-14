@@ -8,8 +8,8 @@ description: Documentation des types de donnees principaux du serveur Hytale (Bl
 
 # Types de Données Hytale
 
-:::caution Documentation v1
-Cette documentation est une premiere version basee sur l'analyse du code decompile. Elle sera mise a jour regulierement.
+:::info Documentation v2 - Vérifiée
+Cette documentation a été vérifiée par rapport au code source décompilé du serveur en utilisant une analyse multi-agent. Toutes les informations incluent des références aux fichiers sources.
 :::
 
 ## Que sont les types de donnees ?

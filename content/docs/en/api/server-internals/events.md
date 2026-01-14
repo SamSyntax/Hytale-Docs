@@ -8,8 +8,8 @@ description: Complete documentation of the EventBus system for the Hytale server
 
 # Event System
 
-:::caution v1 Documentation
-This documentation is a first version based on decompiled code analysis. It will be updated regularly.
+:::info v2 Documentation - Verified
+This documentation has been verified against decompiled server source code using multi-agent analysis. All information includes source file references.
 :::
 
 ## What is an Event System?

@@ -110,7 +110,89 @@ export const sidebarConfig: SidebarItem[] = [
           { titleKey: "overview", href: "/docs/modding/plugins/overview" },
           { titleKey: "projectSetup", href: "/docs/modding/plugins/project-setup" },
           { titleKey: "pluginLifecycle", href: "/docs/modding/plugins/plugin-lifecycle" },
-          { titleKey: "events", href: "/docs/modding/plugins/events" },
+          {
+            titleKey: "events",
+            items: [
+              { titleKey: "eventsOverview", href: "/docs/modding/plugins/events/overview" },
+              {
+                titleKey: "playerEvents",
+                items: [
+                  { titleKey: "playerConnectEvent", href: "/docs/modding/plugins/events/player/player-connect-event" },
+                  { titleKey: "playerDisconnectEvent", href: "/docs/modding/plugins/events/player/player-disconnect-event" },
+                  { titleKey: "playerChatEvent", href: "/docs/modding/plugins/events/player/player-chat-event" },
+                  { titleKey: "playerSetupConnectEvent", href: "/docs/modding/plugins/events/player/player-setup-connect-event" },
+                  { titleKey: "playerSetupDisconnectEvent", href: "/docs/modding/plugins/events/player/player-setup-disconnect-event" },
+                  { titleKey: "playerReadyEvent", href: "/docs/modding/plugins/events/player/player-ready-event" },
+                  { titleKey: "playerMouseButtonEvent", href: "/docs/modding/plugins/events/player/player-mouse-button-event" },
+                  { titleKey: "playerMouseMotionEvent", href: "/docs/modding/plugins/events/player/player-mouse-motion-event" },
+                  { titleKey: "addPlayerToWorldEvent", href: "/docs/modding/plugins/events/player/add-player-to-world-event" },
+                  { titleKey: "drainPlayerFromWorldEvent", href: "/docs/modding/plugins/events/player/drain-player-from-world-event" },
+                  { titleKey: "playerInteractEvent", href: "/docs/modding/plugins/events/player/player-interact-event" },
+                  { titleKey: "playerCraftEvent", href: "/docs/modding/plugins/events/player/player-craft-event" },
+                  { titleKey: "changeGameModeEvent", href: "/docs/modding/plugins/events/player/change-game-mode-event" },
+                ],
+              },
+              {
+                titleKey: "blockEvents",
+                items: [
+                  { titleKey: "breakBlockEvent", href: "/docs/modding/plugins/events/block/break-block-event" },
+                  { titleKey: "placeBlockEvent", href: "/docs/modding/plugins/events/block/place-block-event" },
+                  { titleKey: "damageBlockEvent", href: "/docs/modding/plugins/events/block/damage-block-event" },
+                  { titleKey: "useBlockEvent", href: "/docs/modding/plugins/events/block/use-block-event" },
+                ],
+              },
+              {
+                titleKey: "worldEvents",
+                items: [
+                  { titleKey: "addWorldEvent", href: "/docs/modding/plugins/events/world/add-world-event" },
+                  { titleKey: "removeWorldEvent", href: "/docs/modding/plugins/events/world/remove-world-event" },
+                  { titleKey: "startWorldEvent", href: "/docs/modding/plugins/events/world/start-world-event" },
+                  { titleKey: "allWorldsLoadedEvent", href: "/docs/modding/plugins/events/world/all-worlds-loaded-event" },
+                  { titleKey: "moonPhaseChangeEvent", href: "/docs/modding/plugins/events/world/moon-phase-change-event" },
+                ],
+              },
+              {
+                titleKey: "chunkEvents",
+                items: [
+                  { titleKey: "chunkPreLoadProcessEvent", href: "/docs/modding/plugins/events/chunk/chunk-pre-load-process-event" },
+                  { titleKey: "chunkSaveEvent", href: "/docs/modding/plugins/events/chunk/chunk-save-event" },
+                  { titleKey: "chunkUnloadEvent", href: "/docs/modding/plugins/events/chunk/chunk-unload-event" },
+                ],
+              },
+              {
+                titleKey: "serverEvents",
+                items: [
+                  { titleKey: "bootEvent", href: "/docs/modding/plugins/events/server/boot-event" },
+                  { titleKey: "shutdownEvent", href: "/docs/modding/plugins/events/server/shutdown-event" },
+                  { titleKey: "pluginSetupEvent", href: "/docs/modding/plugins/events/server/plugin-setup-event" },
+                ],
+              },
+              {
+                titleKey: "entityEvents",
+                items: [
+                  { titleKey: "entityRemoveEvent", href: "/docs/modding/plugins/events/entity/entity-remove-event" },
+                  { titleKey: "livingEntityInventoryChangeEvent", href: "/docs/modding/plugins/events/entity/living-entity-inventory-change-event" },
+                ],
+              },
+              {
+                titleKey: "permissionEvents",
+                items: [
+                  { titleKey: "playerPermissionChangeEvent", href: "/docs/modding/plugins/events/permission/player-permission-change-event" },
+                  { titleKey: "groupPermissionChangeEvent", href: "/docs/modding/plugins/events/permission/group-permission-change-event" },
+                  { titleKey: "playerGroupEvent", href: "/docs/modding/plugins/events/permission/player-group-event" },
+                ],
+              },
+              {
+                titleKey: "inventoryEvents",
+                items: [
+                  { titleKey: "dropItemEvent", href: "/docs/modding/plugins/events/inventory/drop-item-event" },
+                  { titleKey: "switchActiveSlotEvent", href: "/docs/modding/plugins/events/inventory/switch-active-slot-event" },
+                  { titleKey: "interactivelyPickupItemEvent", href: "/docs/modding/plugins/events/inventory/interactively-pickup-item-event" },
+                  { titleKey: "craftRecipeEvent", href: "/docs/modding/plugins/events/inventory/craft-recipe-event" },
+                ],
+              },
+            ],
+          },
           { titleKey: "commands", href: "/docs/modding/plugins/commands" },
         ],
       },
@@ -123,43 +205,6 @@ export const sidebarConfig: SidebarItem[] = [
           { titleKey: "animations", href: "/docs/modding/art-assets/animations" },
         ],
       },
-    ],
-  },
-  {
-    titleKey: "servers",
-    items: [
-      { titleKey: "overview", href: "/docs/servers/overview" },
-      {
-        titleKey: "setup",
-        items: [
-          { titleKey: "requirements", href: "/docs/servers/setup/requirements" },
-          { titleKey: "installation", href: "/docs/servers/setup/installation" },
-          { titleKey: "configuration", href: "/docs/servers/setup/configuration" },
-        ],
-      },
-      {
-        titleKey: "administration",
-        items: [
-          { titleKey: "commands", href: "/docs/servers/administration/commands" },
-          { titleKey: "permissions", href: "/docs/servers/administration/permissions" },
-          { titleKey: "whitelist", href: "/docs/servers/administration/whitelist" },
-        ],
-      },
-      {
-        titleKey: "hosting",
-        items: [
-          { titleKey: "selfHosting", href: "/docs/servers/hosting/self-hosting" },
-          { titleKey: "budgetHosting", href: "/docs/servers/budget-hosting" },
-          { titleKey: "docker", href: "/docs/servers/hosting/docker" },
-          { titleKey: "cloudProviders", href: "/docs/servers/hosting/providers" },
-        ],
-      },
-    ],
-  },
-  {
-    titleKey: "apiReference",
-    items: [
-      { titleKey: "overview", href: "/docs/api/overview" },
       {
         titleKey: "serverInternals",
         items: [
@@ -184,6 +229,38 @@ export const sidebarConfig: SidebarItem[] = [
         items: [
           { titleKey: "javascript", href: "/docs/api/sdks/javascript" },
           { titleKey: "php", href: "/docs/api/sdks/php" },
+        ],
+      },
+    ],
+  },
+  {
+    titleKey: "servers",
+    items: [
+      { titleKey: "overview", href: "/docs/servers/overview" },
+      { titleKey: "networkProtocol", href: "/docs/servers/network-protocol" },
+      {
+        titleKey: "setup",
+        items: [
+          { titleKey: "requirements", href: "/docs/servers/setup/requirements" },
+          { titleKey: "installation", href: "/docs/servers/setup/installation" },
+          { titleKey: "configuration", href: "/docs/servers/setup/configuration" },
+        ],
+      },
+      {
+        titleKey: "administration",
+        items: [
+          { titleKey: "commands", href: "/docs/servers/administration/commands" },
+          { titleKey: "permissions", href: "/docs/servers/administration/permissions" },
+          { titleKey: "whitelist", href: "/docs/servers/administration/whitelist" },
+        ],
+      },
+      {
+        titleKey: "hosting",
+        items: [
+          { titleKey: "selfHosting", href: "/docs/servers/hosting/self-hosting" },
+          { titleKey: "budgetHosting", href: "/docs/servers/budget-hosting" },
+          { titleKey: "docker", href: "/docs/servers/hosting/docker" },
+          { titleKey: "cloudProviders", href: "/docs/servers/hosting/providers" },
         ],
       },
     ],
@@ -231,7 +308,7 @@ export const sidebarConfig: SidebarItem[] = [
       { titleKey: "communityServers", href: "/docs/community/servers" },
       { titleKey: "contentCreators", href: "/docs/community/content-creators" },
       { titleKey: "buildsGallery", href: "/docs/community/builds-gallery" },
-      { titleKey: "events", href: "/docs/community/events" },
+      { titleKey: "eventsCalendar", href: "/docs/community/events" },
     ],
   },
 ];

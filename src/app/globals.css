@@ -420,11 +420,39 @@
 /* Mermaid diagrams */
 .mermaid-container {
   min-width: fit-content;
+  display: flex;
+  justify-content: center;
 }
 
 .mermaid-container svg {
-  max-width: 100%;
-  height: auto;
+  max-width: none !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.mermaid-container svg .node rect,
+.mermaid-container svg .node circle,
+.mermaid-container svg .node ellipse,
+.mermaid-container svg .node polygon,
+.mermaid-container svg .node path {
+  stroke-width: 2px !important;
+}
+
+.mermaid-container svg .cluster rect {
+  rx: 8px !important;
+  ry: 8px !important;
+}
+
+.mermaid-container svg .label {
+  font-family: ui-sans-serif, system-ui, sans-serif !important;
+}
+
+.mermaid-container svg .edgeLabel {
+  background-color: transparent !important;
+}
+
+.mermaid-container svg .flowchart-link {
+  stroke-width: 2px !important;
 }
 
 /* Mermaid node styling overrides - Dark mode */
@@ -528,4 +556,334 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+/* ============================================
+   Prism Syntax Highlighting - Hytale Theme
+   ============================================ */
+
+/* Code block container */
+pre[class*="language-"] {
+  background: var(--card) !important;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  tab-size: 2;
+}
+
+code[class*="language-"] {
+  background: transparent !important;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  text-shadow: none;
+}
+
+/* Line numbers */
+.code-line {
+  display: block;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  margin-left: -1rem;
+  margin-right: -1rem;
+  border-left: 3px solid transparent;
+}
+
+.code-line.line-number::before {
+  content: attr(line);
+  display: inline-block;
+  width: 2.5rem;
+  margin-right: 1rem;
+  text-align: right;
+  color: var(--muted-foreground);
+  opacity: 0.5;
+}
+
+/* Highlighted lines */
+.code-line.highlight-line {
+  background: rgba(232, 168, 73, 0.1);
+  border-left-color: var(--primary);
+}
+
+/* ---- Light Mode Tokens ---- */
+:root:not(.dark) {
+  /* Comments */
+  .token.comment,
+  .token.prolog,
+  .token.doctype,
+  .token.cdata {
+    color: #6a737d;
+    font-style: italic;
+  }
+
+  /* Punctuation */
+  .token.punctuation {
+    color: #24292e;
+  }
+
+  /* Strings */
+  .token.string,
+  .token.attr-value {
+    color: #22863a;
+  }
+
+  /* Keywords */
+  .token.keyword,
+  .token.selector,
+  .token.important,
+  .token.atrule {
+    color: #d73a49;
+  }
+
+  /* Operators & Entities */
+  .token.operator,
+  .token.entity,
+  .token.url {
+    color: #005cc5;
+  }
+
+  /* Functions */
+  .token.function {
+    color: #6f42c1;
+  }
+
+  /* Classes & Types */
+  .token.class-name,
+  .token.type,
+  .token.builtin {
+    color: #e36209;
+  }
+
+  /* Variables & Properties */
+  .token.variable,
+  .token.property {
+    color: #005cc5;
+  }
+
+  /* Numbers & Booleans */
+  .token.number,
+  .token.boolean {
+    color: #005cc5;
+  }
+
+  /* Tags */
+  .token.tag {
+    color: #22863a;
+  }
+
+  /* Attributes */
+  .token.attr-name {
+    color: #6f42c1;
+  }
+
+  /* Annotations */
+  .token.annotation {
+    color: #6f42c1;
+  }
+
+  /* Namespace */
+  .token.namespace {
+    color: #6a737d;
+  }
+
+  /* Regex */
+  .token.regex {
+    color: #032f62;
+  }
+
+  /* Inserted/Deleted */
+  .token.inserted {
+    color: #22863a;
+    background: rgba(34, 134, 58, 0.1);
+  }
+
+  .token.deleted {
+    color: #d73a49;
+    background: rgba(215, 58, 73, 0.1);
+  }
+}
+
+/* ---- Dark Mode Tokens ---- */
+.dark {
+  /* Comments */
+  .token.comment,
+  .token.prolog,
+  .token.doctype,
+  .token.cdata {
+    color: #8b949e;
+    font-style: italic;
+  }
+
+  /* Punctuation */
+  .token.punctuation {
+    color: #c9d1d9;
+  }
+
+  /* Strings */
+  .token.string,
+  .token.attr-value {
+    color: #a5d6ff;
+  }
+
+  /* Keywords */
+  .token.keyword,
+  .token.selector,
+  .token.important,
+  .token.atrule {
+    color: #ff7b72;
+  }
+
+  /* Operators & Entities */
+  .token.operator,
+  .token.entity,
+  .token.url {
+    color: #79c0ff;
+  }
+
+  /* Functions */
+  .token.function {
+    color: #d2a8ff;
+  }
+
+  /* Classes & Types */
+  .token.class-name,
+  .token.type,
+  .token.builtin {
+    color: #ffa657;
+  }
+
+  /* Variables & Properties */
+  .token.variable,
+  .token.property {
+    color: #79c0ff;
+  }
+
+  /* Numbers & Booleans */
+  .token.number,
+  .token.boolean {
+    color: #79c0ff;
+  }
+
+  /* Tags */
+  .token.tag {
+    color: #7ee787;
+  }
+
+  /* Attributes */
+  .token.attr-name {
+    color: #d2a8ff;
+  }
+
+  /* Annotations */
+  .token.annotation {
+    color: #d2a8ff;
+  }
+
+  /* Namespace */
+  .token.namespace {
+    color: #8b949e;
+  }
+
+  /* Regex */
+  .token.regex {
+    color: #a5d6ff;
+  }
+
+  /* Inserted/Deleted */
+  .token.inserted {
+    color: #7ee787;
+    background: rgba(63, 185, 80, 0.15);
+  }
+
+  .token.deleted {
+    color: #ffa198;
+    background: rgba(248, 81, 73, 0.15);
+  }
+}
+
+/* Code block wrapper for positioning */
+pre[class*="language-"] {
+  position: relative;
+}
+
+/* Java-specific styling */
+.language-java .token.annotation {
+  color: #e8a849;
+}
+
+.dark .language-java .token.annotation {
+  color: #e8a849;
+}
+
+/* Diff highlighting */
+.token.coord {
+  color: var(--muted-foreground);
+}
+
+/* Selection */
+pre[class*="language-"]::selection,
+pre[class*="language-"] ::selection,
+code[class*="language-"]::selection,
+code[class*="language-"] ::selection {
+  background: rgba(232, 168, 73, 0.3);
+}
+
+/* Inline code in prose - make sure it doesn't get prism styling */
+.prose :not(pre) > code {
+  background: var(--muted) !important;
+  color: var(--primary) !important;
+  padding: 0.15em 0.4em !important;
+  border-radius: 0.25rem !important;
+  font-size: 0.875em !important;
+  border: 1px solid var(--border) !important;
+}
+
+.prose :not(pre) > code::before,
+.prose :not(pre) > code::after {
+  content: none !important;
+}
+
+/* ASCII Art / Box Drawing Characters Support */
+pre {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", "Consolas", "DejaVu Sans Mono", monospace;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure box-drawing characters render properly */
+pre code {
+  font-variant-ligatures: none;
+  text-rendering: optimizeSpeed;
+}
+
+/* Mermaid diagram styles */
+.mermaid-container svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid-container .nodeLabel,
+.mermaid-container .edgeLabel,
+.mermaid-container .label,
+.mermaid-container text {
+  fill: #e2e8f0 !important;
+  color: #e2e8f0 !important;
+}
+
+.mermaid-container .node rect,
+.mermaid-container .node circle,
+.mermaid-container .node polygon {
+  fill: #253649 !important;
+  stroke: #e8a849 !important;
+}
+
+.mermaid-container .edgePath path {
+  stroke: #4a90a8 !important;
+}
+
+.mermaid-container marker path {
+  fill: #e8a849 !important;
 }

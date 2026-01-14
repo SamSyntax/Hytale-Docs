@@ -88,7 +88,7 @@ export function Sidebar() {
   const t = useTranslations("sidebar");
 
   return (
-    <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-56 xl:w-60 shrink-0 border-r border-border lg:block">
+    <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-64 xl:w-72 2xl:w-80 shrink-0 border-r border-border lg:block">
       <ScrollArea className="h-full py-4 pr-3">
         <nav className="space-y-0.5 pl-3">
           {sidebarConfig.map((item) => (
