@@ -111,6 +111,9 @@ export const sidebarConfig: SidebarItem[] = [
           { titleKey: "projectSetup", href: "/docs/modding/plugins/project-setup" },
           { titleKey: "pluginLifecycle", href: "/docs/modding/plugins/plugin-lifecycle" },
           { titleKey: "entityStats", href: "/docs/modding/plugins/entity-stats" },
+          { titleKey: "accessControl", href: "/docs/modding/plugins/access-control" },
+          { titleKey: "damageSystem", href: "/docs/modding/plugins/damage-system" },
+          { titleKey: "interactions", href: "/docs/modding/plugins/interactions" },
           {
             titleKey: "events",
             items: [
@@ -190,6 +193,26 @@ export const sidebarConfig: SidebarItem[] = [
                   { titleKey: "switchActiveSlotEvent", href: "/docs/modding/plugins/events/inventory/switch-active-slot-event" },
                   { titleKey: "interactivelyPickupItemEvent", href: "/docs/modding/plugins/events/inventory/interactively-pickup-item-event" },
                   { titleKey: "craftRecipeEvent", href: "/docs/modding/plugins/events/inventory/craft-recipe-event" },
+                ],
+              },
+              {
+                titleKey: "prefabEvents",
+                items: [
+                  { titleKey: "prefabPlaceEntityEvent", href: "/docs/modding/plugins/events/prefab/prefab-place-entity-event" },
+                  { titleKey: "prefabPasteEvent", href: "/docs/modding/plugins/events/prefab/prefab-paste-event" },
+                ],
+              },
+              {
+                titleKey: "damageEvents",
+                items: [
+                  { titleKey: "killFeedEvent", href: "/docs/modding/plugins/events/damage/kill-feed-event" },
+                ],
+              },
+              {
+                titleKey: "zoneEvents",
+                items: [
+                  { titleKey: "discoverInstanceEvent", href: "/docs/modding/plugins/events/instance/discover-instance-event" },
+                  { titleKey: "discoverZoneEvent", href: "/docs/modding/plugins/events/zone/discover-zone-event" },
                 ],
               },
             ],

@@ -14,22 +14,22 @@ export const documentationProgress: DocumentationProgress = {
   categories: [
     {
       id: "modules",
-      documented: 14,
+      documented: 17,
       total: 21,
     },
     {
       id: "commands",
-      documented: 4,
+      documented: 44,
       total: 168,
     },
     {
       id: "events",
-      documented: 35,
+      documented: 40,
       total: 65,
     },
     {
       id: "components",
-      documented: 15,
+      documented: 27,
       total: 100,
     },
     {

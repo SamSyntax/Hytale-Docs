@@ -1165,3 +1165,748 @@ public enum RemoveReason {
 7. **Explicit dependencies**: Always declare dependencies between systems to ensure correct execution order.
 
 8. **Mandatory clone()**: Always implement `clone()` correctly for components that need to be copied.
+
+---
+
+## Additional Built-in Components Reference
+
+The following sections document additional ECS components found in the decompiled server source code. These components provide essential functionality for entity behavior, networking, and rendering.
+
+### Invulnerable
+
+**Package:** `com.hypixel.hytale.server.core.modules.entity.component`
+
+The `Invulnerable` component is a marker component (tag) that makes an entity immune to damage. It uses the singleton pattern - there is only one instance shared by all invulnerable entities.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/modules/entity/component/Invulnerable.java`
+
+```java
+public class Invulnerable implements Component<EntityStore> {
+   public static final Invulnerable INSTANCE = new Invulnerable();
+   public static final BuilderCodec<Invulnerable> CODEC =
+       BuilderCodec.builder(Invulnerable.class, () -> INSTANCE).build();
+
+   public static ComponentType<EntityStore, Invulnerable> getComponentType() {
+      return EntityModule.get().getInvulnerableComponentType();
+   }
+
+   private Invulnerable() {}
+
+   @Override
+   public Component<EntityStore> clone() {
+      return INSTANCE;
+   }
+}
+```
+
+**Properties:**
+- None (marker component)
+
+**How to add/remove:**
+
+```java
+// Make an entity invulnerable
+commandBuffer.addComponent(ref, Invulnerable.getComponentType(), Invulnerable.INSTANCE);
+
+// Remove invulnerability
+commandBuffer.removeComponent(ref, Invulnerable.getComponentType());
+
+// Check if entity is invulnerable
+Archetype<EntityStore> archetype = store.getArchetype(ref);
+boolean isInvulnerable = archetype.contains(Invulnerable.getComponentType());
+```
+
+**Usage notes:**
+- The component is automatically synced to clients via `InvulnerableSystems.EntityTrackerUpdate`
+- When added, it queues a `ComponentUpdate` with type `ComponentUpdateType.Invulnerable` to all viewers
+- When removed, it sends a remove notification to all viewing clients
+
+---
+
+### Intangible
+
+**Package:** `com.hypixel.hytale.server.core.modules.entity.component`
+
+The `Intangible` component is a marker component that makes an entity non-collidable. Other entities and projectiles will pass through intangible entities. Like `Invulnerable`, it uses the singleton pattern.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/modules/entity/component/Intangible.java`
+
+```java
+public class Intangible implements Component<EntityStore> {
+   public static final Intangible INSTANCE = new Intangible();
+   public static final BuilderCodec<Intangible> CODEC =
+       BuilderCodec.builder(Intangible.class, () -> INSTANCE).build();
+
+   public static ComponentType<EntityStore, Intangible> getComponentType() {
+      return EntityModule.get().getIntangibleComponentType();
+   }
+
+   private Intangible() {}
+
+   @Override
+   public Component<EntityStore> clone() {
+      return INSTANCE;
+   }
+}
+```
+
+**Properties:**
+- None (marker component)
+
+**How to add/remove:**
+
+```java
+// Make an entity intangible (non-collidable)
+holder.ensureComponent(Intangible.getComponentType());
+// or
+commandBuffer.addComponent(ref, Intangible.getComponentType(), Intangible.INSTANCE);
+
+// Remove intangibility
+commandBuffer.removeComponent(ref, Intangible.getComponentType());
+```
+
+**Usage notes:**
+- Commonly used for dropped item entities to prevent collision with other items
+- Synced to clients via `IntangibleSystems.EntityTrackerUpdate`
+- Used in `ItemComponent.generateItemDrop()` to make dropped items intangible
+
+---
+
+### Interactable
+
+**Package:** `com.hypixel.hytale.server.core.modules.entity.component`
+
+The `Interactable` component marks an entity as interactable by players. This enables interaction events (like right-click actions) to be processed for the entity.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/modules/entity/component/Interactable.java`
+
+```java
+public class Interactable implements Component<EntityStore> {
+   @Nonnull
+   public static final Interactable INSTANCE = new Interactable();
+   @Nonnull
+   public static final BuilderCodec<Interactable> CODEC =
+       BuilderCodec.builder(Interactable.class, () -> INSTANCE).build();
+
+   public static ComponentType<EntityStore, Interactable> getComponentType() {
+      return EntityModule.get().getInteractableComponentType();
+   }
+
+   private Interactable() {}
+
+   @Override
+   public Component<EntityStore> clone() {
+      return INSTANCE;
+   }
+}
+```
+
+**Properties:**
+- None (marker component)
+
+**How to add/remove:**
+
+```java
+// Make an entity interactable
+holder.addComponent(Interactable.getComponentType(), Interactable.INSTANCE);
+
+// Remove interactability
+commandBuffer.removeComponent(ref, Interactable.getComponentType());
+```
+
+**Usage notes:**
+- Used for NPCs, containers, and other entities that players can interact with
+- The interaction logic is handled by separate systems that query for this component
+
+---
+
+### ItemComponent
+
+**Package:** `com.hypixel.hytale.server.core.modules.entity.item`
+
+The `ItemComponent` represents a dropped item in the world. It contains the item stack data, pickup delays, merge delays, and provides utilities for creating item drops and handling pickups.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/modules/entity/item/ItemComponent.java`
+
+```java
+public class ItemComponent implements Component<EntityStore> {
+   @Nonnull
+   public static final BuilderCodec<ItemComponent> CODEC = BuilderCodec.builder(ItemComponent.class, ItemComponent::new)
+      .append(new KeyedCodec<>("Item", ItemStack.CODEC), ...)
+      .append(new KeyedCodec<>("StackDelay", Codec.FLOAT), ...)
+      .append(new KeyedCodec<>("PickupDelay", Codec.FLOAT), ...)
+      .append(new KeyedCodec<>("PickupThrottle", Codec.FLOAT), ...)
+      .append(new KeyedCodec<>("RemovedByPlayerPickup", Codec.BOOLEAN), ...)
+      .build();
+
+   public static final float DEFAULT_PICKUP_DELAY = 0.5F;
+   public static final float PICKUP_DELAY_DROPPED = 1.5F;
+   public static final float PICKUP_THROTTLE = 0.25F;
+   public static final float DEFAULT_MERGE_DELAY = 1.5F;
+
+   @Nullable
+   private ItemStack itemStack;
+   private boolean isNetworkOutdated;
+   private float mergeDelay = 1.5F;
+   private float pickupDelay = 0.5F;
+   private float pickupThrottle;
+   private boolean removedByPlayerPickup;
+   private float pickupRange = -1.0F;
+
+   // ... methods
+}
+```
+
+**Properties:**
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `itemStack` | `ItemStack` | null | The item stack this entity represents |
+| `mergeDelay` | float | 1.5 | Delay before items can merge (seconds) |
+| `pickupDelay` | float | 0.5 | Delay before item can be picked up (seconds) |
+| `pickupThrottle` | float | 0.25 | Cooldown between pickup attempts |
+| `removedByPlayerPickup` | boolean | false | Whether item was removed by player pickup |
+| `pickupRange` | float | -1.0 | Range for pickup (-1 = use config default) |
+
+**How to create item drops:**
+
+```java
+// Create a single item drop
+Holder<EntityStore> itemHolder = ItemComponent.generateItemDrop(
+    accessor,           // ComponentAccessor
+    itemStack,          // ItemStack to drop
+    position,           // Vector3d position
+    rotation,           // Vector3f rotation
+    velocityX,          // float horizontal velocity
+    velocityY,          // float vertical velocity (3.25F default)
+    velocityZ           // float horizontal velocity
+);
+store.addEntity(itemHolder, AddReason.SPAWN);
+
+// Create multiple item drops from a list
+Holder<EntityStore>[] items = ItemComponent.generateItemDrops(
+    accessor, itemStacks, position, rotation
+);
+
+// Add item to a container (handles partial pickup)
+ItemStack pickedUp = ItemComponent.addToItemContainer(store, itemRef, itemContainer);
+```
+
+**Usage notes:**
+- Automatically assigns `Intangible`, `Velocity`, `PhysicsValues`, `UUIDComponent`, and `DespawnComponent`
+- Item lifetime defaults to 120 seconds (configurable via `ItemEntityConfig`)
+- Can emit dynamic light if the item/block has a light property
+
+---
+
+### PlayerInput
+
+**Package:** `com.hypixel.hytale.server.core.modules.entity.player`
+
+The `PlayerInput` component handles player input updates including movement, rotation, and mount control. It queues input updates that are processed by player systems.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/modules/entity/player/PlayerInput.java`
+
+```java
+public class PlayerInput implements Component<EntityStore> {
+   @Nonnull
+   private final List<PlayerInput.InputUpdate> inputUpdateQueue = new ObjectArrayList<>();
+   private int mountId;
+
+   public static ComponentType<EntityStore, PlayerInput> getComponentType() {
+      return EntityModule.get().getPlayerInputComponentType();
+   }
+
+   public void queue(PlayerInput.InputUpdate inputUpdate);
+   @Nonnull
+   public List<PlayerInput.InputUpdate> getMovementUpdateQueue();
+   public int getMountId();
+   public void setMountId(int mountId);
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `inputUpdateQueue` | `List<InputUpdate>` | Queue of pending input updates |
+| `mountId` | int | Network ID of the mount entity (0 = not mounted) |
+
+**Input Update Types:**
+
+| Type | Description |
+|------|-------------|
+| `AbsoluteMovement` | Teleport to absolute position (x, y, z) |
+| `RelativeMovement` | Move relative to current position |
+| `WishMovement` | Desired movement direction |
+| `SetBody` | Set body rotation (pitch, yaw, roll) |
+| `SetHead` | Set head rotation (pitch, yaw, roll) |
+| `SetMovementStates` | Set movement state flags |
+| `SetClientVelocity` | Set velocity from client |
+| `SetRiderMovementStates` | Set movement states while riding |
+
+**How to use:**
+
+```java
+// Queue an absolute movement
+PlayerInput input = store.getComponent(playerRef, PlayerInput.getComponentType());
+input.queue(new PlayerInput.AbsoluteMovement(x, y, z));
+
+// Queue a head rotation change
+input.queue(new PlayerInput.SetHead(new Direction(pitch, yaw, roll)));
+```
+
+---
+
+### NetworkId
+
+**Package:** `com.hypixel.hytale.server.core.modules.entity.tracker`
+
+The `NetworkId` component assigns a unique network identifier to an entity for client-server synchronization. This ID is used in network packets to reference entities.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/modules/entity/tracker/NetworkId.java`
+
+```java
+public final class NetworkId implements Component<EntityStore> {
+   private final int id;
+
+   @Nonnull
+   public static ComponentType<EntityStore, NetworkId> getComponentType() {
+      return EntityModule.get().getNetworkIdComponentType();
+   }
+
+   public NetworkId(int id) {
+      this.id = id;
+   }
+
+   public int getId() {
+      return this.id;
+   }
+
+   @Nonnull
+   @Override
+   public Component<EntityStore> clone() {
+      return this;  // Immutable - returns same instance
+   }
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `id` | int | Unique network identifier for the entity |
+
+**How to add:**
+
+```java
+// Get next network ID from world and assign to entity
+int networkId = world.getExternalData().takeNextNetworkId();
+holder.addComponent(NetworkId.getComponentType(), new NetworkId(networkId));
+
+// Or during entity generation
+holder.addComponent(NetworkId.getComponentType(),
+    new NetworkId(ref.getStore().getExternalData().takeNextNetworkId()));
+```
+
+**Usage notes:**
+- Network IDs are assigned automatically by the entity tracker system for tracked entities
+- The component is immutable - `clone()` returns the same instance
+- Used extensively in packet serialization for entity references
+
+---
+
+### Frozen
+
+**Package:** `com.hypixel.hytale.server.core.entity`
+
+The `Frozen` component is a marker component that stops an entity from moving or being affected by physics. Uses the singleton pattern.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/entity/Frozen.java`
+
+```java
+public class Frozen implements Component<EntityStore> {
+   public static final BuilderCodec<Frozen> CODEC =
+       BuilderCodec.builder(Frozen.class, Frozen::get).build();
+   private static final Frozen INSTANCE = new Frozen();
+
+   public static ComponentType<EntityStore, Frozen> getComponentType() {
+      return EntityModule.get().getFrozenComponentType();
+   }
+
+   public static Frozen get() {
+      return INSTANCE;
+   }
+
+   private Frozen() {}
+
+   @Override
+   public Component<EntityStore> clone() {
+      return get();
+   }
+}
+```
+
+**Properties:**
+- None (marker component)
+
+**How to add/remove:**
+
+```java
+// Freeze an entity
+commandBuffer.addComponent(ref, Frozen.getComponentType(), Frozen.get());
+
+// Unfreeze an entity
+commandBuffer.removeComponent(ref, Frozen.getComponentType());
+```
+
+**Usage notes:**
+- Useful for cutscenes, dialogue, or pausing entities
+- Does not make the entity invulnerable - combine with `Invulnerable` if needed
+
+---
+
+### Teleport
+
+**Package:** `com.hypixel.hytale.server.core.modules.entity.teleport`
+
+The `Teleport` component is used to teleport an entity to a new position, rotation, and optionally a different world. It is a transient component that is automatically removed after the teleport is processed.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/modules/entity/teleport/Teleport.java`
+
+```java
+public class Teleport implements Component<EntityStore> {
+   @Nullable
+   private final World world;
+   @Nonnull
+   private final Vector3d position = new Vector3d();
+   @Nonnull
+   private final Vector3f rotation = new Vector3f();
+   @Nullable
+   private Vector3f headRotation;
+   private boolean resetVelocity = true;
+
+   @Nonnull
+   public static ComponentType<EntityStore, Teleport> getComponentType() {
+      return EntityModule.get().getTeleportComponentType();
+   }
+
+   // Constructors
+   public Teleport(@Nullable World world, @Nonnull Vector3d position, @Nonnull Vector3f rotation);
+   public Teleport(@Nonnull Vector3d position, @Nonnull Vector3f rotation);
+   public Teleport(@Nullable World world, @Nonnull Transform transform);
+   public Teleport(@Nonnull Transform transform);
+
+   // Fluent modifiers
+   @Nonnull
+   public Teleport withHeadRotation(@Nonnull Vector3f headRotation);
+   public Teleport withResetRoll();
+   public Teleport withoutVelocityReset();
+
+   // Getters
+   @Nullable
+   public World getWorld();
+   @Nonnull
+   public Vector3d getPosition();
+   @Nonnull
+   public Vector3f getRotation();
+   @Nullable
+   public Vector3f getHeadRotation();
+   public boolean isResetVelocity();
+}
+```
+
+**Properties:**
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `world` | `World` | null | Target world (null = same world) |
+| `position` | `Vector3d` | - | Target position |
+| `rotation` | `Vector3f` | - | Target body rotation |
+| `headRotation` | `Vector3f` | null | Target head rotation (optional) |
+| `resetVelocity` | boolean | true | Whether to reset velocity after teleport |
+
+**How to teleport an entity:**
+
+```java
+// Teleport to position in same world
+commandBuffer.addComponent(ref, Teleport.getComponentType(),
+    new Teleport(new Vector3d(100, 64, 200), new Vector3f(0, 90, 0)));
+
+// Teleport to a different world
+commandBuffer.addComponent(ref, Teleport.getComponentType(),
+    new Teleport(targetWorld, position, rotation));
+
+// Teleport with head rotation and without resetting velocity
+Teleport teleport = new Teleport(position, rotation)
+    .withHeadRotation(headRotation)
+    .withoutVelocityReset();
+commandBuffer.addComponent(ref, Teleport.getComponentType(), teleport);
+```
+
+**Usage notes:**
+- The `Teleport` component is processed by `TeleportSystems.MoveSystem` (for entities) or `TeleportSystems.PlayerMoveSystem` (for players)
+- For players, teleportation sends a `ClientTeleport` packet and waits for acknowledgment
+- The component is automatically removed after processing
+- Cross-world teleportation moves the entity between stores
+
+---
+
+### EntityScaleComponent
+
+**Package:** `com.hypixel.hytale.server.core.modules.entity.component`
+
+The `EntityScaleComponent` controls the visual scale of an entity. This affects the rendered size of the entity's model on clients.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/modules/entity/component/EntityScaleComponent.java`
+
+```java
+public class EntityScaleComponent implements Component<EntityStore> {
+   public static final BuilderCodec<EntityScaleComponent> CODEC =
+       BuilderCodec.builder(EntityScaleComponent.class, EntityScaleComponent::new)
+          .addField(new KeyedCodec<>("Scale", Codec.FLOAT),
+              (o, scale) -> o.scale = scale, o -> o.scale)
+          .build();
+
+   private float scale = 1.0F;
+   private boolean isNetworkOutdated = true;
+
+   public static ComponentType<EntityStore, EntityScaleComponent> getComponentType() {
+      return EntityModule.get().getEntityScaleComponentType();
+   }
+
+   public EntityScaleComponent() {}
+   public EntityScaleComponent(float scale) {
+      this.scale = scale;
+   }
+
+   public float getScale();
+   public void setScale(float scale);
+   public boolean consumeNetworkOutdated();
+}
+```
+
+**Properties:**
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `scale` | float | 1.0 | Scale multiplier (1.0 = normal size) |
+| `isNetworkOutdated` | boolean | true | Internal flag for network sync |
+
+**How to use:**
+
+```java
+// Create entity with custom scale
+holder.addComponent(EntityScaleComponent.getComponentType(),
+    new EntityScaleComponent(2.0f));  // Double size
+
+// Modify scale at runtime
+EntityScaleComponent scaleComponent = store.getComponent(ref,
+    EntityScaleComponent.getComponentType());
+scaleComponent.setScale(0.5f);  // Half size
+```
+
+**Usage notes:**
+- Changes to scale are automatically synchronized to clients
+- Only affects visual rendering, not collision/hitbox
+- Scale of 0 or negative values may cause undefined behavior
+
+---
+
+### HitboxCollision
+
+**Package:** `com.hypixel.hytale.server.core.modules.entity.hitboxcollision`
+
+The `HitboxCollision` component defines how an entity's hitbox interacts with other entities. It references a `HitboxCollisionConfig` asset that defines collision behavior.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/modules/entity/hitboxcollision/HitboxCollision.java`
+
+```java
+public class HitboxCollision implements Component<EntityStore> {
+   public static final BuilderCodec<HitboxCollision> CODEC =
+       BuilderCodec.builder(HitboxCollision.class, HitboxCollision::new)
+          .append(new KeyedCodec<>("HitboxCollisionConfigIndex", Codec.INTEGER), ...)
+          .build();
+
+   private int hitboxCollisionConfigIndex;
+   private boolean isNetworkOutdated = true;
+
+   public static ComponentType<EntityStore, HitboxCollision> getComponentType() {
+      return EntityModule.get().getHitboxCollisionComponentType();
+   }
+
+   public HitboxCollision(@Nonnull HitboxCollisionConfig hitboxCollisionConfig) {
+      this.hitboxCollisionConfigIndex =
+          HitboxCollisionConfig.getAssetMap().getIndexOrDefault(hitboxCollisionConfig.getId(), -1);
+   }
+
+   public int getHitboxCollisionConfigIndex();
+   public void setHitboxCollisionConfigIndex(int hitboxCollisionConfigIndex);
+   public boolean consumeNetworkOutdated();
+}
+```
+
+**Properties:**
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `hitboxCollisionConfigIndex` | int | - | Index into `HitboxCollisionConfig` asset map |
+| `isNetworkOutdated` | boolean | true | Internal flag for network sync |
+
+**HitboxCollisionConfig properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `CollisionType` | `CollisionType` | `Hard` (block movement) or `Soft` (slow down) |
+| `SoftCollisionOffsetRatio` | float | Movement ratio when passing through soft collision |
+
+**How to use:**
+
+```java
+// Get a hitbox collision config from assets
+HitboxCollisionConfig config = HitboxCollisionConfig.getAssetMap().getAsset("mymod:soft_hitbox");
+
+// Add hitbox collision to an entity
+holder.addComponent(HitboxCollision.getComponentType(), new HitboxCollision(config));
+
+// Modify hitbox collision at runtime
+HitboxCollision hitbox = store.getComponent(ref, HitboxCollision.getComponentType());
+hitbox.setHitboxCollisionConfigIndex(newConfigIndex);
+```
+
+**Usage notes:**
+- Used for entity-to-entity collision (not block collision)
+- `Hard` collision type blocks movement completely
+- `Soft` collision type allows passing through with reduced speed
+
+---
+
+### Nameplate
+
+**Package:** `com.hypixel.hytale.server.core.entity.nameplate`
+
+The `Nameplate` component displays a floating text label above an entity. This is commonly used for player names, NPC names, or custom labels.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/entity/nameplate/Nameplate.java`
+
+```java
+public class Nameplate implements Component<EntityStore> {
+   @Nonnull
+   public static final BuilderCodec<Nameplate> CODEC =
+       BuilderCodec.builder(Nameplate.class, Nameplate::new)
+          .append(new KeyedCodec<>("Text", Codec.STRING),
+              (nameplate, s) -> nameplate.text = s, nameplate -> nameplate.text)
+          .documentation("The contents to display as the nameplate text.")
+          .addValidator(Validators.nonNull())
+          .build();
+
+   @Nonnull
+   private String text = "";
+   private boolean isNetworkOutdated = true;
+
+   @Nonnull
+   public static ComponentType<EntityStore, Nameplate> getComponentType() {
+      return EntityModule.get().getNameplateComponentType();
+   }
+
+   public Nameplate() {}
+   public Nameplate(@Nonnull String text) {
+      this.text = text;
+   }
+
+   @Nonnull
+   public String getText();
+   public void setText(@Nonnull String text);
+   public boolean consumeNetworkOutdated();
+}
+```
+
+**Properties:**
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `text` | String | "" | The text to display above the entity |
+| `isNetworkOutdated` | boolean | true | Internal flag for network sync |
+
+**How to use:**
+
+```java
+// Create entity with a nameplate
+holder.addComponent(Nameplate.getComponentType(), new Nameplate("Shop Keeper"));
+
+// Modify nameplate text at runtime
+Nameplate nameplate = store.getComponent(ref, Nameplate.getComponentType());
+nameplate.setText("New Name");  // Only updates if text changed
+
+// Remove nameplate
+commandBuffer.removeComponent(ref, Nameplate.getComponentType());
+```
+
+**Usage notes:**
+- Text changes are automatically synced to clients when modified
+- The `setText` method only marks the component as outdated if the text actually changes
+- Empty string displays no nameplate but keeps the component
+
+---
+
+### DynamicLight
+
+**Package:** `com.hypixel.hytale.server.core.modules.entity.component`
+
+The `DynamicLight` component makes an entity emit light. This creates a moving light source that illuminates the surrounding area.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/modules/entity/component/DynamicLight.java`
+
+```java
+public class DynamicLight implements Component<EntityStore> {
+   private ColorLight colorLight = new ColorLight();
+   private boolean isNetworkOutdated = true;
+
+   public static ComponentType<EntityStore, DynamicLight> getComponentType() {
+      return EntityModule.get().getDynamicLightComponentType();
+   }
+
+   public DynamicLight() {}
+   public DynamicLight(ColorLight colorLight) {
+      this.colorLight = colorLight;
+   }
+
+   public ColorLight getColorLight();
+   public void setColorLight(ColorLight colorLight);
+   public boolean consumeNetworkOutdated();
+}
+```
+
+**ColorLight properties:**
+
+| Property | Type | Range | Description |
+|----------|------|-------|-------------|
+| `radius` | byte | 0-255 | Light radius in blocks |
+| `red` | byte | 0-255 | Red color component |
+| `green` | byte | 0-255 | Green color component |
+| `blue` | byte | 0-255 | Blue color component |
+
+**How to use:**
+
+```java
+// Create a red dynamic light
+ColorLight redLight = new ColorLight((byte)15, (byte)255, (byte)0, (byte)0);
+holder.addComponent(DynamicLight.getComponentType(), new DynamicLight(redLight));
+
+// Create a white torch-like light
+ColorLight torchLight = new ColorLight((byte)12, (byte)255, (byte)200, (byte)100);
+holder.addComponent(DynamicLight.getComponentType(), new DynamicLight(torchLight));
+
+// Modify light at runtime
+DynamicLight light = store.getComponent(ref, DynamicLight.getComponentType());
+light.setColorLight(new ColorLight((byte)10, (byte)0, (byte)255, (byte)0));  // Green light
+
+// Remove dynamic light
+commandBuffer.removeComponent(ref, DynamicLight.getComponentType());
+```
+
+**Usage notes:**
+- Light changes are automatically synced to clients
+- For persistent lights (saved with the entity), use `PersistentDynamicLight` instead
+- `DynamicLightSystems.Setup` automatically creates `DynamicLight` from `PersistentDynamicLight` on load
+- Dropped items automatically emit light if the item/block has a light property (see `ItemComponent.computeDynamicLight()`)
