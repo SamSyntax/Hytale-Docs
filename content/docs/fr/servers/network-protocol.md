@@ -294,6 +294,8 @@ Configuration initiale du client.
 | Machinima | `RequestMachinimaActorModel` (260), `UpdateMachinimaScene` (262) | Outils cinématiques |
 | Caméra | `RequestFlyCameraMode` (282) | Contrôle de la caméra |
 | Interaction | `SyncInteractionChains` (290) | Chaînes d'interaction |
+| Objectifs/Quêtes | `TrackOrUpdateObjective` (69), `UntrackObjective` (70), `UpdateObjectiveTask` (71) | Suivi des quêtes et progression |
+| Débogage PNJ | `BuilderToolSetNPCDebug` (423) | Débogage du comportement PNJ |
 | Assets | 40+ paquets | Synchronisation des assets |
 
 ## Détails des Paquets Clés
@@ -1303,6 +1305,10 @@ Structure d'acquittement pour les teleportations initiees par le serveur.
 | Paquets Camera | `com/hypixel/hytale/protocol/packets/camera/*.java` |
 | Paquets Machinima | `com/hypixel/hytale/protocol/packets/machinima/*.java` |
 | Paquets Interface | `com/hypixel/hytale/protocol/packets/interface_/*.java` |
+| Paquets d'Interaction | `com/hypixel/hytale/protocol/packets/interaction/*.java` |
+| Paquets d'Objectif | `com/hypixel/hytale/protocol/packets/assets/TrackOrUpdateObjective.java`, `UntrackObjective.java`, `UpdateObjectiveTask.java` |
+| Structures d'Objectif | `com/hypixel/hytale/protocol/Objective.java`, `ObjectiveTask.java` |
+| Paquets de Debogage PNJ | `com/hypixel/hytale/protocol/packets/buildertools/BuilderToolSetNPCDebug.java` |
 | Structures de Mouvement | `com/hypixel/hytale/protocol/MovementStates.java`, `MovementSettings.java` |
 | Structures d'Entree | `com/hypixel/hytale/protocol/MouseButtonEvent.java`, `MouseMotionEvent.java` |
 
@@ -1942,6 +1948,97 @@ Les paquets de monture et PNJ gerent les mecaniques de chevauchement et les inte
 
 **Taille fixe :** 27 octets (minimum)
 **Taille maximale :** 16 385 065 octets
+
+---
+
+### Paquets d'Objectif/Quete
+
+Les paquets d'objectif gerent le suivi des quetes, la progression des taches et les mises a jour de l'interface d'objectifs. Ces paquets permettent au serveur de communiquer les etats des quetes et leur progression aux clients.
+
+#### TrackOrUpdateObjective (ID 69)
+
+**Direction :** Serveur -> Client
+**Compresse :** Non
+**Description :** Suit un nouvel objectif ou met a jour un objectif existant sur le panneau d'objectifs du client. Utilise quand un joueur accepte une quete, recoit des mises a jour d'objectif, ou doit afficher la progression d'une quete.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = objectif present |
+| 1 | objective | Objective | Variable | Donnees de l'objectif (optionnel) |
+
+**Structure Objective :**
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Indicateurs de presence pour les champs optionnels |
+| 1 | objectiveUuid | UUID | 16 | Identifiant unique pour cet objectif |
+| 17 | objectiveTitleKeyOffset | int32 LE | 4 | Offset vers la cle de localisation du titre |
+| 21 | objectiveDescriptionKeyOffset | int32 LE | 4 | Offset vers la cle de localisation de la description |
+| 25 | objectiveLineIdOffset | int32 LE | 4 | Offset vers l'identifiant de la ligne de quete |
+| 29 | tasksOffset | int32 LE | 4 | Offset vers le tableau de taches |
+| 33+ | objectiveTitleKey | VarString | Variable | Cle de localisation pour le titre de l'objectif (optionnel) |
+| - | objectiveDescriptionKey | VarString | Variable | Cle de localisation pour la description (optionnel) |
+| - | objectiveLineId | VarString | Variable | Identifiant de la ligne de quete (optionnel) |
+| - | tasks | VarInt + ObjectiveTask[] | Variable | Tableau des taches de l'objectif (optionnel) |
+
+**Taille fixe :** 1 octet (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+#### UntrackObjective (ID 70)
+
+**Direction :** Serveur -> Client
+**Compresse :** Non
+**Description :** Supprime un objectif du suivi du client. Utilise quand une quete est completee, abandonnee, ou ne doit plus etre affichee.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | objectiveUuid | UUID | 16 | UUID de l'objectif a ne plus suivre |
+
+**Taille fixe :** 16 octets
+
+#### UpdateObjectiveTask (ID 71)
+
+**Direction :** Serveur -> Client
+**Compresse :** Non
+**Description :** Met a jour une tache specifique dans un objectif suivi. Utilise pour les mises a jour de progression incrementales sans renvoyer l'objectif entier.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = tache presente |
+| 1 | objectiveUuid | UUID | 16 | UUID de l'objectif parent |
+| 17 | taskIndex | int32 LE | 4 | Index de la tache a mettre a jour (base 0) |
+| 21 | task | ObjectiveTask | Variable | Donnees de la tache mise a jour (optionnel) |
+
+**Structure ObjectiveTask :**
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = taskDescriptionKey present |
+| 1 | currentCompletion | int32 LE | 4 | Compte de progression actuel |
+| 5 | completionNeeded | int32 LE | 4 | Compte total requis pour la completion |
+| 9 | taskDescriptionKey | VarString | Variable | Cle de localisation pour la description de la tache (optionnel) |
+
+**Taille fixe :** 21 octets (minimum)
+**Taille maximale :** 16 384 035 octets
+
+---
+
+### Paquets de Debogage PNJ
+
+Les paquets de debogage PNJ fournissent des outils de developpement et de debogage pour le comportement et l'IA des PNJ.
+
+#### BuilderToolSetNPCDebug (ID 423)
+
+**Direction :** Bidirectionnel
+**Compresse :** Non
+**Description :** Active ou desactive la visualisation de debogage pour une entite PNJ specifique. Quand active, affiche l'etat de l'IA, la recherche de chemin, les arbres de comportement et autres informations de debogage.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | entityId | int32 LE | 4 | ID reseau de l'entite PNJ cible |
+| 4 | enabled | octet | 1 | Booleen : visualisation de debogage activee |
+
+**Taille fixe :** 5 octets
 
 ---
 
@@ -3540,3 +3637,961 @@ Serveur                                 Client
    |  <---- CustomPageEvent (Dismiss) ---- |  L'utilisateur a ferme la page
    |                                       |
 ```
+
+---
+
+## Paquets de Synchronisation d'Assets
+
+Les paquets de synchronisation d'assets transferent les definitions d'assets du jeu du serveur vers le client lors de la configuration de connexion et des mises a jour en temps reel. Ces paquets permettent aux serveurs de personnaliser le contenu du jeu dynamiquement, prenant en charge les serveurs moddes et les packs de contenu.
+
+### Structure Commune
+
+Tous les paquets de mise a jour d'assets partagent un modele commun :
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `type` | UpdateType | Init (0), Update (1), ou Delta (2) |
+| `maxId` | int32 | ID maximum dans le registre (pour les assets indexes) |
+| `[assets]` | Map/Array | Definitions d'assets (optionnel) |
+| `[removedAssets]` | String[] | IDs des assets a supprimer (optionnel) |
+
+**Valeurs UpdateType :**
+- `0` - Init : Initialisation complete du registre lors de la configuration
+- `1` - Update : Remplacer les entrees existantes
+- `2` - Delta : Modifications incrementales uniquement
+
+---
+
+### UpdateBlockTypes (ID 40)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui (Zstd)
+**Description :** Envoie les definitions de types de blocs incluant les proprietes visuelles, les caracteristiques physiques et les references de modeles. Utilise lors de la configuration et lorsque les definitions de blocs changent.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = blockTypes present |
+| 1 | type | octet | 1 | Valeur enum UpdateType |
+| 2 | maxId | int32 LE | 4 | ID maximum de type de bloc |
+| 6 | updateBlockTextures | octet | 1 | Booleen : recharger les textures de blocs |
+| 7 | updateModelTextures | octet | 1 | Booleen : recharger les textures de modeles |
+| 8 | updateModels | octet | 1 | Booleen : recharger les modeles 3D |
+| 9 | updateMapGeometry | octet | 1 | Booleen : reconstruire la geometrie de la carte |
+| 10+ | blockTypes | `Map<int32, BlockType>` | Variable | Definitions de types de blocs (optionnel) |
+
+**Taille fixe :** 10 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateBlockHitboxes (ID 41)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui (Zstd)
+**Description :** Envoie les definitions de hitbox/collision des blocs. Mappe les IDs de types de blocs vers des tableaux de hitboxes qui definissent la geometrie de collision du bloc. Utilise pour la collision des joueurs, le raycasting et la physique des entites.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = blockBaseHitboxes present |
+| 1 | type | octet | 1 | Valeur enum UpdateType |
+| 2 | maxId | int32 LE | 4 | ID maximum de type de bloc dans le registre |
+| 6+ | blockBaseHitboxes | `Map<int32, Hitbox[]>` | Variable | Dictionnaire d'ID de bloc vers tableau de hitboxes (optionnel) |
+
+**Structure Hitbox (24 octets chacune) :**
+
+| Champ | Type | Taille | Description |
+|-------|------|--------|-------------|
+| minX | float LE | 4 | Coordonnee X minimum (0.0-1.0) |
+| minY | float LE | 4 | Coordonnee Y minimum (0.0-1.0) |
+| minZ | float LE | 4 | Coordonnee Z minimum (0.0-1.0) |
+| maxX | float LE | 4 | Coordonnee X maximum (0.0-1.0) |
+| maxY | float LE | 4 | Coordonnee Y maximum (0.0-1.0) |
+| maxZ | float LE | 4 | Coordonnee Z maximum (0.0-1.0) |
+
+**Notes :**
+- Les coordonnees de hitbox sont relatives a la position du bloc (plage 0.0-1.0)
+- Un bloc complet a une seule hitbox : (0,0,0) a (1,1,1)
+- Les escaliers, dalles et formes personnalisees ont plusieurs hitboxes
+- Maximum 64 hitboxes par type de bloc
+
+**Taille fixe :** 6 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateBlockParticleSets (ID 44)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui (Zstd)
+**Description :** Envoie les configurations d'effets de particules de blocs. Definit les particules emises lorsque les blocs sont casses, foules ou interagis. Chaque type de bloc peut referencer un ensemble de particules par nom.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = blockParticleSets present |
+| 1 | type | octet | 1 | Valeur enum UpdateType |
+| 2+ | blockParticleSets | `Map<String, BlockParticleSet>` | Variable | Dictionnaire d'ID d'ensemble de particules vers configuration (optionnel) |
+
+**Champs BlockParticleSet :**
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| breakParticles | ParticleConfig | Particules emises lors de la destruction du bloc |
+| stepParticles | ParticleConfig | Particules emises lorsqu'une entite marche sur le bloc |
+| landParticles | ParticleConfig | Particules emises lorsqu'une entite atterrit sur le bloc |
+| slideParticles | ParticleConfig | Particules emises lorsqu'une entite glisse sur le bloc |
+
+**Taille fixe :** 2 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateBlockBreakingDecals (ID 45)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui (Zstd)
+**Description :** Envoie les configurations de textures de fissures de blocs. Definit la progression visuelle des fissures qui apparaissent sur les blocs pendant le minage.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = blockBreakingDecals present |
+| 1 | type | octet | 1 | Valeur enum UpdateType |
+| 2+ | blockBreakingDecals | `Map<String, BlockBreakingDecal>` | Variable | Dictionnaire d'ID d'ensemble de decals vers configuration (optionnel) |
+
+**Champs BlockBreakingDecal :**
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| stages | TextureRef[] | Tableau de textures d'etapes de fissure (typiquement 10 etapes de 0-100%) |
+| tintColor | Color | Teinte de couleur appliquee a la texture de fissure |
+| emissive | boolean | Si les fissures emettent de la lumiere (effet de lueur) |
+
+**Taille fixe :** 2 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateBlockSets (ID 46)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui (Zstd)
+**Description :** Envoie les definitions d'ensembles de blocs. Les ensembles de blocs regroupent des blocs apparentes pour les categories du mode creatif, le changement de barre d'acces rapide (paquet SwitchHotbarBlockSet) et les mecaniques de jeu.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = blockSets present |
+| 1 | type | octet | 1 | Valeur enum UpdateType |
+| 2+ | blockSets | `Map<String, BlockSet>` | Variable | Dictionnaire d'ID d'ensemble de blocs vers definition (optionnel) |
+
+**Champs BlockSet :**
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| id | String | Identifiant de l'ensemble de blocs (ex: "building_blocks", "natural") |
+| displayName | String | Nom d'affichage localise pour l'interface |
+| blocks | String[] | Tableau d'IDs de types de blocs dans cet ensemble |
+| icon | ItemRef | Reference d'icone pour l'affichage dans l'interface |
+
+**Taille fixe :** 2 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateFluidFX (ID 63)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui (Zstd)
+**Description :** Envoie les configurations d'effets visuels de fluides. Definit comment les fluides comme l'eau et la lave sont rendus, incluant les effets de surface, les effets sous-marins et les parametres de brouillard.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = fluidFX present |
+| 1 | type | octet | 1 | Valeur enum UpdateType |
+| 2 | maxId | int32 LE | 4 | ID maximum de type de fluide |
+| 6+ | fluidFX | `Map<int32, FluidFX>` | Variable | Dictionnaire d'ID de fluide vers configuration FX (optionnel) |
+
+**Champs FluidFX :**
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| surfaceColor | Color | Couleur de la surface du fluide |
+| underwaterColor | Color | Teinte de couleur lorsque la camera est submergee |
+| fogDensity | float | Densite du brouillard sous-marin (plus eleve = moins de visibilite) |
+| fogColor | Color | Couleur du brouillard sous-marin |
+| reflectivity | float | Force de reflexion de la surface (0.0-1.0) |
+| transparency | float | Transparence du fluide (0.0 = opaque, 1.0 = invisible) |
+| flowSpeed | float | Vitesse d'animation du flux visuel |
+| particleEmitter | ParticleConfig | Effets de particules de surface (bulles, vapeur, etc.) |
+
+**Taille fixe :** 6 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateItems (ID 54)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui (Zstd)
+**Description :** Envoie les definitions d'objets incluant les proprietes, modeles et icones. Supporte l'ajout et la suppression d'objets.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = items present, bit 1 = removedItems present |
+| 1 | type | octet | 1 | Valeur enum UpdateType |
+| 2 | updateModels | octet | 1 | Booleen : recharger les modeles d'objets |
+| 3 | updateIcons | octet | 1 | Booleen : recharger les icones d'objets |
+| 4 | itemsOffset | int32 LE | 4 | Offset vers le dictionnaire d'objets |
+| 8 | removedItemsOffset | int32 LE | 4 | Offset vers le tableau d'objets supprimes |
+| 12+ | items | `Map<String, ItemBase>` | Variable | Definitions d'objets par ID (optionnel) |
+| - | removedItems | String[] | Variable | IDs d'objets a supprimer (optionnel) |
+
+**Taille fixe :** 12 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateRecipes (ID 60)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui (Zstd)
+**Description :** Envoie les definitions de recettes de craft. Supporte l'ajout de nouvelles recettes et la suppression des existantes.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = recipes present, bit 1 = removedRecipes present |
+| 1 | type | octet | 1 | Valeur enum UpdateType |
+| 2 | recipesOffset | int32 LE | 4 | Offset vers le dictionnaire de recettes |
+| 6 | removedRecipesOffset | int32 LE | 4 | Offset vers le tableau de recettes supprimees |
+| 10+ | recipes | `Map<String, CraftingRecipe>` | Variable | Definitions de recettes (optionnel) |
+| - | removedRecipes | String[] | Variable | IDs de recettes a supprimer (optionnel) |
+
+**Taille fixe :** 10 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateEnvironments (ID 61)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui (Zstd)
+**Description :** Envoie les definitions d'environnements de monde (biomes) incluant les parametres ambiants, configurations meteorologiques et parametres de terrain.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = environments present |
+| 1 | type | octet | 1 | Valeur enum UpdateType |
+| 2 | maxId | int32 LE | 4 | ID maximum d'environnement |
+| 6 | rebuildMapGeometry | octet | 1 | Booleen : reconstruire la geometrie de la carte |
+| 7+ | environments | `Map<int32, WorldEnvironment>` | Variable | Definitions d'environnements (optionnel) |
+
+**Taille fixe :** 7 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateTranslations (ID 64)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui (Zstd)
+**Description :** Envoie les chaines de localisation pour le contenu defini par le serveur. Permet aux serveurs de fournir du texte personnalise pour les objets, blocs et elements d'interface.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = translations present |
+| 1 | type | octet | 1 | Valeur enum UpdateType |
+| 2+ | translations | `Map<String, String>` | Variable | Paires cle-valeur de traduction (optionnel) |
+
+**Taille fixe :** 2 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateSoundEvents (ID 65)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui (Zstd)
+**Description :** Envoie les definitions d'evenements sonores pour les declencheurs de lecture audio.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = soundEvents present |
+| 1 | type | octet | 1 | Valeur enum UpdateType |
+| 2 | maxId | int32 LE | 4 | ID maximum d'evenement sonore |
+| 6+ | soundEvents | `Map<int32, SoundEvent>` | Variable | Definitions d'evenements sonores (optionnel) |
+
+**Taille fixe :** 6 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateInteractions (ID 66)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui (Zstd)
+**Description :** Envoie les definitions d'interactions pour le combat, l'utilisation d'objets et les interactions environnementales.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = interactions present |
+| 1 | type | octet | 1 | Valeur enum UpdateType |
+| 2 | maxId | int32 LE | 4 | ID maximum d'interaction |
+| 6+ | interactions | `Map<int32, Interaction>` | Variable | Definitions d'interactions (optionnel) |
+
+**Taille fixe :** 6 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateWeathers (ID 47)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui (Zstd)
+**Description :** Envoie les definitions de types meteorologiques incluant les effets visuels, systemes de particules et impact environnemental.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = weathers present |
+| 1 | type | octet | 1 | Valeur enum UpdateType |
+| 2 | maxId | int32 LE | 4 | ID maximum de meteo |
+| 6+ | weathers | `Map<int32, Weather>` | Variable | Definitions de meteo (optionnel) |
+
+**Taille fixe :** 6 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateParticleSystems (ID 49)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui (Zstd)
+**Description :** Envoie les definitions de systemes de particules pour les effets visuels.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = particleSystems present, bit 1 = removedParticleSystems present |
+| 1 | type | octet | 1 | Valeur enum UpdateType |
+| 2 | particleSystemsOffset | int32 LE | 4 | Offset vers le dictionnaire de systemes de particules |
+| 6 | removedParticleSystemsOffset | int32 LE | 4 | Offset vers le tableau supprime |
+| 10+ | particleSystems | `Map<String, ParticleSystem>` | Variable | Definitions de systemes de particules (optionnel) |
+| - | removedParticleSystems | String[] | Variable | IDs a supprimer (optionnel) |
+
+**Taille fixe :** 10 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateBlockGroups (ID 78)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui (Zstd)
+**Description :** Envoie les definitions de groupes de blocs pour categoriser les blocs (ex: "pierre", "bois", "minerai").
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = groups present |
+| 1 | type | octet | 1 | Valeur enum UpdateType |
+| 2+ | groups | `Map<String, BlockGroup>` | Variable | Definitions de groupes de blocs (optionnel) |
+
+**Taille fixe :** 2 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateSoundSets (ID 79)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui (Zstd)
+**Description :** Envoie les definitions d'ensembles de sons qui regroupent les evenements sonores lies pour les materiaux et actions.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = soundSets present |
+| 1 | type | octet | 1 | Valeur enum UpdateType |
+| 2 | maxId | int32 LE | 4 | ID maximum d'ensemble de sons |
+| 6+ | soundSets | `Map<int32, SoundSet>` | Variable | Definitions d'ensembles de sons (optionnel) |
+
+**Taille fixe :** 6 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateFluids (ID 83)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui (Zstd)
+**Description :** Envoie les definitions de types de fluides incluant l'eau, la lave et les fluides personnalises.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = fluids present |
+| 1 | type | octet | 1 | Valeur enum UpdateType |
+| 2 | maxId | int32 LE | 4 | ID maximum de fluide |
+| 6+ | fluids | `Map<int32, Fluid>` | Variable | Definitions de fluides (optionnel) |
+
+**Taille fixe :** 6 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### Tableau de Reference des Paquets d'Assets
+
+Le tableau suivant resume tous les paquets de synchronisation d'assets :
+
+| Paquet | ID | Type de Cle | Type de Valeur | Supporte Suppression |
+|--------|-----|-------------|----------------|---------------------|
+| UpdateBlockTypes | 40 | int32 | BlockType | Non |
+| UpdateWeathers | 47 | int32 | Weather | Non |
+| UpdateParticleSystems | 49 | String | ParticleSystem | Oui |
+| UpdateParticleSpawners | 50 | String | ParticleSpawner | Oui |
+| UpdateItems | 54 | String | ItemBase | Oui |
+| UpdateItemCategories | 55 | String | ItemCategory | Oui |
+| UpdateItemQualities | 56 | String | ItemQuality | Non |
+| UpdateRecipes | 60 | String | CraftingRecipe | Oui |
+| UpdateEnvironments | 61 | int32 | WorldEnvironment | Non |
+| UpdateTranslations | 64 | String | String | Non |
+| UpdateSoundEvents | 65 | int32 | SoundEvent | Non |
+| UpdateInteractions | 66 | int32 | Interaction | Non |
+| UpdateRootInteractions | 67 | int32 | RootInteraction | Non |
+| UpdateUnarmedInteractions | 68 | int32 | UnarmedInteraction | Non |
+| UpdateBlockGroups | 78 | String | BlockGroup | Non |
+| UpdateSoundSets | 79 | int32 | SoundSet | Non |
+| UpdateBlockSoundSets | 80 | int32 | BlockSoundSet | Non |
+| UpdateItemSoundSets | 81 | int32 | ItemSoundSet | Non |
+| UpdateBlockHitboxes | 41 | int32 | Hitbox[] | Non |
+| UpdateBlockParticleSets | 44 | String | BlockParticleSet | Non |
+| UpdateBlockBreakingDecals | 45 | String | BlockBreakingDecal | Non |
+| UpdateBlockSets | 46 | String | BlockSet | Non |
+| UpdateFluidFX | 63 | int32 | FluidFX | Non |
+| UpdateFluids | 83 | int32 | Fluid | Non |
+| UpdateProjectileConfigs | 85 | String | ProjectileConfig | Oui |
+| UpdateEntityEffects | 90 | String | EntityEffect | Oui |
+| UpdateEntityStatTypes | 91 | int32 | EntityStatType | Non |
+| UpdateItemPlayerAnimations | 92 | String | ItemPlayerAnimation | Oui |
+| UpdateItemReticles | 93 | int32 | ItemReticle | Non |
+| UpdateModelvfxs | 94 | String | Modelvfx | Oui |
+| UpdateCameraShake | 95 | int32 | CameraShake | Non |
+| UpdateViewBobbing | 96 | int32 | ViewBobbing | Non |
+| UpdateTrails | 97 | String | Trail | Oui |
+| UpdateResourceTypes | 98 | int32 | ResourceType | Non |
+| UpdateAudioCategories | 99 | int32 | AudioCategory | Non |
+| UpdateReverbEffects | 350 | int32 | ReverbEffect | Non |
+| UpdateEqualizerEffects | 351 | int32 | EqualizerEffect | Non |
+| UpdateAmbienceFX | 352 | int32 | AmbienceFX | Non |
+| UpdateEntityUIComponents | 353 | String | EntityUIComponent | Oui |
+| UpdateTagPatterns | 354 | int32 | TagPattern | Non |
+| UpdateFieldcraftCategories | 355 | String | FieldcraftCategory | Oui |
+| UpdateHitboxCollisionConfig | 356 | - | HitboxCollisionConfig | Non |
+| UpdateRepulsionConfig | 357 | - | RepulsionConfig | Non |
+
+---
+
+### Paquets de Suivi d'Objectifs
+
+Ces paquets gerent l'etat de suivi des quetes/objectifs.
+
+#### TrackOrUpdateObjective (ID 358)
+
+**Direction :** Serveur -> Client
+**Compresse :** Non
+**Description :** Ajoute ou met a jour un objectif dans le tracker d'objectifs du client.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Indicateurs de presence |
+| 1+ | objective | ObjectiveData | Variable | Definition d'objectif |
+
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+#### UpdateObjectiveTask (ID 359)
+
+**Direction :** Serveur -> Client
+**Compresse :** Non
+**Description :** Met a jour une tache specifique au sein d'un objectif suivi.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Indicateurs de presence |
+| 1+ | taskUpdate | ObjectiveTaskUpdate | Variable | Donnees de mise a jour de tache |
+
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+#### UntrackObjective (ID 70)
+
+**Direction :** Serveur -> Client
+**Compresse :** Non
+**Description :** Supprime un objectif du tracker d'objectifs du client.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = objectiveId present |
+| 1+ | objectiveId | VarString | Variable | ID d'objectif a supprimer |
+
+**Taille fixe :** 1 octet (minimum)
+**Taille maximale :** 16 384 006 octets
+
+---
+
+## Paquets de Connexion (Supplementaires)
+
+### Ping (ID 2)
+
+**Direction :** Serveur -> Client
+**Compresse :** Non
+**Description :** Paquet de ping envoye par le serveur pour mesurer la latence. Contient des informations de synchronisation et les valeurs de ping precedentes a des fins de diagnostic.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = temps present |
+| 1 | id | int32 LE | 4 | Identifiant de sequence ping |
+| 5 | time | InstantData | 12 | Horodatage (optionnel) |
+| 17 | lastPingValueRaw | int32 LE | 4 | Ping brut precedent en ms |
+| 21 | lastPingValueDirect | int32 LE | 4 | Ping direct precedent en ms |
+| 25 | lastPingValueTick | int32 LE | 4 | Ping base sur tick precedent en ms |
+
+**Taille fixe :** 29 octets
+
+---
+
+### Pong (ID 3)
+
+**Direction :** Client -> Serveur
+**Compresse :** Non
+**Description :** Reponse a un paquet Ping. Contient l'horodatage original et des informations sur le type de pong et la file d'attente de paquets du client.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = temps present |
+| 1 | id | int32 LE | 4 | Identifiant de sequence ping correspondant |
+| 5 | time | InstantData | 12 | Horodatage (optionnel) |
+| 17 | type | octet | 1 | Valeur enum PongType |
+| 18 | packetQueueSize | int16 LE | 2 | Nombre de paquets dans la file client |
+
+**Valeurs PongType :**
+- `0` - Raw : Reponse directe
+- `1` - Direct : Mesure sans delai de traitement
+- `2` - Tick : Mesure sur le tick de jeu
+
+**Taille fixe :** 20 octets
+
+---
+
+## Paquets d'Authentification (Etendus)
+
+### Status (ID 10)
+
+**Direction :** Serveur -> Client
+**Compresse :** Non
+**Description :** Reponse d'etat du serveur contenant les informations de base. Envoye en reponse aux requetes d'etat avant la connexion complete.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = nom, Bit 1 = motd |
+| 1 | playerCount | int32 LE | 4 | Nombre de joueurs actuels |
+| 5 | maxPlayers | int32 LE | 4 | Capacite maximale de joueurs |
+| 9 | nameOffset | int32 LE | 4 | Offset vers la chaine nom |
+| 13 | motdOffset | int32 LE | 4 | Offset vers la chaine MOTD |
+| 17+ | name | VarString | Variable | Nom du serveur (max 128 chars) |
+| ... | motd | VarString | Variable | Message du jour (max 512 chars) |
+
+**Taille fixe :** 17 octets (minimum)
+**Taille maximale :** 2 587 octets
+
+---
+
+### AuthGrant (ID 11)
+
+**Direction :** Serveur -> Client
+**Compresse :** Non
+**Description :** Le serveur accorde l'authentification au client apres verification reussie. Contient la subvention d'autorisation et le jeton d'identite du serveur.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = grant, Bit 1 = token |
+| 1 | authorizationGrantOffset | int32 LE | 4 | Offset vers la chaine grant |
+| 5 | serverIdentityTokenOffset | int32 LE | 4 | Offset vers la chaine token |
+| 9+ | authorizationGrant | VarString | Variable | Subvention OAuth (max 4096 chars) |
+| ... | serverIdentityToken | VarString | Variable | Jeton ID serveur (max 8192 chars) |
+
+**Taille fixe :** 9 octets (minimum)
+**Taille maximale :** 49 171 octets
+
+---
+
+### AuthToken (ID 12)
+
+**Direction :** Client -> Serveur
+**Compresse :** Non
+**Description :** Le client envoie le jeton d'authentification au serveur pour verification.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = accessToken, Bit 1 = grant |
+| 1 | accessTokenOffset | int32 LE | 4 | Offset vers le jeton d'acces |
+| 5 | serverAuthorizationGrantOffset | int32 LE | 4 | Offset vers la subvention d'autorisation |
+| 9+ | accessToken | VarString | Variable | Jeton d'acces utilisateur (max 8192 chars) |
+| ... | serverAuthorizationGrant | VarString | Variable | Subvention auth serveur (max 4096 chars) |
+
+**Taille fixe :** 9 octets (minimum)
+**Taille maximale :** 49 171 octets
+
+---
+
+### ServerAuthToken (ID 13)
+
+**Direction :** Serveur -> Client
+**Compresse :** Non
+**Description :** Le serveur envoie son jeton d'authentification pour l'authentification mutuelle. Peut inclure un defi de mot de passe pour les serveurs proteges.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = accessToken, Bit 1 = challenge |
+| 1 | serverAccessTokenOffset | int32 LE | 4 | Offset vers le jeton serveur |
+| 5 | passwordChallengeOffset | int32 LE | 4 | Offset vers les octets de defi |
+| 9+ | serverAccessToken | VarString | Variable | Jeton d'acces serveur (max 8192 chars) |
+| ... | passwordChallenge | byte[] | Variable | Octets de defi (max 64 octets) |
+
+**Taille fixe :** 9 octets (minimum)
+**Taille maximale :** 32 851 octets
+
+---
+
+### ConnectAccept (ID 14)
+
+**Direction :** Serveur -> Client
+**Compresse :** Non
+**Description :** Le serveur accepte la demande de connexion. Peut inclure un defi de mot de passe pour les serveurs proteges.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = challenge present |
+| 1+ | passwordChallenge | byte[] | Variable | Octets de defi (max 64 octets) |
+
+**Taille fixe :** 1 octet (minimum)
+**Taille maximale :** 70 octets
+
+---
+
+### PasswordResponse (ID 15)
+
+**Direction :** Client -> Serveur
+**Compresse :** Non
+**Description :** Le client envoie la reponse de mot de passe hachee au defi du serveur.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = hash present |
+| 1+ | hash | byte[] | Variable | Hash du mot de passe (max 64 octets) |
+
+**Taille fixe :** 1 octet (minimum)
+**Taille maximale :** 70 octets
+
+---
+
+### PasswordAccepted (ID 16)
+
+**Direction :** Serveur -> Client
+**Compresse :** Non
+**Description :** Le serveur confirme que le mot de passe etait correct. Paquet vide sans charge utile.
+
+**Taille fixe :** 0 octets
+
+---
+
+### PasswordRejected (ID 17)
+
+**Direction :** Serveur -> Client
+**Compresse :** Non
+**Description :** Le serveur rejette le mot de passe et envoie un nouveau defi. Inclut le nombre de tentatives restantes.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = nouveau defi present |
+| 1 | attemptsRemaining | int32 LE | 4 | Tentatives de mot de passe restantes |
+| 5+ | newChallenge | byte[] | Variable | Nouveaux octets de defi (max 64 octets) |
+
+**Taille fixe :** 5 octets (minimum)
+**Taille maximale :** 74 octets
+
+---
+
+### ClientReferral (ID 18)
+
+**Direction :** Serveur -> Client
+**Compresse :** Non
+**Description :** Le serveur redirige le client vers un autre serveur. Utilise pour les transferts de serveur et l'equilibrage de charge.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = host, Bit 1 = data |
+| 1 | hostToOffset | int32 LE | 4 | Offset vers l'adresse hote |
+| 5 | dataOffset | int32 LE | 4 | Offset vers les donnees de transfert |
+| 9+ | hostTo | HostAddress | Variable | Adresse du serveur cible |
+| ... | data | byte[] | Variable | Donnees de transfert (max 4096 octets) |
+
+**Taille fixe :** 9 octets (minimum)
+**Taille maximale :** 5 141 octets
+
+---
+
+## Paquets de Carte du Monde
+
+Ces paquets gerent le systeme de carte du monde en jeu pour la navigation et la decouverte.
+
+### UpdateWorldMapSettings (ID 240)
+
+**Direction :** Serveur -> Client
+**Compresse :** Non
+**Description :** Configure les parametres de la carte du monde incluant l'etat d'activation, les donnees de biome et les permissions de teleportation.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = biomeDataMap present |
+| 1 | enabled | octet | 1 | Booleen : carte activee |
+| 2 | allowTeleportToCoordinates | octet | 1 | Booleen : teleportation coordonnees |
+| 3 | allowTeleportToMarkers | octet | 1 | Booleen : teleportation marqueurs |
+| 4 | defaultScale | float LE | 4 | Niveau de zoom par defaut (defaut: 32.0) |
+| 8 | minScale | float LE | 4 | Zoom minimum (defaut: 2.0) |
+| 12 | maxScale | float LE | 4 | Zoom maximum (defaut: 256.0) |
+| 16+ | biomeDataMap | `Map<short, BiomeData>` | Variable | Donnees visuelles de biome |
+
+**Taille fixe :** 16 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateWorldMap (ID 241)
+
+**Direction :** Serveur -> Client
+**Compresse :** Oui
+**Description :** Met a jour la carte du monde avec de nouveaux chunks, marqueurs et suppressions.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = chunks, Bit 1 = ajoutes, Bit 2 = supprimes |
+| 1 | chunksOffset | int32 LE | 4 | Offset vers le tableau de chunks |
+| 5 | addedMarkersOffset | int32 LE | 4 | Offset vers les marqueurs ajoutes |
+| 9 | removedMarkersOffset | int32 LE | 4 | Offset vers les IDs de marqueurs supprimes |
+| 13+ | chunks | MapChunk[] | Variable | Donnees de chunk de carte |
+| ... | addedMarkers | MapMarker[] | Variable | Nouveaux marqueurs de carte |
+| ... | removedMarkers | VarString[] | Variable | IDs de marqueurs a supprimer |
+
+**Taille fixe :** 13 octets (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### ClearWorldMap (ID 242)
+
+**Direction :** Serveur -> Client
+**Compresse :** Non
+**Description :** Efface toutes les donnees de la carte du monde. Utilise lors du changement de monde ou de la reinitialisation de la carte.
+
+**Taille fixe :** 0 octets
+
+---
+
+### UpdateWorldMapVisible (ID 243)
+
+**Direction :** Client -> Serveur
+**Compresse :** Non
+**Description :** Le client notifie le serveur quand la visibilite de l'UI de carte change.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | visible | octet | 1 | Booleen : carte visible |
+
+**Taille fixe :** 1 octet
+
+---
+
+### TeleportToWorldMapMarker (ID 244)
+
+**Direction :** Client -> Serveur
+**Compresse :** Non
+**Description :** Le client demande la teleportation vers un emplacement de marqueur de carte.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = id present |
+| 1+ | id | VarString | Variable | ID du marqueur cible |
+
+**Taille fixe :** 1 octet (minimum)
+**Taille maximale :** 16 384 006 octets
+
+---
+
+### TeleportToWorldMapPosition (ID 245)
+
+**Direction :** Client -> Serveur
+**Compresse :** Non
+**Description :** Le client demande la teleportation vers des coordonnees specifiques de la carte.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | x | int32 LE | 4 | Coordonnee X cible |
+| 4 | y | int32 LE | 4 | Coordonnee Y cible |
+
+**Taille fixe :** 8 octets
+
+---
+
+## Paquets Joueur (Supplementaires)
+
+### SyncPlayerPreferences (ID 116)
+
+**Direction :** Bidirectionnel
+**Compresse :** Non
+**Description :** Synchronise les parametres de preferences du joueur entre le client et le serveur.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | showEntityMarkers | octet | 1 | Booleen : afficher les marqueurs d'entite |
+| 1 | armorItemsPreferredPickupLocation | octet | 1 | Enum PickupLocation |
+| 2 | weaponAndToolItemsPreferredPickupLocation | octet | 1 | Enum PickupLocation |
+| 3 | usableItemsItemsPreferredPickupLocation | octet | 1 | Enum PickupLocation |
+| 4 | solidBlockItemsPreferredPickupLocation | octet | 1 | Enum PickupLocation |
+| 5 | miscItemsPreferredPickupLocation | octet | 1 | Enum PickupLocation |
+| 6 | allowNPCDetection | octet | 1 | Booleen : autoriser detection PNJ |
+| 7 | respondToHit | octet | 1 | Booleen : reagir aux coups |
+
+**Valeurs PickupLocation :**
+- `0` - Hotbar : Preferer les emplacements de barre rapide
+- `1` - Inventory : Preferer les emplacements d'inventaire
+- `2` - Auto : Placement automatique
+
+**Taille fixe :** 8 octets
+
+---
+
+### RemoveMapMarker (ID 119)
+
+**Direction :** Client -> Serveur
+**Compresse :** Non
+**Description :** Le client demande la suppression d'un marqueur de carte.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = markerId present |
+| 1+ | markerId | VarString | Variable | ID du marqueur a supprimer |
+
+**Taille fixe :** 1 octet (minimum)
+**Taille maximale :** 16 384 006 octets
+
+---
+
+## Paquets de Configuration (Supplementaires)
+
+### ViewRadius (ID 32)
+
+**Direction :** Bidirectionnel
+**Compresse :** Non
+**Description :** Definit la distance de vue/rendu du client en chunks.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | value | int32 LE | 4 | Rayon de vue en chunks |
+
+**Taille fixe :** 4 octets
+
+---
+
+## Paquets d'Acces Serveur (Supplementaires)
+
+### RequestServerAccess (ID 250)
+
+**Direction :** Client -> Serveur
+**Compresse :** Non
+**Description :** Le client demande a changer le niveau d'acces du serveur (pour les proprietaires/admins du serveur).
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | access | octet | 1 | Valeur enum Access |
+| 1 | externalPort | int16 LE | 2 | Port externe pour l'acces public |
+
+**Valeurs Access :**
+- `0` - Private : Serveur non liste
+- `1` - FriendsOnly : Visible par les amis
+- `2` - Public : Liste publiquement
+
+**Taille fixe :** 3 octets
+
+---
+
+## Paquets Interface (Supplementaires)
+
+### CustomPageEvent (ID 219)
+
+**Direction :** Client -> Serveur
+**Compresse :** Non
+**Description :** Le client envoie des evenements des pages UI personnalisees au serveur.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = donnees presentes |
+| 1 | type | octet | 1 | Enum CustomPageEventType |
+| 2+ | data | VarString | Variable | Donnees d'evenement JSON |
+
+**Valeurs CustomPageEventType :**
+- `0` - Acknowledge : Confirmation de chargement de page
+- `1` - Data : Donnees d'entree utilisateur
+- `2` - Dismiss : L'utilisateur a ferme la page
+
+**Taille fixe :** 2 octets (minimum)
+**Taille maximale :** 16 384 007 octets
+
+---
+
+### EditorBlocksChange (ID 222)
+
+**Direction :** Bidirectionnel
+**Compresse :** Oui
+**Description :** Commande d'editeur pour les changements de blocs/fluides en lot. Utilise par les outils de construction pour les operations complexes.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = selection, Bit 1 = blocs, Bit 2 = fluides |
+| 1 | selection | EditorSelection | 24 | Limites de selection (optionnel) |
+| 25 | blocksCount | int32 LE | 4 | Total de blocs affectes |
+| 29 | advancedPreview | octet | 1 | Booleen : afficher apercu |
+| 30 | blocksChangeOffset | int32 LE | 4 | Offset vers les changements de blocs |
+| 34 | fluidsChangeOffset | int32 LE | 4 | Offset vers les changements de fluides |
+| 38+ | blocksChange | BlockChange[] | Variable | Modifications de blocs |
+| ... | fluidsChange | FluidChange[] | Variable | Modifications de fluides |
+
+**Taille fixe :** 38 octets (minimum)
+**Taille maximale :** 139 264 048 octets
+
+---
+
+### UpdateKnownRecipes (ID 228)
+
+**Direction :** Serveur -> Client
+**Compresse :** Non
+**Description :** Met a jour les recettes d'artisanat connues du client. Utilise pour les systemes de deblocage de recettes.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = carte connue presente |
+| 1+ | known | `Map<String, CraftingRecipe>` | Variable | ID de recette vers donnees de recette |
+
+**Taille fixe :** 1 octet (minimum)
+**Taille maximale :** 1 677 721 600 octets
+
+---
+
+### UpdateLanguage (ID 232)
+
+**Direction :** Client -> Serveur
+**Compresse :** Non
+**Description :** Le client notifie le serveur du changement de preference de langue.
+
+| Offset | Champ | Type | Taille | Description |
+|--------|-------|------|--------|-------------|
+| 0 | nullBits | octet | 1 | Bit 0 = langue presente |
+| 1+ | language | VarString | Variable | Code de langue (ex. "en", "fr") |
+
+**Taille fixe :** 1 octet (minimum)
+**Taille maximale :** 16 384 006 octets

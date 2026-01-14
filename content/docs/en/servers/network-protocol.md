@@ -294,6 +294,8 @@ Initial client setup.
 | Machinima | `RequestMachinimaActorModel` (260), `UpdateMachinimaScene` (262) | Cinematic tools |
 | Camera | `RequestFlyCameraMode` (282) | Camera control |
 | Interaction | `SyncInteractionChains` (290) | Interaction chains |
+| Objectives/Quests | `TrackOrUpdateObjective` (69), `UntrackObjective` (70), `UpdateObjectiveTask` (71) | Quest tracking and progress |
+| NPC Debug | `BuilderToolSetNPCDebug` (423) | NPC behavior debugging |
 | Assets | 40+ packets | Asset synchronization |
 
 ## Key Packet Details
@@ -1334,6 +1336,10 @@ Acknowledgment structure for server-initiated teleports.
 | Camera Packets | `com/hypixel/hytale/protocol/packets/camera/*.java` |
 | Machinima Packets | `com/hypixel/hytale/protocol/packets/machinima/*.java` |
 | Interface Packets | `com/hypixel/hytale/protocol/packets/interface_/*.java` |
+| Interaction Packets | `com/hypixel/hytale/protocol/packets/interaction/*.java` |
+| Objective Packets | `com/hypixel/hytale/protocol/packets/assets/TrackOrUpdateObjective.java`, `UntrackObjective.java`, `UpdateObjectiveTask.java` |
+| Objective Structures | `com/hypixel/hytale/protocol/Objective.java`, `ObjectiveTask.java` |
+| NPC Debug Packets | `com/hypixel/hytale/protocol/packets/buildertools/BuilderToolSetNPCDebug.java` |
 | Movement Structures | `com/hypixel/hytale/protocol/MovementStates.java`, `MovementSettings.java` |
 | Input Structures | `com/hypixel/hytale/protocol/MouseButtonEvent.java`, `MouseMotionEvent.java` |
 
@@ -1973,6 +1979,97 @@ Mount and NPC packets handle riding mechanics and NPC interactions.
 
 **Fixed Size:** 27 bytes (minimum)
 **Max Size:** 16,385,065 bytes
+
+---
+
+### Objective/Quest Packets
+
+Objective packets manage quest tracking, task progress, and objective UI updates. These packets enable the server to communicate quest states and progress to clients.
+
+#### TrackOrUpdateObjective (ID 69)
+
+**Direction:** Server -> Client
+**Compressed:** No
+**Description:** Tracks a new objective or updates an existing one on the client's objective panel. Used when a player accepts a quest, receives objective updates, or needs to display quest progress.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = objective present |
+| 1 | objective | Objective | Variable | Objective data (optional) |
+
+**Objective Structure:**
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Presence flags for optional fields |
+| 1 | objectiveUuid | UUID | 16 | Unique identifier for this objective |
+| 17 | objectiveTitleKeyOffset | int32 LE | 4 | Offset to title localization key |
+| 21 | objectiveDescriptionKeyOffset | int32 LE | 4 | Offset to description localization key |
+| 25 | objectiveLineIdOffset | int32 LE | 4 | Offset to quest line identifier |
+| 29 | tasksOffset | int32 LE | 4 | Offset to tasks array |
+| 33+ | objectiveTitleKey | VarString | Variable | Localization key for objective title (optional) |
+| - | objectiveDescriptionKey | VarString | Variable | Localization key for description (optional) |
+| - | objectiveLineId | VarString | Variable | Quest line identifier (optional) |
+| - | tasks | VarInt + ObjectiveTask[] | Variable | Array of objective tasks (optional) |
+
+**Fixed Size:** 1 byte (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+#### UntrackObjective (ID 70)
+
+**Direction:** Server -> Client
+**Compressed:** No
+**Description:** Removes an objective from the client's tracking. Used when a quest is completed, abandoned, or should no longer be displayed.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | objectiveUuid | UUID | 16 | UUID of the objective to untrack |
+
+**Fixed Size:** 16 bytes
+
+#### UpdateObjectiveTask (ID 71)
+
+**Direction:** Server -> Client
+**Compressed:** No
+**Description:** Updates a specific task within a tracked objective. Used for incremental progress updates without resending the entire objective.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = task present |
+| 1 | objectiveUuid | UUID | 16 | UUID of the parent objective |
+| 17 | taskIndex | int32 LE | 4 | Index of the task to update (0-based) |
+| 21 | task | ObjectiveTask | Variable | Updated task data (optional) |
+
+**ObjectiveTask Structure:**
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = taskDescriptionKey present |
+| 1 | currentCompletion | int32 LE | 4 | Current progress count |
+| 5 | completionNeeded | int32 LE | 4 | Total count required for completion |
+| 9 | taskDescriptionKey | VarString | Variable | Localization key for task description (optional) |
+
+**Fixed Size:** 21 bytes (minimum)
+**Max Size:** 16,384,035 bytes
+
+---
+
+### NPC Debug Packets
+
+NPC debug packets provide development and debugging tools for NPC behavior and AI.
+
+#### BuilderToolSetNPCDebug (ID 423)
+
+**Direction:** Bidirectional
+**Compressed:** No
+**Description:** Enables or disables debug visualization for a specific NPC entity. When enabled, displays AI state, pathfinding, behavior trees, and other debug information.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | entityId | int32 LE | 4 | Target NPC entity network ID |
+| 4 | enabled | byte | 1 | Boolean: debug visualization enabled |
+
+**Fixed Size:** 5 bytes
 
 ---
 
@@ -3571,3 +3668,961 @@ Server                                  Client
    |  <---- CustomPageEvent (Dismiss) ---- |  User closed page
    |                                       |
 ```
+
+---
+
+## Asset Synchronization Packets
+
+Asset synchronization packets transfer game asset definitions from the server to the client during connection setup and runtime updates. These packets enable servers to customize game content dynamically, supporting modded servers and content packs.
+
+### Common Structure
+
+All asset update packets share a common pattern:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | UpdateType | Init (0), Update (1), or Delta (2) |
+| `maxId` | int32 | Maximum ID in the registry (for indexed assets) |
+| `[assets]` | Map/Array | Asset definitions (optional) |
+| `[removedAssets]` | String[] | IDs of assets to remove (optional) |
+
+**UpdateType Values:**
+- `0` - Init: Full registry initialization during setup
+- `1` - Update: Replace existing entries
+- `2` - Delta: Incremental changes only
+
+---
+
+### UpdateBlockTypes (ID 40)
+
+**Direction:** Server -> Client
+**Compressed:** Yes (Zstd)
+**Description:** Sends block type definitions including visual properties, physics characteristics, and model references. Used during setup and when block definitions change.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = blockTypes present |
+| 1 | type | byte | 1 | UpdateType enum value |
+| 2 | maxId | int32 LE | 4 | Maximum block type ID |
+| 6 | updateBlockTextures | byte | 1 | Boolean: reload block textures |
+| 7 | updateModelTextures | byte | 1 | Boolean: reload model textures |
+| 8 | updateModels | byte | 1 | Boolean: reload 3D models |
+| 9 | updateMapGeometry | byte | 1 | Boolean: rebuild map geometry |
+| 10+ | blockTypes | `Map<int32, BlockType>` | Variable | Block type definitions (optional) |
+
+**Fixed Size:** 10 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateBlockHitboxes (ID 41)
+
+**Direction:** Server -> Client
+**Compressed:** Yes (Zstd)
+**Description:** Sends block hitbox/collision shape definitions. Maps block type IDs to arrays of hitboxes that define the block's collision geometry. Used for player collision, raycasting, and entity physics.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = blockBaseHitboxes present |
+| 1 | type | byte | 1 | UpdateType enum value |
+| 2 | maxId | int32 LE | 4 | Maximum block type ID in registry |
+| 6+ | blockBaseHitboxes | `Map<int32, Hitbox[]>` | Variable | Dictionary of block ID to hitbox array (optional) |
+
+**Hitbox Structure (24 bytes each):**
+
+| Field | Type | Size | Description |
+|-------|------|------|-------------|
+| minX | float LE | 4 | Minimum X coordinate (0.0-1.0) |
+| minY | float LE | 4 | Minimum Y coordinate (0.0-1.0) |
+| minZ | float LE | 4 | Minimum Z coordinate (0.0-1.0) |
+| maxX | float LE | 4 | Maximum X coordinate (0.0-1.0) |
+| maxY | float LE | 4 | Maximum Y coordinate (0.0-1.0) |
+| maxZ | float LE | 4 | Maximum Z coordinate (0.0-1.0) |
+
+**Notes:**
+- Hitbox coordinates are relative to the block position (0.0-1.0 range)
+- A full block has a single hitbox: (0,0,0) to (1,1,1)
+- Stairs, slabs, and custom shapes have multiple hitboxes
+- Maximum 64 hitboxes per block type
+
+**Fixed Size:** 6 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateBlockParticleSets (ID 44)
+
+**Direction:** Server -> Client
+**Compressed:** Yes (Zstd)
+**Description:** Sends block particle effect configurations. Defines the particles emitted when blocks are broken, walked on, or interacted with. Each block type can reference a particle set by name.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = blockParticleSets present |
+| 1 | type | byte | 1 | UpdateType enum value |
+| 2+ | blockParticleSets | `Map<String, BlockParticleSet>` | Variable | Dictionary of particle set ID to configuration (optional) |
+
+**BlockParticleSet Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| breakParticles | ParticleConfig | Particles emitted when block is destroyed |
+| stepParticles | ParticleConfig | Particles emitted when entity walks on block |
+| landParticles | ParticleConfig | Particles emitted when entity lands on block |
+| slideParticles | ParticleConfig | Particles emitted when entity slides on block |
+
+**Fixed Size:** 2 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateBlockBreakingDecals (ID 45)
+
+**Direction:** Server -> Client
+**Compressed:** Yes (Zstd)
+**Description:** Sends block breaking decal/crack texture configurations. Defines the visual progression of cracks that appear on blocks as they are being mined.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = blockBreakingDecals present |
+| 1 | type | byte | 1 | UpdateType enum value |
+| 2+ | blockBreakingDecals | `Map<String, BlockBreakingDecal>` | Variable | Dictionary of decal set ID to configuration (optional) |
+
+**BlockBreakingDecal Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| stages | TextureRef[] | Array of crack stage textures (typically 10 stages from 0-100%) |
+| tintColor | Color | Color tint applied to crack texture |
+| emissive | boolean | Whether cracks emit light (glow effect) |
+
+**Fixed Size:** 2 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateBlockSets (ID 46)
+
+**Direction:** Server -> Client
+**Compressed:** Yes (Zstd)
+**Description:** Sends block set definitions. Block sets group related blocks together for creative mode categories, hotbar switching (SwitchHotbarBlockSet packet), and gameplay mechanics.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = blockSets present |
+| 1 | type | byte | 1 | UpdateType enum value |
+| 2+ | blockSets | `Map<String, BlockSet>` | Variable | Dictionary of block set ID to definition (optional) |
+
+**BlockSet Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | String | Block set identifier (e.g., "building_blocks", "natural") |
+| displayName | String | Localized display name for UI |
+| blocks | String[] | Array of block type IDs in this set |
+| icon | ItemRef | Icon reference for UI display |
+
+**Fixed Size:** 2 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateFluidFX (ID 63)
+
+**Direction:** Server -> Client
+**Compressed:** Yes (Zstd)
+**Description:** Sends fluid visual effects configurations. Defines how fluids like water and lava are rendered, including surface effects, underwater effects, and fog parameters.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = fluidFX present |
+| 1 | type | byte | 1 | UpdateType enum value |
+| 2 | maxId | int32 LE | 4 | Maximum fluid type ID |
+| 6+ | fluidFX | `Map<int32, FluidFX>` | Variable | Dictionary of fluid ID to FX configuration (optional) |
+
+**FluidFX Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| surfaceColor | Color | Color of the fluid surface |
+| underwaterColor | Color | Tint color when camera is submerged |
+| fogDensity | float | Underwater fog density (higher = less visibility) |
+| fogColor | Color | Underwater fog color |
+| reflectivity | float | Surface reflection strength (0.0-1.0) |
+| transparency | float | Fluid transparency (0.0 = opaque, 1.0 = invisible) |
+| flowSpeed | float | Visual flow animation speed |
+| particleEmitter | ParticleConfig | Surface particle effects (bubbles, steam, etc.) |
+
+**Fixed Size:** 6 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateItems (ID 54)
+
+**Direction:** Server -> Client
+**Compressed:** Yes (Zstd)
+**Description:** Sends item definitions including properties, models, and icons. Supports both addition and removal of items.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = items present, bit 1 = removedItems present |
+| 1 | type | byte | 1 | UpdateType enum value |
+| 2 | updateModels | byte | 1 | Boolean: reload item models |
+| 3 | updateIcons | byte | 1 | Boolean: reload item icons |
+| 4 | itemsOffset | int32 LE | 4 | Offset to items dictionary |
+| 8 | removedItemsOffset | int32 LE | 4 | Offset to removed items array |
+| 12+ | items | `Map<String, ItemBase>` | Variable | Item definitions keyed by ID (optional) |
+| - | removedItems | String[] | Variable | Item IDs to remove (optional) |
+
+**Fixed Size:** 12 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateRecipes (ID 60)
+
+**Direction:** Server -> Client
+**Compressed:** Yes (Zstd)
+**Description:** Sends crafting recipe definitions. Supports adding new recipes and removing existing ones.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = recipes present, bit 1 = removedRecipes present |
+| 1 | type | byte | 1 | UpdateType enum value |
+| 2 | recipesOffset | int32 LE | 4 | Offset to recipes dictionary |
+| 6 | removedRecipesOffset | int32 LE | 4 | Offset to removed recipes array |
+| 10+ | recipes | `Map<String, CraftingRecipe>` | Variable | Recipe definitions (optional) |
+| - | removedRecipes | String[] | Variable | Recipe IDs to remove (optional) |
+
+**Fixed Size:** 10 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateEnvironments (ID 61)
+
+**Direction:** Server -> Client
+**Compressed:** Yes (Zstd)
+**Description:** Sends world environment (biome) definitions including ambient settings, weather configurations, and terrain parameters.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = environments present |
+| 1 | type | byte | 1 | UpdateType enum value |
+| 2 | maxId | int32 LE | 4 | Maximum environment ID |
+| 6 | rebuildMapGeometry | byte | 1 | Boolean: rebuild map geometry |
+| 7+ | environments | `Map<int32, WorldEnvironment>` | Variable | Environment definitions (optional) |
+
+**Fixed Size:** 7 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateTranslations (ID 64)
+
+**Direction:** Server -> Client
+**Compressed:** Yes (Zstd)
+**Description:** Sends localization strings for server-defined content. Enables servers to provide custom text for items, blocks, and UI elements.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = translations present |
+| 1 | type | byte | 1 | UpdateType enum value |
+| 2+ | translations | `Map<String, String>` | Variable | Translation key-value pairs (optional) |
+
+**Fixed Size:** 2 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateSoundEvents (ID 65)
+
+**Direction:** Server -> Client
+**Compressed:** Yes (Zstd)
+**Description:** Sends sound event definitions for audio playback triggers.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = soundEvents present |
+| 1 | type | byte | 1 | UpdateType enum value |
+| 2 | maxId | int32 LE | 4 | Maximum sound event ID |
+| 6+ | soundEvents | `Map<int32, SoundEvent>` | Variable | Sound event definitions (optional) |
+
+**Fixed Size:** 6 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateInteractions (ID 66)
+
+**Direction:** Server -> Client
+**Compressed:** Yes (Zstd)
+**Description:** Sends interaction definitions for combat, item usage, and environmental interactions.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = interactions present |
+| 1 | type | byte | 1 | UpdateType enum value |
+| 2 | maxId | int32 LE | 4 | Maximum interaction ID |
+| 6+ | interactions | `Map<int32, Interaction>` | Variable | Interaction definitions (optional) |
+
+**Fixed Size:** 6 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateWeathers (ID 47)
+
+**Direction:** Server -> Client
+**Compressed:** Yes (Zstd)
+**Description:** Sends weather type definitions including visual effects, particle systems, and environmental impact.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = weathers present |
+| 1 | type | byte | 1 | UpdateType enum value |
+| 2 | maxId | int32 LE | 4 | Maximum weather ID |
+| 6+ | weathers | `Map<int32, Weather>` | Variable | Weather definitions (optional) |
+
+**Fixed Size:** 6 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateParticleSystems (ID 49)
+
+**Direction:** Server -> Client
+**Compressed:** Yes (Zstd)
+**Description:** Sends particle system definitions for visual effects.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = particleSystems present, bit 1 = removedParticleSystems present |
+| 1 | type | byte | 1 | UpdateType enum value |
+| 2 | particleSystemsOffset | int32 LE | 4 | Offset to particle systems dictionary |
+| 6 | removedParticleSystemsOffset | int32 LE | 4 | Offset to removed array |
+| 10+ | particleSystems | `Map<String, ParticleSystem>` | Variable | Particle system definitions (optional) |
+| - | removedParticleSystems | String[] | Variable | IDs to remove (optional) |
+
+**Fixed Size:** 10 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateBlockGroups (ID 78)
+
+**Direction:** Server -> Client
+**Compressed:** Yes (Zstd)
+**Description:** Sends block group definitions for categorizing blocks (e.g., "stone", "wood", "ore").
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = groups present |
+| 1 | type | byte | 1 | UpdateType enum value |
+| 2+ | groups | `Map<String, BlockGroup>` | Variable | Block group definitions (optional) |
+
+**Fixed Size:** 2 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateSoundSets (ID 79)
+
+**Direction:** Server -> Client
+**Compressed:** Yes (Zstd)
+**Description:** Sends sound set definitions that group related sound events for materials and actions.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = soundSets present |
+| 1 | type | byte | 1 | UpdateType enum value |
+| 2 | maxId | int32 LE | 4 | Maximum sound set ID |
+| 6+ | soundSets | `Map<int32, SoundSet>` | Variable | Sound set definitions (optional) |
+
+**Fixed Size:** 6 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateFluids (ID 83)
+
+**Direction:** Server -> Client
+**Compressed:** Yes (Zstd)
+**Description:** Sends fluid type definitions including water, lava, and custom fluids.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = fluids present |
+| 1 | type | byte | 1 | UpdateType enum value |
+| 2 | maxId | int32 LE | 4 | Maximum fluid ID |
+| 6+ | fluids | `Map<int32, Fluid>` | Variable | Fluid definitions (optional) |
+
+**Fixed Size:** 6 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### Asset Packet Reference Table
+
+The following table summarizes all asset synchronization packets:
+
+| Packet | ID | Key Type | Value Type | Supports Removal |
+|--------|-----|----------|------------|------------------|
+| UpdateBlockTypes | 40 | int32 | BlockType | No |
+| UpdateWeathers | 47 | int32 | Weather | No |
+| UpdateParticleSystems | 49 | String | ParticleSystem | Yes |
+| UpdateParticleSpawners | 50 | String | ParticleSpawner | Yes |
+| UpdateItems | 54 | String | ItemBase | Yes |
+| UpdateItemCategories | 55 | String | ItemCategory | Yes |
+| UpdateItemQualities | 56 | String | ItemQuality | No |
+| UpdateRecipes | 60 | String | CraftingRecipe | Yes |
+| UpdateEnvironments | 61 | int32 | WorldEnvironment | No |
+| UpdateTranslations | 64 | String | String | No |
+| UpdateSoundEvents | 65 | int32 | SoundEvent | No |
+| UpdateInteractions | 66 | int32 | Interaction | No |
+| UpdateRootInteractions | 67 | int32 | RootInteraction | No |
+| UpdateUnarmedInteractions | 68 | int32 | UnarmedInteraction | No |
+| UpdateBlockGroups | 78 | String | BlockGroup | No |
+| UpdateSoundSets | 79 | int32 | SoundSet | No |
+| UpdateBlockSoundSets | 80 | int32 | BlockSoundSet | No |
+| UpdateItemSoundSets | 81 | int32 | ItemSoundSet | No |
+| UpdateBlockHitboxes | 41 | int32 | Hitbox[] | No |
+| UpdateBlockParticleSets | 44 | String | BlockParticleSet | No |
+| UpdateBlockBreakingDecals | 45 | String | BlockBreakingDecal | No |
+| UpdateBlockSets | 46 | String | BlockSet | No |
+| UpdateFluidFX | 63 | int32 | FluidFX | No |
+| UpdateFluids | 83 | int32 | Fluid | No |
+| UpdateProjectileConfigs | 85 | String | ProjectileConfig | Yes |
+| UpdateEntityEffects | 90 | String | EntityEffect | Yes |
+| UpdateEntityStatTypes | 91 | int32 | EntityStatType | No |
+| UpdateItemPlayerAnimations | 92 | String | ItemPlayerAnimation | Yes |
+| UpdateItemReticles | 93 | int32 | ItemReticle | No |
+| UpdateModelvfxs | 94 | String | Modelvfx | Yes |
+| UpdateCameraShake | 95 | int32 | CameraShake | No |
+| UpdateViewBobbing | 96 | int32 | ViewBobbing | No |
+| UpdateTrails | 97 | String | Trail | Yes |
+| UpdateResourceTypes | 98 | int32 | ResourceType | No |
+| UpdateAudioCategories | 99 | int32 | AudioCategory | No |
+| UpdateReverbEffects | 350 | int32 | ReverbEffect | No |
+| UpdateEqualizerEffects | 351 | int32 | EqualizerEffect | No |
+| UpdateAmbienceFX | 352 | int32 | AmbienceFX | No |
+| UpdateEntityUIComponents | 353 | String | EntityUIComponent | Yes |
+| UpdateTagPatterns | 354 | int32 | TagPattern | No |
+| UpdateFieldcraftCategories | 355 | String | FieldcraftCategory | Yes |
+| UpdateHitboxCollisionConfig | 356 | - | HitboxCollisionConfig | No |
+| UpdateRepulsionConfig | 357 | - | RepulsionConfig | No |
+
+---
+
+### Objective Tracking Packets
+
+These packets manage quest/objective tracking state.
+
+#### TrackOrUpdateObjective (ID 358)
+
+**Direction:** Server -> Client
+**Compressed:** No
+**Description:** Adds or updates an objective in the client's objective tracker.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Presence flags |
+| 1+ | objective | ObjectiveData | Variable | Objective definition |
+
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+#### UpdateObjectiveTask (ID 359)
+
+**Direction:** Server -> Client
+**Compressed:** No
+**Description:** Updates a specific task within a tracked objective.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Presence flags |
+| 1+ | taskUpdate | ObjectiveTaskUpdate | Variable | Task update data |
+
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+#### UntrackObjective (ID 70)
+
+**Direction:** Server -> Client
+**Compressed:** No
+**Description:** Removes an objective from the client's objective tracker.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = objectiveId present |
+| 1+ | objectiveId | VarString | Variable | Objective ID to remove |
+
+**Fixed Size:** 1 byte (minimum)
+**Max Size:** 16,384,006 bytes
+
+---
+
+## Connection Packets (Additional)
+
+### Ping (ID 2)
+
+**Direction:** Server -> Client
+**Compressed:** No
+**Description:** Ping packet sent by the server to measure latency. Contains timing information and previous ping values for diagnostic purposes.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = time present |
+| 1 | id | int32 LE | 4 | Ping sequence identifier |
+| 5 | time | InstantData | 12 | Timestamp (optional) |
+| 17 | lastPingValueRaw | int32 LE | 4 | Previous raw ping in ms |
+| 21 | lastPingValueDirect | int32 LE | 4 | Previous direct ping in ms |
+| 25 | lastPingValueTick | int32 LE | 4 | Previous tick-based ping in ms |
+
+**Fixed Size:** 29 bytes
+
+---
+
+### Pong (ID 3)
+
+**Direction:** Client -> Server
+**Compressed:** No
+**Description:** Response to a Ping packet. Contains the original timestamp and information about the pong type and client packet queue.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = time present |
+| 1 | id | int32 LE | 4 | Matching ping sequence identifier |
+| 5 | time | InstantData | 12 | Timestamp (optional) |
+| 17 | type | byte | 1 | PongType enum value |
+| 18 | packetQueueSize | int16 LE | 2 | Number of packets in client queue |
+
+**PongType Values:**
+- `0` - Raw: Direct response
+- `1` - Direct: Measured without processing delay
+- `2` - Tick: Measured on game tick
+
+**Fixed Size:** 20 bytes
+
+---
+
+## Authentication Packets (Extended)
+
+### Status (ID 10)
+
+**Direction:** Server -> Client
+**Compressed:** No
+**Description:** Server status response containing basic server information. Sent in response to status queries before full connection.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = name, Bit 1 = motd |
+| 1 | playerCount | int32 LE | 4 | Current player count |
+| 5 | maxPlayers | int32 LE | 4 | Maximum player capacity |
+| 9 | nameOffset | int32 LE | 4 | Offset to name string |
+| 13 | motdOffset | int32 LE | 4 | Offset to MOTD string |
+| 17+ | name | VarString | Variable | Server name (max 128 chars) |
+| ... | motd | VarString | Variable | Message of the day (max 512 chars) |
+
+**Fixed Size:** 17 bytes (minimum)
+**Max Size:** 2,587 bytes
+
+---
+
+### AuthGrant (ID 11)
+
+**Direction:** Server -> Client
+**Compressed:** No
+**Description:** Server grants authentication to the client after successful verification. Contains authorization grant and server identity token.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = grant, Bit 1 = token |
+| 1 | authorizationGrantOffset | int32 LE | 4 | Offset to grant string |
+| 5 | serverIdentityTokenOffset | int32 LE | 4 | Offset to token string |
+| 9+ | authorizationGrant | VarString | Variable | OAuth grant (max 4096 chars) |
+| ... | serverIdentityToken | VarString | Variable | Server ID token (max 8192 chars) |
+
+**Fixed Size:** 9 bytes (minimum)
+**Max Size:** 49,171 bytes
+
+---
+
+### AuthToken (ID 12)
+
+**Direction:** Client -> Server
+**Compressed:** No
+**Description:** Client sends authentication token to server for verification.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = accessToken, Bit 1 = grant |
+| 1 | accessTokenOffset | int32 LE | 4 | Offset to access token |
+| 5 | serverAuthorizationGrantOffset | int32 LE | 4 | Offset to authorization grant |
+| 9+ | accessToken | VarString | Variable | User access token (max 8192 chars) |
+| ... | serverAuthorizationGrant | VarString | Variable | Server auth grant (max 4096 chars) |
+
+**Fixed Size:** 9 bytes (minimum)
+**Max Size:** 49,171 bytes
+
+---
+
+### ServerAuthToken (ID 13)
+
+**Direction:** Server -> Client
+**Compressed:** No
+**Description:** Server sends its authentication token for mutual authentication. May include password challenge for protected servers.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = accessToken, Bit 1 = challenge |
+| 1 | serverAccessTokenOffset | int32 LE | 4 | Offset to server token |
+| 5 | passwordChallengeOffset | int32 LE | 4 | Offset to challenge bytes |
+| 9+ | serverAccessToken | VarString | Variable | Server access token (max 8192 chars) |
+| ... | passwordChallenge | byte[] | Variable | Challenge bytes (max 64 bytes) |
+
+**Fixed Size:** 9 bytes (minimum)
+**Max Size:** 32,851 bytes
+
+---
+
+### ConnectAccept (ID 14)
+
+**Direction:** Server -> Client
+**Compressed:** No
+**Description:** Server accepts the connection request. May include password challenge for protected servers.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = challenge present |
+| 1+ | passwordChallenge | byte[] | Variable | Challenge bytes (max 64 bytes) |
+
+**Fixed Size:** 1 byte (minimum)
+**Max Size:** 70 bytes
+
+---
+
+### PasswordResponse (ID 15)
+
+**Direction:** Client -> Server
+**Compressed:** No
+**Description:** Client sends hashed password response to server password challenge.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = hash present |
+| 1+ | hash | byte[] | Variable | Password hash (max 64 bytes) |
+
+**Fixed Size:** 1 byte (minimum)
+**Max Size:** 70 bytes
+
+---
+
+### PasswordAccepted (ID 16)
+
+**Direction:** Server -> Client
+**Compressed:** No
+**Description:** Server confirms password was correct. Empty packet with no payload.
+
+**Fixed Size:** 0 bytes
+
+---
+
+### PasswordRejected (ID 17)
+
+**Direction:** Server -> Client
+**Compressed:** No
+**Description:** Server rejects password and sends a new challenge. Includes remaining attempts count.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = new challenge present |
+| 1 | attemptsRemaining | int32 LE | 4 | Remaining password attempts |
+| 5+ | newChallenge | byte[] | Variable | New challenge bytes (max 64 bytes) |
+
+**Fixed Size:** 5 bytes (minimum)
+**Max Size:** 74 bytes
+
+---
+
+### ClientReferral (ID 18)
+
+**Direction:** Server -> Client
+**Compressed:** No
+**Description:** Server redirects client to another server. Used for server transfers and load balancing.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = host, Bit 1 = data |
+| 1 | hostToOffset | int32 LE | 4 | Offset to host address |
+| 5 | dataOffset | int32 LE | 4 | Offset to transfer data |
+| 9+ | hostTo | HostAddress | Variable | Target server address |
+| ... | data | byte[] | Variable | Transfer data (max 4096 bytes) |
+
+**Fixed Size:** 9 bytes (minimum)
+**Max Size:** 5,141 bytes
+
+---
+
+## World Map Packets
+
+These packets handle the in-game world map system for navigation and discovery.
+
+### UpdateWorldMapSettings (ID 240)
+
+**Direction:** Server -> Client
+**Compressed:** No
+**Description:** Configures the world map settings including enabled state, biome data, and teleportation permissions.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = biomeDataMap present |
+| 1 | enabled | byte | 1 | Boolean: map enabled |
+| 2 | allowTeleportToCoordinates | byte | 1 | Boolean: coordinate teleport |
+| 3 | allowTeleportToMarkers | byte | 1 | Boolean: marker teleport |
+| 4 | defaultScale | float LE | 4 | Default zoom level (default: 32.0) |
+| 8 | minScale | float LE | 4 | Minimum zoom (default: 2.0) |
+| 12 | maxScale | float LE | 4 | Maximum zoom (default: 256.0) |
+| 16+ | biomeDataMap | `Map<short, BiomeData>` | Variable | Biome visual data |
+
+**Fixed Size:** 16 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateWorldMap (ID 241)
+
+**Direction:** Server -> Client
+**Compressed:** Yes
+**Description:** Updates the world map with new chunks, markers, and removals.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = chunks, Bit 1 = added, Bit 2 = removed |
+| 1 | chunksOffset | int32 LE | 4 | Offset to chunks array |
+| 5 | addedMarkersOffset | int32 LE | 4 | Offset to added markers |
+| 9 | removedMarkersOffset | int32 LE | 4 | Offset to removed marker IDs |
+| 13+ | chunks | MapChunk[] | Variable | Map chunk data |
+| ... | addedMarkers | MapMarker[] | Variable | New map markers |
+| ... | removedMarkers | VarString[] | Variable | Marker IDs to remove |
+
+**Fixed Size:** 13 bytes (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### ClearWorldMap (ID 242)
+
+**Direction:** Server -> Client
+**Compressed:** No
+**Description:** Clears all world map data. Used when changing worlds or resetting the map.
+
+**Fixed Size:** 0 bytes
+
+---
+
+### UpdateWorldMapVisible (ID 243)
+
+**Direction:** Client -> Server
+**Compressed:** No
+**Description:** Client notifies server when the map UI visibility changes.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | visible | byte | 1 | Boolean: map is visible |
+
+**Fixed Size:** 1 byte
+
+---
+
+### TeleportToWorldMapMarker (ID 244)
+
+**Direction:** Client -> Server
+**Compressed:** No
+**Description:** Client requests teleportation to a map marker location.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = id present |
+| 1+ | id | VarString | Variable | Target marker ID |
+
+**Fixed Size:** 1 byte (minimum)
+**Max Size:** 16,384,006 bytes
+
+---
+
+### TeleportToWorldMapPosition (ID 245)
+
+**Direction:** Client -> Server
+**Compressed:** No
+**Description:** Client requests teleportation to specific map coordinates.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | x | int32 LE | 4 | Target X coordinate |
+| 4 | y | int32 LE | 4 | Target Y coordinate |
+
+**Fixed Size:** 8 bytes
+
+---
+
+## Player Packets (Additional)
+
+### SyncPlayerPreferences (ID 116)
+
+**Direction:** Bidirectional
+**Compressed:** No
+**Description:** Synchronizes player preference settings between client and server.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | showEntityMarkers | byte | 1 | Boolean: show entity markers |
+| 1 | armorItemsPreferredPickupLocation | byte | 1 | PickupLocation enum |
+| 2 | weaponAndToolItemsPreferredPickupLocation | byte | 1 | PickupLocation enum |
+| 3 | usableItemsItemsPreferredPickupLocation | byte | 1 | PickupLocation enum |
+| 4 | solidBlockItemsPreferredPickupLocation | byte | 1 | PickupLocation enum |
+| 5 | miscItemsPreferredPickupLocation | byte | 1 | PickupLocation enum |
+| 6 | allowNPCDetection | byte | 1 | Boolean: allow NPC detection |
+| 7 | respondToHit | byte | 1 | Boolean: respond to being hit |
+
+**PickupLocation Values:**
+- `0` - Hotbar: Prefer hotbar slots
+- `1` - Inventory: Prefer inventory slots
+- `2` - Auto: Automatic placement
+
+**Fixed Size:** 8 bytes
+
+---
+
+### RemoveMapMarker (ID 119)
+
+**Direction:** Client -> Server
+**Compressed:** No
+**Description:** Client requests removal of a map marker.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = markerId present |
+| 1+ | markerId | VarString | Variable | Marker ID to remove |
+
+**Fixed Size:** 1 byte (minimum)
+**Max Size:** 16,384,006 bytes
+
+---
+
+## Setup Packets (Additional)
+
+### ViewRadius (ID 32)
+
+**Direction:** Bidirectional
+**Compressed:** No
+**Description:** Sets the client view/render distance in chunks.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | value | int32 LE | 4 | View radius in chunks |
+
+**Fixed Size:** 4 bytes
+
+---
+
+## Server Access Packets (Additional)
+
+### RequestServerAccess (ID 250)
+
+**Direction:** Client -> Server
+**Compressed:** No
+**Description:** Client requests to change server access level (for server owners/admins).
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | access | byte | 1 | Access enum value |
+| 1 | externalPort | int16 LE | 2 | External port for public access |
+
+**Access Values:**
+- `0` - Private: Server not listed
+- `1` - FriendsOnly: Visible to friends
+- `2` - Public: Listed publicly
+
+**Fixed Size:** 3 bytes
+
+---
+
+## Interface Packets (Additional)
+
+### CustomPageEvent (ID 219)
+
+**Direction:** Client -> Server
+**Compressed:** No
+**Description:** Client sends events from custom UI pages back to the server.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = data present |
+| 1 | type | byte | 1 | CustomPageEventType enum |
+| 2+ | data | VarString | Variable | Event data JSON |
+
+**CustomPageEventType Values:**
+- `0` - Acknowledge: Page loaded confirmation
+- `1` - Data: User input data
+- `2` - Dismiss: User closed the page
+
+**Fixed Size:** 2 bytes (minimum)
+**Max Size:** 16,384,007 bytes
+
+---
+
+### EditorBlocksChange (ID 222)
+
+**Direction:** Bidirectional
+**Compressed:** Yes
+**Description:** Editor command for batch block/fluid changes. Used by builder tools for complex operations.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = selection, Bit 1 = blocks, Bit 2 = fluids |
+| 1 | selection | EditorSelection | 24 | Selection bounds (optional) |
+| 25 | blocksCount | int32 LE | 4 | Total blocks affected |
+| 29 | advancedPreview | byte | 1 | Boolean: show preview |
+| 30 | blocksChangeOffset | int32 LE | 4 | Offset to block changes |
+| 34 | fluidsChangeOffset | int32 LE | 4 | Offset to fluid changes |
+| 38+ | blocksChange | BlockChange[] | Variable | Block modifications |
+| ... | fluidsChange | FluidChange[] | Variable | Fluid modifications |
+
+**Fixed Size:** 38 bytes (minimum)
+**Max Size:** 139,264,048 bytes
+
+---
+
+### UpdateKnownRecipes (ID 228)
+
+**Direction:** Server -> Client
+**Compressed:** No
+**Description:** Updates the client's known crafting recipes. Used for recipe unlocking systems.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = known map present |
+| 1+ | known | `Map<String, CraftingRecipe>` | Variable | Recipe ID to Recipe data |
+
+**Fixed Size:** 1 byte (minimum)
+**Max Size:** 1,677,721,600 bytes
+
+---
+
+### UpdateLanguage (ID 232)
+
+**Direction:** Client -> Server
+**Compressed:** No
+**Description:** Client notifies server of language preference change.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | nullBits | byte | 1 | Bit 0 = language present |
+| 1+ | language | VarString | Variable | Language code (e.g., "en", "fr") |
+
+**Fixed Size:** 1 byte (minimum)
+**Max Size:** 16,384,006 bytes

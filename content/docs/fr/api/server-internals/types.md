@@ -1154,4 +1154,879 @@ Configuration principale des mecaniques de gameplay, combinant plusieurs sous-co
 
 ---
 
+---
+
+## Enumerations Additionnelles (Protocole)
+
+Cette section documente les enumerations additionnelles decouvertes dans la couche protocole, essentielles pour les moddeurs et createurs de contenu.
+
+### Son et Audio
+
+#### SoundCategory
+
+`com.hypixel.hytale.protocol.SoundCategory`
+
+Categories pour la lecture audio et le controle du volume.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Music` | 0 | Musique de fond |
+| `Ambient` | 1 | Sons ambiants environnementaux |
+| `SFX` | 2 | Effets sonores (actions, combat, etc.) |
+| `UI` | 3 | Sons d'interface utilisateur |
+
+**Source :** `com/hypixel/hytale/protocol/SoundCategory.java`
+
+---
+
+#### BlockSoundEvent
+
+`com.hypixel.hytale.protocol.BlockSoundEvent`
+
+Evenements declenchant les sons lies aux blocs.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Walk` | 0 | Marcher sur le bloc |
+| `Land` | 1 | Atterrir sur le bloc |
+| `MoveIn` | 2 | Entrer dans le bloc |
+| `MoveOut` | 3 | Sortir du bloc |
+| `Hit` | 4 | Frapper/endommager le bloc |
+| `Break` | 5 | Casser le bloc |
+| `Build` | 6 | Placer le bloc |
+| `Clone` | 7 | Cloner le bloc (outils de construction) |
+| `Harvest` | 8 | Recolter du bloc |
+
+**Source :** `com/hypixel/hytale/protocol/BlockSoundEvent.java`
+
+---
+
+#### ItemSoundEvent
+
+`com.hypixel.hytale.protocol.ItemSoundEvent`
+
+Evenements declenchant les sons lies aux items.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Drag` | 0 | Glisser un item dans l'inventaire |
+| `Drop` | 1 | Lacher un item |
+
+**Source :** `com/hypixel/hytale/protocol/ItemSoundEvent.java`
+
+---
+
+### Particules et Effets Visuels
+
+#### BlockParticleEvent
+
+`com.hypixel.hytale.protocol.BlockParticleEvent`
+
+Evenements declenchant les effets de particules de bloc.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Walk` | 0 | Particules de marche |
+| `Run` | 1 | Particules de course |
+| `Sprint` | 2 | Particules de sprint |
+| `SoftLand` | 3 | Particules d'atterrissage douce |
+| `HardLand` | 4 | Particules d'atterrissage dure (degats de chute) |
+| `MoveOut` | 5 | Particules de sortie |
+| `Hit` | 6 | Particules d'impact |
+| `Break` | 7 | Particules de cassure de bloc |
+| `Build` | 8 | Particules de placement de bloc |
+| `Physics` | 9 | Particules declenchees par la physique |
+
+**Source :** `com/hypixel/hytale/protocol/BlockParticleEvent.java`
+
+---
+
+#### EmitShape
+
+`com.hypixel.hytale.protocol.EmitShape`
+
+Formes d'emission de particules.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Sphere` | 0 | Emission spherique |
+| `Cube` | 1 | Emission cubique |
+
+**Source :** `com/hypixel/hytale/protocol/EmitShape.java`
+
+---
+
+#### FXRenderMode
+
+`com.hypixel.hytale.protocol.FXRenderMode`
+
+Modes de rendu pour les effets visuels.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `BlendLinear` | 0 | Melange lineaire |
+| `BlendAdd` | 1 | Melange additif |
+| `Erosion` | 2 | Effet d'erosion |
+| `Distortion` | 3 | Effet de distorsion |
+
+**Source :** `com/hypixel/hytale/protocol/FXRenderMode.java`
+
+---
+
+#### ShaderType
+
+`com.hypixel.hytale.protocol.ShaderType`
+
+Effets de shader applicables aux blocs.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `None` | 0 | Pas d'effet de shader |
+| `Wind` | 1 | Animation de vent |
+| `WindAttached` | 2 | Animation de vent (attachee) |
+| `WindRandom` | 3 | Animation de vent aleatoire |
+| `WindFractal` | 4 | Animation de vent fractale |
+| `Ice` | 5 | Shader de glace |
+| `Water` | 6 | Shader d'eau |
+| `Lava` | 7 | Shader de lave |
+| `Slime` | 8 | Shader de slime |
+| `Ripple` | 9 | Effet d'ondulation |
+
+**Source :** `com/hypixel/hytale/protocol/ShaderType.java`
+
+---
+
+### Camera et Vue
+
+#### CameraPerspectiveType
+
+`com.hypixel.hytale.protocol.CameraPerspectiveType`
+
+Modes de perspective de la camera.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `First` | 0 | Vue a la premiere personne |
+| `Third` | 1 | Vue a la troisieme personne |
+
+**Source :** `com/hypixel/hytale/protocol/CameraPerspectiveType.java`
+
+---
+
+#### CameraActionType
+
+`com.hypixel.hytale.protocol.CameraActionType`
+
+Types d'actions de camera.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `ForcePerspective` | 0 | Forcer une perspective specifique |
+| `Orbit` | 1 | Orbiter autour d'une cible |
+| `Transition` | 2 | Transition entre positions |
+
+**Source :** `com/hypixel/hytale/protocol/CameraActionType.java`
+
+---
+
+### Animation et Easing
+
+#### EasingType
+
+`com.hypixel.hytale.protocol.EasingType`
+
+Fonctions d'easing pour des animations et transitions fluides. Essentiel pour creer des mouvements fluides dans les animations personnalisees.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Linear` | 0 | Lineaire (vitesse constante) |
+| `QuadIn` | 1 | Quadratique entree |
+| `QuadOut` | 2 | Quadratique sortie |
+| `QuadInOut` | 3 | Quadratique entree/sortie |
+| `CubicIn` | 4 | Cubique entree |
+| `CubicOut` | 5 | Cubique sortie |
+| `CubicInOut` | 6 | Cubique entree/sortie |
+| `QuartIn` | 7 | Quartique entree |
+| `QuartOut` | 8 | Quartique sortie |
+| `QuartInOut` | 9 | Quartique entree/sortie |
+| `QuintIn` | 10 | Quintique entree |
+| `QuintOut` | 11 | Quintique sortie |
+| `QuintInOut` | 12 | Quintique entree/sortie |
+| `SineIn` | 13 | Sinusoidale entree |
+| `SineOut` | 14 | Sinusoidale sortie |
+| `SineInOut` | 15 | Sinusoidale entree/sortie |
+| `ExpoIn` | 16 | Exponentielle entree |
+| `ExpoOut` | 17 | Exponentielle sortie |
+| `ExpoInOut` | 18 | Exponentielle entree/sortie |
+| `CircIn` | 19 | Circulaire entree |
+| `CircOut` | 20 | Circulaire sortie |
+| `CircInOut` | 21 | Circulaire entree/sortie |
+| `ElasticIn` | 22 | Elastique entree |
+| `ElasticOut` | 23 | Elastique sortie |
+| `ElasticInOut` | 24 | Elastique entree/sortie |
+| `BackIn` | 25 | Back entree |
+| `BackOut` | 26 | Back sortie |
+| `BackInOut` | 27 | Back entree/sortie |
+| `BounceIn` | 28 | Rebond entree |
+| `BounceOut` | 29 | Rebond sortie |
+| `BounceInOut` | 30 | Rebond entree/sortie |
+
+**Source :** `com/hypixel/hytale/protocol/EasingType.java`
+
+---
+
+### Entree et Interaction
+
+#### ClickType
+
+`com.hypixel.hytale.protocol.ClickType`
+
+Types de clic souris.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `None` | 0 | Pas de clic |
+| `Left` | 1 | Bouton gauche de la souris |
+| `Right` | 2 | Bouton droit de la souris |
+| `Middle` | 3 | Bouton du milieu de la souris |
+
+**Source :** `com/hypixel/hytale/protocol/ClickType.java`
+
+---
+
+#### InteractionState
+
+`com.hypixel.hytale.protocol.InteractionState`
+
+Etats d'une interaction.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Finished` | 0 | Interaction terminee avec succes |
+| `Skip` | 1 | Interaction sautee |
+| `ItemChanged` | 2 | Item change pendant l'interaction |
+| `Failed` | 3 | Interaction echouee |
+| `NotFinished` | 4 | Interaction encore en cours |
+
+**Source :** `com/hypixel/hytale/protocol/InteractionState.java`
+
+---
+
+#### InteractionTarget
+
+`com.hypixel.hytale.protocol.InteractionTarget`
+
+Cible d'une interaction.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `User` | 0 | L'utilisateur effectuant l'interaction |
+| `Owner` | 1 | Le proprietaire de l'entite interagie |
+| `Target` | 2 | La cible de l'interaction |
+
+**Source :** `com/hypixel/hytale/protocol/InteractionTarget.java`
+
+---
+
+### Inventaire
+
+#### InventoryActionType
+
+`com.hypixel.hytale.protocol.InventoryActionType`
+
+Types d'actions d'inventaire.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `TakeAll` | 0 | Prendre tous les items |
+| `PutAll` | 1 | Deposer tous les items |
+| `QuickStack` | 2 | Rangement rapide vers les conteneurs proches |
+| `Sort` | 3 | Trier l'inventaire |
+
+**Source :** `com/hypixel/hytale/protocol/InventoryActionType.java`
+
+---
+
+#### SortType
+
+`com.hypixel.hytale.server.core.inventory.container.SortType`
+
+Methodes de tri d'inventaire.
+
+| Valeur | Description |
+|--------|-------------|
+| `NAME` | Tri alphabetique par nom |
+| `TYPE` | Tri par type d'item (Arme, Armure, Outil, Item, Special) |
+| `RARITY` | Tri par rarete/qualite de l'item |
+
+**Source :** `com/hypixel/hytale/server/core/inventory/container/SortType.java`
+
+---
+
+### Configuration des Blocs
+
+#### BlockNeighbor
+
+`com.hypixel.hytale.protocol.BlockNeighbor`
+
+Toutes les directions de blocs voisins possibles (26 voisins au total).
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Up` | 0 | Au-dessus |
+| `Down` | 1 | En-dessous |
+| `North` | 2 | Nord |
+| `East` | 3 | Est |
+| `South` | 4 | Sud |
+| `West` | 5 | Ouest |
+| `UpNorth` | 6 | Au-dessus et Nord |
+| `UpSouth` | 7 | Au-dessus et Sud |
+| `UpEast` | 8 | Au-dessus et Est |
+| `UpWest` | 9 | Au-dessus et Ouest |
+| `DownNorth` | 10 | En-dessous et Nord |
+| `DownSouth` | 11 | En-dessous et Sud |
+| `DownEast` | 12 | En-dessous et Est |
+| `DownWest` | 13 | En-dessous et Ouest |
+| `NorthEast` | 14 | Nord-Est |
+| `SouthEast` | 15 | Sud-Est |
+| `SouthWest` | 16 | Sud-Ouest |
+| `NorthWest` | 17 | Nord-Ouest |
+| `UpNorthEast` | 18 | Au-dessus et Nord-Est |
+| `UpSouthEast` | 19 | Au-dessus et Sud-Est |
+| `UpSouthWest` | 20 | Au-dessus et Sud-Ouest |
+| `UpNorthWest` | 21 | Au-dessus et Nord-Ouest |
+| `DownNorthEast` | 22 | En-dessous et Nord-Est |
+| `DownSouthEast` | 23 | En-dessous et Sud-Est |
+| `DownSouthWest` | 24 | En-dessous et Sud-Ouest |
+| `DownNorthWest` | 25 | En-dessous et Nord-Ouest |
+
+**Source :** `com/hypixel/hytale/protocol/BlockNeighbor.java`
+
+---
+
+#### ConnectedBlockRuleSetType
+
+`com.hypixel.hytale.protocol.ConnectedBlockRuleSetType`
+
+Types d'ensembles de regles pour les blocs connectes comme les escaliers.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Stair` | 0 | Regles de connexion d'escaliers |
+| `Roof` | 1 | Regles de connexion de toit |
+
+**Source :** `com/hypixel/hytale/protocol/ConnectedBlockRuleSetType.java`
+
+---
+
+### UI et Interface
+
+#### Page
+
+`com.hypixel.hytale.protocol.packets.interface_.Page`
+
+Types de pages d'interface.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `None` | 0 | Aucune page |
+| `Bench` | 1 | Page d'etabli de fabrication |
+| `Inventory` | 2 | Page d'inventaire |
+| `ToolsSettings` | 3 | Page de parametres des outils |
+| `Map` | 4 | Page de carte du monde |
+| `MachinimaEditor` | 5 | Page de l'editeur machinima |
+| `ContentCreation` | 6 | Page de creation de contenu |
+| `Custom` | 7 | Page personnalisee |
+
+**Source :** `com/hypixel/hytale/protocol/packets/interface_/Page.java`
+
+---
+
+#### HudComponent
+
+`com.hypixel.hytale.protocol.packets.interface_.HudComponent`
+
+Composants du HUD (Affichage Tete Haute) pouvant etre affiches/masques.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Hotbar` | 0 | Barre d'acces rapide |
+| `StatusIcons` | 1 | Icones d'effets de statut |
+| `Reticle` | 2 | Viseur/reticule |
+| `Chat` | 3 | Fenetre de discussion |
+| `Requests` | 4 | Notifications de demandes |
+| `Notifications` | 5 | Notifications generales |
+| `KillFeed` | 6 | Fil d'eliminations |
+| `InputBindings` | 7 | Indices de raccourcis |
+| `PlayerList` | 8 | Liste des joueurs (Tab) |
+| `EventTitle` | 9 | Affichage de titre d'evenement |
+| `Compass` | 10 | Boussole |
+| `ObjectivePanel` | 11 | Panneau d'objectifs/quetes |
+| `PortalPanel` | 12 | Panneau de portail |
+| `BuilderToolsLegend` | 13 | Legende des outils de construction |
+| `Speedometer` | 14 | Indicateur de vitesse |
+| `UtilitySlotSelector` | 15 | Selecteur d'emplacement utilitaire |
+| `BlockVariantSelector` | 16 | Selecteur de variante de bloc |
+| `BuilderToolsMaterialSlotSelector` | 17 | Selecteur d'emplacement de materiau |
+| `Stamina` | 18 | Barre d'endurance |
+| `AmmoIndicator` | 19 | Indicateur de munitions |
+| `Health` | 20 | Barre de vie |
+| `Mana` | 21 | Barre de mana |
+| `Oxygen` | 22 | Barre d'oxygene |
+| `Sleep` | 23 | Indicateur de sommeil |
+
+**Source :** `com/hypixel/hytale/protocol/packets/interface_/HudComponent.java`
+
+---
+
+#### WindowType
+
+`com.hypixel.hytale.protocol.packets.window.WindowType`
+
+Types de fenetres (conteneurs/UI).
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Container` | 0 | Conteneur generique |
+| `PocketCrafting` | 1 | Fabrication de poche (2x2) |
+| `BasicCrafting` | 2 | Etabli de fabrication basique |
+| `DiagramCrafting` | 3 | Fabrication par diagramme |
+| `StructuralCrafting` | 4 | Fabrication structurelle |
+| `Processing` | 5 | Traitement (fourneau, etc.) |
+| `Memories` | 6 | Systeme de memoires/connaissances |
+
+**Source :** `com/hypixel/hytale/protocol/packets/window/WindowType.java`
+
+---
+
+### Outils de Construction
+
+#### BrushShape
+
+`com.hypixel.hytale.protocol.packets.buildertools.BrushShape`
+
+Formes de pinceaux disponibles pour les outils de construction.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Cube` | 0 | Forme cubique |
+| `Sphere` | 1 | Forme spherique |
+| `Cylinder` | 2 | Forme cylindrique |
+| `Cone` | 3 | Forme conique |
+| `InvertedCone` | 4 | Forme conique inversee |
+| `Pyramid` | 5 | Forme pyramidale |
+| `InvertedPyramid` | 6 | Forme pyramidale inversee |
+| `Dome` | 7 | Dome (demi-sphere) |
+| `InvertedDome` | 8 | Dome inverse |
+| `Diamond` | 9 | Forme losange |
+| `Torus` | 10 | Forme tore (donut) |
+
+**Source :** `com/hypixel/hytale/protocol/packets/buildertools/BrushShape.java`
+
+---
+
+#### BrushOrigin
+
+`com.hypixel.hytale.protocol.packets.buildertools.BrushOrigin`
+
+Point d'origine pour le placement du pinceau.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Center` | 0 | Centre du pinceau |
+| `Bottom` | 1 | Bas du pinceau |
+| `Top` | 2 | Haut du pinceau |
+
+**Source :** `com/hypixel/hytale/protocol/packets/buildertools/BrushOrigin.java`
+
+---
+
+#### Axis
+
+`com.hypixel.hytale.protocol.packets.buildertools.Axis`
+
+Axes de coordonnees.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `X` | 0 | Axe X (Est-Ouest) |
+| `Y` | 1 | Axe Y (Haut-Bas) |
+| `Z` | 2 | Axe Z (Nord-Sud) |
+
+**Source :** `com/hypixel/hytale/protocol/packets/buildertools/Axis.java`
+
+---
+
+### Physique et Forces
+
+#### ApplyForceState
+
+`com.hypixel.hytale.protocol.ApplyForceState`
+
+Etats pour l'application de force (recul, capacites, etc.).
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Waiting` | 0 | En attente d'appliquer la force |
+| `Ground` | 1 | Declenche au contact du sol |
+| `Collision` | 2 | Declenche lors d'une collision |
+| `Timer` | 3 | Declenche apres un delai |
+
+**Source :** `com/hypixel/hytale/protocol/ApplyForceState.java`
+
+---
+
+#### CollisionType
+
+`com.hypixel.hytale.protocol.CollisionType`
+
+Types de detection de collision.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Hard` | 0 | Collision dure (bloque le mouvement) |
+| `Soft` | 1 | Collision douce (declenche des evenements uniquement) |
+
+**Source :** `com/hypixel/hytale/protocol/CollisionType.java`
+
+---
+
+#### RaycastMode
+
+`com.hypixel.hytale.protocol.RaycastMode`
+
+Modes de raycast (projectiles, ligne de vue, etc.).
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `FollowMotion` | 0 | Le raycast suit la direction du mouvement |
+| `FollowLook` | 1 | Le raycast suit la direction du regard |
+
+**Source :** `com/hypixel/hytale/protocol/RaycastMode.java`
+
+---
+
+### Systeme d'Entites
+
+#### EntityPart
+
+`com.hypixel.hytale.protocol.EntityPart`
+
+Parties d'une entite pouvant etre referencees.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Self` | 0 | L'entite elle-meme |
+| `Entity` | 1 | Une autre entite |
+| `PrimaryItem` | 2 | Item tenu principal |
+| `SecondaryItem` | 3 | Item tenu secondaire |
+
+**Source :** `com/hypixel/hytale/protocol/EntityPart.java`
+
+---
+
+#### EntityStatOp
+
+`com.hypixel.hytale.protocol.EntityStatOp`
+
+Operations sur les statistiques d'entite.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Init` | 0 | Initialiser la stat |
+| `Remove` | 1 | Supprimer la stat |
+| `PutModifier` | 2 | Ajouter un modificateur |
+| `RemoveModifier` | 3 | Supprimer un modificateur |
+| `Add` | 4 | Ajouter a la valeur |
+| `Set` | 5 | Definir la valeur directement |
+| `Minimize` | 6 | Definir au minimum |
+| `Maximize` | 7 | Definir au maximum |
+| `Reset` | 8 | Reinitialiser par defaut |
+
+**Source :** `com/hypixel/hytale/protocol/EntityStatOp.java`
+
+---
+
+#### AttachedToType
+
+`com.hypixel.hytale.protocol.AttachedToType`
+
+Types d'attachement pour effets/particules.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `LocalPlayer` | 0 | Attache au joueur local |
+| `EntityId` | 1 | Attache a une entite par ID |
+| `None` | 2 | Non attache |
+
+**Source :** `com/hypixel/hytale/protocol/AttachedToType.java`
+
+---
+
+#### EntityMatcherType
+
+`com.hypixel.hytale.protocol.EntityMatcherType`
+
+Types de correspondance d'entite pour le ciblage.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Server` | 0 | Correspondance cote serveur |
+| `VulnerableMatcher` | 1 | Correspondre aux entites vulnerables |
+| `Player` | 2 | Correspondre aux joueurs uniquement |
+
+**Source :** `com/hypixel/hytale/protocol/EntityMatcherType.java`
+
+---
+
+#### Attitude
+
+`com.hypixel.hytale.server.core.asset.type.attitude.Attitude`
+
+Attitude/relation des PNJ envers les cibles.
+
+| Valeur | Description |
+|--------|-------------|
+| `IGNORE` | Ignore la cible |
+| `HOSTILE` | Hostile envers la cible |
+| `NEUTRAL` | Neutre envers la cible |
+| `FRIENDLY` | Amical envers la cible |
+| `REVERED` | Venere la cible |
+
+**Source :** `com/hypixel/hytale/server/core/asset/type/attitude/Attitude.java`
+
+---
+
+### Cosmetiques et Personnage
+
+#### BodyType
+
+`com.hypixel.hytale.server.core.cosmetics.BodyType`
+
+Types de corps de personnage.
+
+| Valeur | Description |
+|--------|-------------|
+| `Masculine` | Type de corps masculin |
+| `Feminine` | Type de corps feminin |
+
+**Source :** `com/hypixel/hytale/server/core/cosmetics/BodyType.java`
+
+---
+
+#### CosmeticType
+
+`com.hypixel.hytale.server.core.cosmetics.CosmeticType`
+
+Types de personnalisations cosmetiques disponibles.
+
+| Valeur | Description |
+|--------|-------------|
+| `EMOTES` | Emotes/gestes |
+| `SKIN_TONES` | Options de ton de peau |
+| `EYE_COLORS` | Options de couleur des yeux |
+| `GRADIENT_SETS` | Ensembles de degrades de couleur |
+| `BODY_CHARACTERISTICS` | Caracteristiques corporelles |
+| `UNDERWEAR` | Sous-vetements |
+| `EYEBROWS` | Styles de sourcils |
+| `EARS` | Styles d'oreilles |
+| `EYES` | Styles d'yeux |
+| `FACE` | Styles de visage |
+| `MOUTHS` | Styles de bouche |
+| `FACIAL_HAIR` | Styles de pilosite faciale |
+| `PANTS` | Pantalons |
+| `OVERPANTS` | Sur-pantalons |
+| `UNDERTOPS` | Sous-vetements haut |
+| `OVERTOPS` | Sur-vetements haut |
+| `HAIRCUTS` | Styles de coupe de cheveux |
+| `SHOES` | Chaussures |
+| `HEAD_ACCESSORY` | Accessoires de tete |
+| `FACE_ACCESSORY` | Accessoires de visage |
+| `EAR_ACCESSORY` | Accessoires d'oreille |
+| `GLOVES` | Gants |
+| `CAPES` | Capes |
+| `SKIN_FEATURES` | Caracteristiques de peau (taches de rousseur, etc.) |
+
+**Source :** `com/hypixel/hytale/server/core/cosmetics/CosmeticType.java`
+
+---
+
+#### PlayerSkinPartType
+
+`com.hypixel.hytale.server.core.cosmetics.PlayerSkinPartType`
+
+Types de parties de skin du joueur.
+
+| Valeur | Description |
+|--------|-------------|
+| `Eyes` | Yeux |
+| `Ears` | Oreilles |
+| `Mouth` | Bouche |
+| `Eyebrows` | Sourcils |
+| `Haircut` | Coupe de cheveux |
+| `FacialHair` | Pilosite faciale |
+| `Pants` | Pantalon |
+| `Overpants` | Sur-pantalon |
+| `Undertops` | Sous-vetement haut |
+| `Overtops` | Sur-vetement haut |
+| `Shoes` | Chaussures |
+| `HeadAccessory` | Accessoire de tete |
+| `FaceAccessory` | Accessoire de visage |
+| `EarAccessory` | Accessoire d'oreille |
+| `SkinFeature` | Caracteristique de peau |
+| `Gloves` | Gants |
+
+**Source :** `com/hypixel/hytale/server/core/cosmetics/PlayerSkinPartType.java`
+
+---
+
+### Combat
+
+#### DamageClass
+
+`com.hypixel.hytale.server.core.modules.interaction.interaction.config.server.combat.DamageClass`
+
+Classifications des types de degats.
+
+| Valeur | Description |
+|--------|-------------|
+| `UNKNOWN` | Degats inconnus/non classes |
+| `LIGHT` | Degats d'attaque legere |
+| `CHARGED` | Degats d'attaque chargee |
+| `SIGNATURE` | Degats de capacite signature/speciale |
+
+**Source :** `com/hypixel/hytale/server/core/modules/interaction/interaction/config/server/combat/DamageClass.java`
+
+---
+
+### Systeme de Plugins
+
+#### PluginState
+
+`com.hypixel.hytale.server.core.plugin.PluginState`
+
+Etats du cycle de vie des plugins.
+
+| Valeur | Description |
+|--------|-------------|
+| `NONE` | Etat initial |
+| `SETUP` | En configuration |
+| `START` | En demarrage |
+| `ENABLED` | En cours d'execution et active |
+| `SHUTDOWN` | En arret |
+| `DISABLED` | Desactive |
+
+**Source :** `com/hypixel/hytale/server/core/plugin/PluginState.java`
+
+---
+
+### Reseau
+
+#### TransportType
+
+`com.hypixel.hytale.server.core.io.transport.TransportType`
+
+Protocoles de transport reseau.
+
+| Valeur | Description |
+|--------|-------------|
+| `TCP` | Protocole TCP |
+| `QUIC` | Protocole QUIC (base UDP) |
+
+**Source :** `com/hypixel/hytale/server/core/io/transport/TransportType.java`
+
+---
+
+### Systeme de Prefab
+
+#### PrefabRotation
+
+`com.hypixel.hytale.server.core.prefab.PrefabRotation`
+
+Angles de rotation pour le placement de prefab.
+
+| Valeur | Rotation | Description |
+|--------|----------|-------------|
+| `ROTATION_0` | 0 degres | Pas de rotation |
+| `ROTATION_90` | 90 degres | Quart de tour horaire |
+| `ROTATION_180` | 180 degres | Demi-tour |
+| `ROTATION_270` | 270 degres | Quart de tour anti-horaire |
+
+**Source :** `com/hypixel/hytale/server/core/prefab/PrefabRotation.java`
+
+---
+
+### Divers
+
+#### AccumulationMode
+
+`com.hypixel.hytale.protocol.AccumulationMode`
+
+Modes d'accumulation/combinaison de valeurs.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Set` | 0 | Remplacer par la nouvelle valeur |
+| `Sum` | 1 | Ajouter a la valeur existante |
+| `Average` | 2 | Faire la moyenne avec la valeur existante |
+
+**Source :** `com/hypixel/hytale/protocol/AccumulationMode.java`
+
+---
+
+#### Phobia
+
+`com.hypixel.hytale.protocol.Phobia`
+
+Filtres d'accessibilite pour les phobies.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `None` | 0 | Pas de filtre de phobie |
+| `Arachnophobia` | 1 | Filtre araignee/arachnide |
+
+**Source :** `com/hypixel/hytale/protocol/Phobia.java`
+
+**Utilisation :** Cette enum est utilisee pour les fonctionnalites d'accessibilite, permettant aux joueurs d'activer des filtres qui modifient ou remplacent le contenu pouvant declencher des phobies.
+
+---
+
+#### AmbienceTransitionSpeed
+
+`com.hypixel.hytale.protocol.AmbienceTransitionSpeed`
+
+Vitesse des transitions de son/visuel ambiant.
+
+| Valeur | ID | Description |
+|--------|-----|-------------|
+| `Default` | 0 | Vitesse de transition par defaut |
+| `Fast` | 1 | Transition rapide |
+| `Instant` | 2 | Transition instantanee |
+
+**Source :** `com/hypixel/hytale/protocol/AmbienceTransitionSpeed.java`
+
+---
+
+## Reference des Packages Sources Mise a Jour
+
+| Package | Contenu |
+|---------|---------|
+| `com.hypixel.hytale.protocol` | Enums et types de donnees du protocole |
+| `com.hypixel.hytale.protocol.packets.connection` | Paquets lies a la connexion |
+| `com.hypixel.hytale.protocol.packets.setup` | Paquets de configuration (WorldSettings) |
+| `com.hypixel.hytale.protocol.packets.interface_` | Paquets et enums d'interface |
+| `com.hypixel.hytale.protocol.packets.window` | Paquets de fenetres/conteneurs |
+| `com.hypixel.hytale.protocol.packets.buildertools` | Paquets et enums des outils de construction |
+| `com.hypixel.hytale.server.core.permissions` | Systeme de permissions |
+| `com.hypixel.hytale.server.core.permissions.provider` | Fournisseurs de permissions |
+| `com.hypixel.hytale.server.core.universe.world` | Gestion du monde |
+| `com.hypixel.hytale.server.core.asset.type.gameplay` | Assets de configuration de gameplay |
+| `com.hypixel.hytale.server.core.cosmetics` | Systeme de cosmetiques |
+| `com.hypixel.hytale.server.core.inventory` | Systeme d'inventaire |
+| `com.hypixel.hytale.server.core.plugin` | Systeme de plugins |
+| `com.hypixel.hytale.server.core.prefab` | Systeme de prefab |
+| `com.hypixel.hytale.server.core.io.transport` | Transport reseau |
+
+---
+
 *Documentation generee a partir du code decompile du serveur Hytale.*

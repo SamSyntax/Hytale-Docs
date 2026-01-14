@@ -6429,3 +6429,879 @@ holder.addComponent(AmbientEmitterComponent.getComponentType(), ambient);
 - Sound plays in a loop at entity position
 - Used for static environmental audio sources
 - Can be attached to block entities or invisible markers
+
+---
+
+### AmbienceTracker
+
+**Package:** `com.hypixel.hytale.builtin.ambience.components`
+
+The `AmbienceTracker` component tracks environmental music per player and synchronizes with the client. Handles forced music overrides and environment-based music changes.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/builtin/ambience/components/AmbienceTracker.java`
+
+```java
+public class AmbienceTracker implements Component<EntityStore> {
+   private final UpdateEnvironmentMusic musicPacket = new UpdateEnvironmentMusic(0);
+   private int forcedMusicIndex;
+
+   public static ComponentType<EntityStore, AmbienceTracker> getComponentType() {
+      return AmbiencePlugin.get().getAmbienceTrackerComponentType();
+   }
+
+   public void setForcedMusicIndex(int forcedMusicIndex);
+   public int getForcedMusicIndex();
+   public UpdateEnvironmentMusic getMusicPacket();
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `forcedMusicIndex` | int | Index of forced music override (0 = no override) |
+| `musicPacket` | UpdateEnvironmentMusic | Reusable packet for network sync |
+
+**Usage notes:**
+- Attached to players to track their current music state
+- Forced music index overrides environment-based selection
+- Music changes smoothly based on player's environment
+
+---
+
+### WeatherTracker
+
+**Package:** `com.hypixel.hytale.builtin.weather.components`
+
+The `WeatherTracker` component tracks weather state per player and synchronizes weather transitions with the client based on environment.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/builtin/weather/components/WeatherTracker.java`
+
+```java
+public class WeatherTracker implements Component<EntityStore> {
+   private final UpdateWeather updateWeather = new UpdateWeather(0, 10.0F);
+   private final Vector3i previousBlockPosition = new Vector3i();
+   private int environmentId;
+   private boolean firstSendForWorld = true;
+
+   public static ComponentType<EntityStore, WeatherTracker> getComponentType() {
+      return WeatherPlugin.get().getWeatherTrackerComponentType();
+   }
+
+   public void updateWeather(PlayerRef playerRef, WeatherResource weatherComponent,
+       TransformComponent transformComponent, float transitionSeconds, ...);
+   public void sendWeatherIndex(PlayerRef playerRef, int weatherIndex, float transitionSeconds);
+   public int getEnvironmentId();
+   public int getWeatherIndex();
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `environmentId` | int | Current environment ID for weather lookup |
+| `previousBlockPosition` | Vector3i | Last known block position for change detection |
+| `firstSendForWorld` | boolean | Flag for initial world weather sync |
+
+**Usage notes:**
+- Weather updates when player moves to different environment
+- Smooth transitions with configurable duration
+- Supports forced weather override via WeatherResource
+
+---
+
+### TeleportHistory
+
+**Package:** `com.hypixel.hytale.builtin.teleport.components`
+
+The `TeleportHistory` component maintains a browser-like back/forward navigation history for player teleports. Supports waypoint naming and cross-world teleportation.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/builtin/teleport/components/TeleportHistory.java`
+
+```java
+public class TeleportHistory implements Component<EntityStore> {
+   private static final int MAX_TELEPORT_HISTORY = 100;
+   private final Deque<Waypoint> back = new ArrayDeque<>();
+   private final Deque<Waypoint> forward = new ArrayDeque<>();
+
+   public static ComponentType<EntityStore, TeleportHistory> getComponentType() {
+      return TeleportPlugin.get().getTeleportHistoryComponentType();
+   }
+
+   public void forward(Ref<EntityStore> ref, int count);
+   public void back(Ref<EntityStore> ref, int count);
+   public void append(World world, Vector3d pos, Vector3f rotation, String key);
+   public int getForwardSize();
+   public int getBackSize();
+
+   public static class Waypoint {
+      private final String world;
+      private final Vector3d position;
+      private final Vector3f rotation;
+      private final String message;  // Optional waypoint name
+   }
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `back` | `Deque<Waypoint>` | Stack of previous locations |
+| `forward` | `Deque<Waypoint>` | Stack of forward locations (after going back) |
+
+**How to use:**
+
+```java
+// Record current position before teleport
+TeleportHistory history = store.getComponent(playerRef, TeleportHistory.getComponentType());
+history.append(world, currentPos, currentRotation, "Named Waypoint");
+
+// Go back in history
+history.back(playerRef, 1);  // Go back 1 step
+
+// Go forward in history
+history.forward(playerRef, 1);  // Go forward 1 step
+```
+
+**Usage notes:**
+- Maximum 100 entries in history (oldest removed when exceeded)
+- Forward history cleared when appending new waypoints
+- Supports cross-world navigation
+- Displays localized messages for teleport feedback
+
+---
+
+### PortalDevice
+
+**Package:** `com.hypixel.hytale.builtin.portals.components`
+
+The `PortalDevice` is a chunk component that stores portal block configuration. Links portals to destination worlds and defines portal appearance.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/builtin/portals/components/PortalDevice.java`
+
+```java
+public class PortalDevice implements Component<ChunkStore> {
+   public static final BuilderCodec<PortalDevice> CODEC = BuilderCodec.builder(...)
+      .append(new KeyedCodec<>("Config", PortalDeviceConfig.CODEC), ...)
+      .append(new KeyedCodec<>("BaseBlockType", Codec.STRING), ...)
+      .append(new KeyedCodec<>("DestinationWorld", Codec.UUID_BINARY), ...)
+      .build();
+
+   private PortalDeviceConfig config;
+   private String baseBlockTypeKey;
+   private UUID destinationWorldUuid;
+
+   public static ComponentType<ChunkStore, PortalDevice> getComponentType() {
+      return PortalsPlugin.getInstance().getPortalDeviceComponentType();
+   }
+
+   public PortalDeviceConfig getConfig();
+   public BlockType getBaseBlockType();
+   public World getDestinationWorld();
+   public void setDestinationWorld(World world);
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `config` | PortalDeviceConfig | Portal behavior configuration |
+| `baseBlockTypeKey` | String | Block type ID for the portal frame |
+| `destinationWorldUuid` | UUID | Target world for teleportation |
+
+**Usage notes:**
+- Stored in `ChunkStore` (block components)
+- Persisted with world data
+- Works with PortalDeviceConfig for behavior customization
+
+---
+
+### Teleporter
+
+**Package:** `com.hypixel.hytale.builtin.adventure.teleporter.component`
+
+The `Teleporter` is a chunk component for teleporter blocks. Supports destination via coordinates, warp names, or relative transforms.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/builtin/adventure/teleporter/component/Teleporter.java`
+
+```java
+public class Teleporter implements Component<ChunkStore> {
+   public static final BuilderCodec<Teleporter> CODEC = BuilderCodec.builder(...)
+      .append(new KeyedCodec<>("World", Codec.UUID_BINARY), ...)
+      .append(new KeyedCodec<>("Transform", Transform.CODEC), ...)
+      .append(new KeyedCodec<>("Relative", Codec.BYTE), ...)
+      .append(new KeyedCodec<>("Warp", Codec.STRING), ...)
+      .append(new KeyedCodec<>("WarpNameWordList", Codec.STRING), ...)
+      .build();
+
+   private UUID worldUuid;
+   private Transform transform;
+   private byte relativeMask;
+   private String warp;
+
+   public static ComponentType<ChunkStore, Teleporter> getComponentType() {
+      return TeleporterPlugin.get().getTeleporterComponentType();
+   }
+
+   public Teleport toTeleport(Vector3d currentPosition, Vector3f currentRotation, Vector3i blockPosition);
+   public boolean isValid();
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `worldUuid` | UUID | Target world (null = same world) |
+| `transform` | Transform | Target position/rotation |
+| `relativeMask` | byte | Bit flags for relative coordinate modes |
+| `warp` | String | Named warp point (alternative to coordinates) |
+| `warpNameWordListKey` | String | Word list for random warp names |
+
+**Usage notes:**
+- Supports both absolute and relative teleportation
+- Can use named warps instead of coordinates
+- Relative mask allows mixing absolute and relative axes
+
+---
+
+### PlayerSomnolence
+
+**Package:** `com.hypixel.hytale.builtin.beds.sleep.components`
+
+The `PlayerSomnolence` component tracks a player's sleep state. Used by the bed system to manage sleep progression.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/builtin/beds/sleep/components/PlayerSomnolence.java`
+
+```java
+public class PlayerSomnolence implements Component<EntityStore> {
+   public static PlayerSomnolence AWAKE = new PlayerSomnolence(PlayerSleep.FullyAwake.INSTANCE);
+   private PlayerSleep state = PlayerSleep.FullyAwake.INSTANCE;
+
+   public static ComponentType<EntityStore, PlayerSomnolence> getComponentType() {
+      return BedsPlugin.getInstance().getPlayerSomnolenceComponentType();
+   }
+
+   public PlayerSleep getSleepState();
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `state` | PlayerSleep | Current sleep state (awake, falling asleep, sleeping, waking) |
+
+**Usage notes:**
+- State machine for sleep progression
+- Shared AWAKE instance for default state
+- Works with SleepTracker for network synchronization
+
+---
+
+### SleepTracker
+
+**Package:** `com.hypixel.hytale.builtin.beds.sleep.components`
+
+The `SleepTracker` component handles sleep state network synchronization. Prevents duplicate packet sends.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/builtin/beds/sleep/components/SleepTracker.java`
+
+```java
+public class SleepTracker implements Component<EntityStore> {
+   private UpdateSleepState lastSentPacket = new UpdateSleepState(false, false, null, null);
+
+   public static ComponentType<EntityStore, SleepTracker> getComponentType() {
+      return BedsPlugin.getInstance().getSleepTrackerComponentType();
+   }
+
+   public UpdateSleepState generatePacketToSend(UpdateSleepState state);
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `lastSentPacket` | UpdateSleepState | Cache of last sent state for delta detection |
+
+**Usage notes:**
+- Optimizes network traffic by only sending changed states
+- Works with PlayerSomnolence for sleep logic
+- Returns null if state unchanged
+
+---
+
+### VoidEvent
+
+**Package:** `com.hypixel.hytale.builtin.portals.components.voidevent`
+
+The `VoidEvent` component manages void portal invasion events. Tracks spawner positions and current invasion stage.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/builtin/portals/components/voidevent/VoidEvent.java`
+
+```java
+public class VoidEvent implements Component<EntityStore> {
+   public static final double MIN_BLOCKS_BETWEEN_SPAWNERS = 62.0;
+   private SpatialHashGrid<Ref<EntityStore>> voidSpawners = new SpatialHashGrid<>(62.0);
+   private VoidEventStage activeStage;
+
+   public static ComponentType<EntityStore, VoidEvent> getComponentType() {
+      return PortalsPlugin.getInstance().getVoidEventComponentType();
+   }
+
+   public VoidEventConfig getConfig(World world);
+   public SpatialHashGrid<Ref<EntityStore>> getVoidSpawners();
+   public VoidEventStage getActiveStage();
+   public void setActiveStage(VoidEventStage activeStage);
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `voidSpawners` | SpatialHashGrid | Spatial index of spawner positions |
+| `activeStage` | VoidEventStage | Current invasion stage (null = inactive) |
+
+**Usage notes:**
+- Minimum 62 blocks between spawners
+- Stages define escalating invasion difficulty
+- Configuration loaded from world's gameplay config
+
+---
+
+### VoidSpawner
+
+**Package:** `com.hypixel.hytale.builtin.portals.components.voidevent`
+
+The `VoidSpawner` component marks an entity as a void portal spawner. Tracks associated spawn beacon UUIDs.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/builtin/portals/components/voidevent/VoidSpawner.java`
+
+```java
+public class VoidSpawner implements Component<EntityStore> {
+   private List<UUID> spawnBeaconUuids = new ObjectArrayList<>();
+
+   public static ComponentType<EntityStore, VoidSpawner> getComponentType() {
+      return PortalsPlugin.getInstance().getVoidPortalComponentType();
+   }
+
+   public List<UUID> getSpawnBeaconUuids();
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `spawnBeaconUuids` | `List<UUID>` | UUIDs of associated spawn beacons |
+
+**Usage notes:**
+- Part of the void invasion system
+- Spawn beacons determine what enemies spawn
+- Works with VoidEvent for invasion management
+
+---
+
+### PlayerMemories
+
+**Package:** `com.hypixel.hytale.builtin.adventure.memories.component`
+
+The `PlayerMemories` component stores adventure memories collected by players. Memories are used for progression and unlocking content.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/builtin/adventure/memories/component/PlayerMemories.java`
+
+```java
+public class PlayerMemories implements Component<EntityStore> {
+   public static final BuilderCodec<PlayerMemories> CODEC = BuilderCodec.builder(...)
+      .append(new KeyedCodec<>("Capacity", Codec.INTEGER), ...)
+      .append(new KeyedCodec<>("Memories", new ArrayCodec<>(Memory.CODEC, Memory[]::new)), ...)
+      .build();
+
+   private final Set<Memory> memories = new LinkedHashSet<>();
+   private int memoriesCapacity;
+
+   public static ComponentType<EntityStore, PlayerMemories> getComponentType() {
+      return MemoriesPlugin.get().getPlayerMemoriesComponentType();
+   }
+
+   public boolean recordMemory(Memory memory);
+   public boolean hasMemories();
+   public boolean takeMemories(Set<Memory> outMemories);
+   public Set<Memory> getRecordedMemories();
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `memories` | `Set<Memory>` | Collected memories |
+| `memoriesCapacity` | int | Maximum number of memories |
+
+**How to use:**
+
+```java
+PlayerMemories memories = store.getComponent(playerRef, PlayerMemories.getComponentType());
+if (memories.recordMemory(newMemory)) {
+    // Memory recorded successfully
+}
+
+// Transfer memories to another container
+Set<Memory> collected = new HashSet<>();
+memories.takeMemories(collected);  // Removes from component
+```
+
+**Usage notes:**
+- Capacity limits how many memories can be held
+- Recording fails if at capacity
+- `takeMemories` removes memories while returning them
+- Persisted with player data
+
+---
+
+### ParkourCheckpoint
+
+**Package:** `com.hypixel.hytale.builtin.parkour`
+
+The `ParkourCheckpoint` component tracks a player's progress through a parkour course by storing the current checkpoint index.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/builtin/parkour/ParkourCheckpoint.java`
+
+```java
+public class ParkourCheckpoint implements Component<EntityStore> {
+   public static final BuilderCodec<ParkourCheckpoint> CODEC = BuilderCodec.builder(...)
+      .append(new KeyedCodec<>("CheckpointIndex", Codec.INTEGER), ...)
+      .build();
+
+   protected int index;
+
+   public static ComponentType<EntityStore, ParkourCheckpoint> getComponentType() {
+      return ParkourPlugin.get().getParkourCheckpointComponentType();
+   }
+
+   public int getIndex();
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `index` | int | Current checkpoint index (0-based) |
+
+**Usage notes:**
+- Attached to players during parkour courses
+- Index increments as checkpoints are reached
+- Used for respawn point determination
+- Persisted for course resumption
+
+---
+
+### CraftingManager
+
+**Package:** `com.hypixel.hytale.builtin.crafting.component`
+
+The `CraftingManager` component manages crafting operations for players. Handles queued crafting jobs, bench tier upgrades, and material consumption.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/builtin/crafting/component/CraftingManager.java`
+
+```java
+public class CraftingManager implements Component<EntityStore> {
+   private final BlockingQueue<CraftingJob> queuedCraftingJobs = new LinkedBlockingQueue<>();
+   private BenchUpgradingJob upgradingJob;
+   private int x, y, z;
+   private BlockType blockType;
+
+   public static ComponentType<EntityStore, CraftingManager> getComponentType() {
+      return CraftingPlugin.get().getCraftingManagerComponentType();
+   }
+
+   public void setBench(int x, int y, int z, BlockType blockType);
+   public boolean clearBench(Ref<EntityStore> ref, Store<EntityStore> store);
+   public boolean craftItem(Ref<EntityStore> ref, ComponentAccessor<EntityStore> store,
+       CraftingRecipe recipe, int quantity, ItemContainer itemContainer);
+   public boolean queueCraft(...);
+   public void tick(Ref<EntityStore> ref, ComponentAccessor<EntityStore> store, float dt);
+   public boolean cancelAllCrafting(Ref<EntityStore> ref, ComponentAccessor<EntityStore> store);
+   public boolean startTierUpgrade(Ref<EntityStore> ref, ComponentAccessor<EntityStore> store, BenchWindow window);
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `queuedCraftingJobs` | `BlockingQueue<CraftingJob>` | Queue of pending crafts |
+| `upgradingJob` | BenchUpgradingJob | Current bench upgrade (null if none) |
+| `x, y, z` | int | Current bench block position |
+| `blockType` | BlockType | Current bench block type |
+
+**How to use:**
+
+```java
+CraftingManager crafting = store.getComponent(playerRef, CraftingManager.getComponentType());
+
+// Set active bench
+crafting.setBench(x, y, z, benchBlockType);
+
+// Queue a crafting recipe
+crafting.queueCraft(ref, store, window, transactionId, recipe, quantity, inputContainer, InputRemovalType.NORMAL);
+
+// Tick to process queue (called each frame)
+crafting.tick(ref, store, deltaTime);
+
+// Clean up when closing bench
+crafting.clearBench(ref, store);
+```
+
+**Usage notes:**
+- Only one bench can be active at a time
+- Supports timed crafting with progress tracking
+- Bench tier affects crafting speed
+- Materials pulled from nearby chests automatically
+- Cancellation refunds materials in progress
+
+---
+
+### DisplayNameComponent
+
+**Package:** `com.hypixel.hytale.server.core.modules.entity.component`
+
+The `DisplayNameComponent` stores a custom display name for entities. Used for nameplates and UI display.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/modules/entity/component/DisplayNameComponent.java`
+
+```java
+public class DisplayNameComponent implements Component<EntityStore> {
+   public static final BuilderCodec<DisplayNameComponent> CODEC = BuilderCodec.builder(...)
+      .appendInherited(new KeyedCodec<>("DisplayName", Message.CODEC), ...)
+      .build();
+
+   private Message displayName;
+
+   public static ComponentType<EntityStore, DisplayNameComponent> getComponentType() {
+      return EntityModule.get().getDisplayNameComponentType();
+   }
+
+   public Message getDisplayName();
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `displayName` | Message | Localizable display name |
+
+**Usage notes:**
+- Supports localized messages with translations
+- Separate from entity type name
+- Used by Nameplate component for rendering
+- Can include formatting and parameters
+
+---
+
+### Repulsion
+
+**Package:** `com.hypixel.hytale.server.core.modules.entity.repulsion`
+
+The `Repulsion` component defines how entities push each other apart. Used for crowd physics and collision avoidance.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/modules/entity/repulsion/Repulsion.java`
+
+```java
+public class Repulsion implements Component<EntityStore> {
+   public static final BuilderCodec<Repulsion> CODEC = BuilderCodec.builder(...)
+      .append(new KeyedCodec<>("RepulsionConfigIndex", Codec.INTEGER), ...)
+      .build();
+
+   private int repulsionConfigIndex;
+   private boolean isNetworkOutdated = true;
+
+   public static ComponentType<EntityStore, Repulsion> getComponentType() {
+      return EntityModule.get().getRepulsionComponentType();
+   }
+
+   public int getRepulsionConfigIndex();
+   public void setRepulsionConfigIndex(int repulsionConfigIndex);
+   public boolean consumeNetworkOutdated();
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `repulsionConfigIndex` | int | Index into RepulsionConfig asset |
+| `isNetworkOutdated` | boolean | Dirty flag for network sync |
+
+**Usage notes:**
+- RepulsionConfig defines strength and radius
+- Works with physics system for soft collisions
+- Prevents entity stacking/overlapping
+- Network flag optimizes sync frequency
+
+---
+
+### Flock
+
+**Package:** `com.hypixel.hytale.server.flock`
+
+The `Flock` component represents a group of NPCs that coordinate behavior. Tracks group damage data and leadership.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/flock/Flock.java`
+
+```java
+public class Flock implements Component<EntityStore> {
+   private boolean trace;
+   private PersistentFlockData flockData;
+   private DamageData nextDamageData = new DamageData();
+   private DamageData currentDamageData = new DamageData();
+   private FlockRemovedStatus removedStatus = FlockRemovedStatus.NOT_REMOVED;
+
+   public static ComponentType<EntityStore, Flock> getComponentType() {
+      return FlockPlugin.get().getFlockComponentType();
+   }
+
+   public DamageData getDamageData();
+   public DamageData getLeaderDamageData();
+   public PersistentFlockData getFlockData();
+   public FlockRemovedStatus getRemovedStatus();
+   public void onTargetKilled(ComponentAccessor<EntityStore> accessor, Ref<EntityStore> targetRef);
+   public void swapDamageDataBuffers();
+
+   public enum FlockRemovedStatus { NOT_REMOVED, DISSOLVED, UNLOADED }
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `flockData` | PersistentFlockData | Persistent flock configuration and state |
+| `currentDamageData` | DamageData | Damage taken this tick |
+| `removedStatus` | FlockRemovedStatus | Dissolution state |
+| `trace` | boolean | Debug tracing flag |
+
+**Usage notes:**
+- Attached to a flock "leader" entity
+- Members reference flock via FlockMembership
+- Double-buffered damage data for thread safety
+- Supports leader inheritance when leader dies
+
+---
+
+### FlockMembership
+
+**Package:** `com.hypixel.hytale.server.flock`
+
+The `FlockMembership` component links an entity to its flock. Tracks membership type (member, leader, interim leader).
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/flock/FlockMembership.java`
+
+```java
+public class FlockMembership implements Component<EntityStore> {
+   public static final BuilderCodec<FlockMembership> CODEC = BuilderCodec.builder(...)
+      .append(new KeyedCodec<>("FlockId", Codec.UUID_BINARY), ...)
+      .append(new KeyedCodec<>("Type", new EnumCodec<>(Type.class, ...)), ...)
+      .build();
+
+   private UUID flockId;
+   private Type membershipType;
+   private Ref<EntityStore> flockRef;
+
+   public static ComponentType<EntityStore, FlockMembership> getComponentType() {
+      return FlockPlugin.get().getFlockMembershipComponentType();
+   }
+
+   public UUID getFlockId();
+   public Type getMembershipType();
+   public Ref<EntityStore> getFlockRef();
+
+   public enum Type {
+      JOINING(false), MEMBER(false), LEADER(true), INTERIM_LEADER(true);
+      public boolean isActingAsLeader();
+   }
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `flockId` | UUID | Persistent flock identifier |
+| `membershipType` | Type | Role within the flock |
+| `flockRef` | `Ref<EntityStore>` | Runtime reference to flock entity |
+
+**Usage notes:**
+- `flockRef` is runtime-only, not persisted
+- Multiple members can act as leader (interim)
+- JOINING state for newly added members
+- Persisted via flockId for save/load
+
+---
+
+### TargetMemory
+
+**Package:** `com.hypixel.hytale.builtin.npccombatactionevaluator.memory`
+
+The `TargetMemory` component tracks NPCs' awareness of friendly and hostile entities. Used by AI combat evaluation.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/builtin/npccombatactionevaluator/memory/TargetMemory.java`
+
+```java
+public class TargetMemory implements Component<EntityStore> {
+   private final Int2FloatOpenHashMap knownFriendlies = new Int2FloatOpenHashMap();
+   private final List<Ref<EntityStore>> knownFriendliesList = new ObjectArrayList<>();
+   private final Int2FloatOpenHashMap knownHostiles = new Int2FloatOpenHashMap();
+   private final List<Ref<EntityStore>> knownHostilesList = new ObjectArrayList<>();
+   private final float rememberFor;
+   private Ref<EntityStore> closestHostile;
+
+   public static ComponentType<EntityStore, TargetMemory> getComponentType() {
+      return NPCCombatActionEvaluatorPlugin.get().getTargetMemoryComponentType();
+   }
+
+   public Int2FloatOpenHashMap getKnownFriendlies();
+   public List<Ref<EntityStore>> getKnownHostilesList();
+   public Ref<EntityStore> getClosestHostile();
+   public float getRememberFor();
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `knownFriendlies` | Int2FloatOpenHashMap | Entity ID to last-seen time mapping |
+| `knownHostiles` | Int2FloatOpenHashMap | Entity ID to last-seen time mapping |
+| `closestHostile` | `Ref<EntityStore>` | Cached nearest hostile |
+| `rememberFor` | float | Memory duration in seconds |
+
+**Usage notes:**
+- Hash maps store entity IDs with timestamps
+- Lists maintain ordered references for iteration
+- Memory decays based on rememberFor duration
+- Closest hostile cached for quick AI decisions
+
+---
+
+### DamageMemory
+
+**Package:** `com.hypixel.hytale.builtin.npccombatactionevaluator.memory`
+
+The `DamageMemory` component tracks damage taken by an NPC. Used for AI decision-making like fleeing or becoming aggressive.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/builtin/npccombatactionevaluator/memory/DamageMemory.java`
+
+```java
+public class DamageMemory implements Component<EntityStore> {
+   private float recentDamage;
+   private float totalCombatDamage;
+
+   public static ComponentType<EntityStore, DamageMemory> getComponentType() {
+      return NPCCombatActionEvaluatorPlugin.get().getDamageMemoryComponentType();
+   }
+
+   public float getRecentDamage();
+   public float getTotalCombatDamage();
+   public void addDamage(float damage);
+   public void clearRecentDamage();
+   public void clearTotalDamage();
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `recentDamage` | float | Damage taken recently (resets periodically) |
+| `totalCombatDamage` | float | Total damage since combat started |
+
+**Usage notes:**
+- Recent damage used for immediate reactions
+- Total damage used for strategic decisions (flee if too damaged)
+- Clear methods for combat state transitions
+- Works with combat AI evaluators
+
+---
+
+### Timers
+
+**Package:** `com.hypixel.hytale.server.npc.components`
+
+The `Timers` component holds an array of tickable timers for NPC behavior. Used by behavior trees for delayed actions.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/npc/components/Timers.java`
+
+```java
+public class Timers implements Component<EntityStore> {
+   private final Tickable[] timers;
+
+   public static ComponentType<EntityStore, Timers> getComponentType() {
+      return NPCPlugin.get().getTimersComponentType();
+   }
+
+   public Timers(Tickable[] timers);
+   public Tickable[] getTimers();
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `timers` | Tickable[] | Array of timer objects |
+
+**Usage notes:**
+- Fixed-size array based on NPC definition
+- Timers ticked each frame
+- Used for cooldowns, delays, periodic actions
+- Part of NPC behavior tree system
+
+---
+
+### ChunkSpawnData
+
+**Package:** `com.hypixel.hytale.server.spawning.world.component`
+
+The `ChunkSpawnData` is a chunk component that tracks spawning state per chunk. Manages spawn cooldowns and environment-specific spawn data.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/spawning/world/component/ChunkSpawnData.java`
+
+```java
+public class ChunkSpawnData implements Component<ChunkStore> {
+   private final Int2ObjectMap<ChunkEnvironmentSpawnData> chunkEnvironmentSpawnDataMap = new Int2ObjectOpenHashMap<>();
+   private boolean started;
+   private long lastSpawn;
+
+   public static ComponentType<ChunkStore, ChunkSpawnData> getComponentType() {
+      return SpawningPlugin.get().getChunkSpawnDataComponentType();
+   }
+
+   public Int2ObjectMap<ChunkEnvironmentSpawnData> getChunkEnvironmentSpawnDataMap();
+   public boolean isStarted();
+   public long getLastSpawn();
+   public boolean isOnSpawnCooldown();
+   public ChunkEnvironmentSpawnData getEnvironmentSpawnData(int environment);
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `chunkEnvironmentSpawnDataMap` | Int2ObjectMap | Environment ID to spawn data |
+| `started` | boolean | Whether spawning has been initialized |
+| `lastSpawn` | long | Timestamp of last spawn |
+
+**Usage notes:**
+- Stored in `ChunkStore` (chunk-level data)
+- Different environments have separate spawn tracking
+- Cooldown prevents spawn spam
+- Initialized lazily when chunk first activates
