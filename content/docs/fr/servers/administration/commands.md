@@ -3128,3 +3128,1039 @@ Affiche les statistiques du ramasse-miettes.
 ```
 /server stats gc
 ```
+
+---
+
+## Commandes Teleportation
+
+Commandes pour teleporter les joueurs vers differents emplacements et mondes.
+
+### tp
+
+Teleporte les joueurs vers des coordonnees ou d'autres joueurs.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/tp <x> <y> <z> [lacet] [tangage] [roulis]` |
+| **Alias** | `teleport` |
+| **Permission** | `teleport.*` |
+| **Mode de jeu** | Creative |
+
+**Variantes d'utilisation :**
+- `/tp <x> <y> <z>` - Se teleporter vers des coordonnees
+- `/tp <joueur> <x> <y> <z>` - Teleporter un joueur vers des coordonnees
+- `/tp <joueur>` - Se teleporter vers un joueur
+- `/tp <joueur1> <joueur2>` - Teleporter joueur1 vers joueur2
+
+**Parametres :**
+- `x y z` - Coordonnees cibles (supporte les coordonnees relatives avec ~)
+- `lacet` (optionnel) - Angle de rotation horizontale
+- `tangage` (optionnel) - Angle de rotation verticale
+- `roulis` (optionnel) - Angle de rotation de roulis
+
+**Exemples :**
+```
+/tp 100 64 200
+/tp ~ ~10 ~
+/tp NomJoueur
+/tp NomJoueur 0 100 0
+```
+
+---
+
+### tp all
+
+Teleporte tous les joueurs d'un monde vers des coordonnees specifiees.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/tp all <x> <y> <z> [lacet] [tangage] [roulis] [monde]` |
+| **Permission** | `teleport.all` |
+
+**Parametres :**
+- `x y z` - Coordonnees cibles (supporte les coordonnees relatives avec ~)
+- `lacet` (optionnel) - Angle de rotation horizontale
+- `tangage` (optionnel) - Angle de rotation verticale
+- `roulis` (optionnel) - Angle de rotation de roulis
+- `monde` (optionnel) - Monde cible (utilise le monde de l'expediteur si non specifie)
+
+**Exemples :**
+```
+/tp all 0 100 0
+/tp all ~ ~ ~ 90 0 0
+/tp all 100 64 200 0 0 0 MonMonde
+```
+
+---
+
+### tp home
+
+Teleporte le joueur vers son point d'apparition.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/tp home` |
+| **Permission** | `teleport.home` |
+
+**Exemples :**
+```
+/tp home
+```
+
+---
+
+### tp top
+
+Teleporte le joueur vers le bloc le plus haut a sa position actuelle.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/tp top` |
+| **Permission** | `teleport.top` |
+
+**Notes :**
+- Utile pour s'echapper des zones souterraines
+- Le chunk doit etre charge a la position du joueur
+
+**Exemples :**
+```
+/tp top
+```
+
+---
+
+### tp back
+
+Ramene le joueur a sa position precedente.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/tp back [nombre]` |
+| **Permission** | `teleport.back` |
+
+**Parametres :**
+- `nombre` (optionnel) - Nombre de positions a remonter dans l'historique (defaut: 1)
+
+**Exemples :**
+```
+/tp back
+/tp back 3
+```
+
+---
+
+### tp forward
+
+Avance le joueur dans son historique de teleportation.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/tp forward [nombre]` |
+| **Permission** | `teleport.forward` |
+
+**Parametres :**
+- `nombre` (optionnel) - Nombre de positions a avancer dans l'historique (defaut: 1)
+
+**Exemples :**
+```
+/tp forward
+/tp forward 2
+```
+
+---
+
+### tp history
+
+Affiche l'historique de teleportation du joueur.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/tp history` |
+| **Permission** | `teleport.history` |
+
+**Exemples :**
+```
+/tp history
+```
+
+---
+
+### tp world
+
+Teleporte le joueur vers le point d'apparition d'un autre monde.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/tp world <nomMonde>` |
+| **Permission** | `teleport.world` |
+
+**Parametres :**
+- `nomMonde` - Nom du monde cible
+
+**Exemples :**
+```
+/tp world Nether
+/tp world MonMondePersonnalise
+```
+
+---
+
+## Commandes Warp
+
+Commandes pour gerer et utiliser les points de warp (emplacements sauvegardes).
+
+### warp
+
+Teleporte vers un emplacement warp sauvegarde.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/warp <nom>` |
+
+**Parametres :**
+- `nom` - Nom du point de warp
+
+**Sous-commandes :**
+- `go` - Aller vers un point de warp
+- `set` - Creer un nouveau point de warp
+- `list` - Lister tous les points de warp
+- `remove` - Supprimer un point de warp
+- `reload` - Recharger la configuration des warps
+
+**Exemples :**
+```
+/warp spawn
+/warp centre_ville
+```
+
+---
+
+### warp set
+
+Cree un nouveau point de warp a l'emplacement actuel.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/warp set <nom>` |
+| **Permission** | `warp.set` |
+
+**Parametres :**
+- `nom` - Nom du nouveau point de warp
+
+**Notes :**
+- Les mots-cles reserves (reload, remove, set, list, go) ne peuvent pas etre utilises comme noms de warp
+
+**Exemples :**
+```
+/warp set spawn
+/warp set arene
+```
+
+---
+
+### warp list
+
+Liste tous les points de warp disponibles.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/warp list` |
+
+**Exemples :**
+```
+/warp list
+```
+
+---
+
+### warp remove
+
+Supprime un point de warp.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/warp remove <nom>` |
+| **Permission** | `warp.remove` |
+
+**Parametres :**
+- `nom` - Nom du point de warp a supprimer
+
+**Exemples :**
+```
+/warp remove ancien_spawn
+```
+
+---
+
+### warp reload
+
+Recharge la configuration des warps depuis le disque.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/warp reload` |
+
+**Exemples :**
+```
+/warp reload
+```
+
+---
+
+## Commandes Temps
+
+Commandes pour gerer le temps du monde.
+
+### time
+
+Affiche ou definit le temps actuel du monde.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/time [heures]` |
+| **Alias** | `daytime` |
+| **Mode de jeu** | Creative |
+
+**Parametres :**
+- `heures` (optionnel) - Heure du jour en heures (0-24). Si non specifie, affiche le temps actuel.
+
+**Sous-commandes :**
+- `set` - Definir le temps a une valeur specifique
+- `Dawn` / `day` / `morning` - Definir le temps a l'aube
+- `Midday` / `noon` - Definir le temps a midi
+- `Dusk` / `night` - Definir le temps au crepuscule
+- `Midnight` - Definir le temps a minuit
+- `pause` / `stop` - Mettre en pause la progression du temps
+- `dilation` - Definir le facteur de dilatation du temps
+
+**Exemples :**
+```
+/time
+/time 12
+/time set 6
+/time Dawn
+/time Midnight
+```
+
+---
+
+### time pause
+
+Met en pause ou reprend la progression du temps.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/time pause` |
+| **Alias** | `stop` |
+
+**Exemples :**
+```
+/time pause
+/time stop
+```
+
+---
+
+### time dilation
+
+Definit le facteur de dilatation du temps (vitesse de passage du temps).
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/time dilation <facteur>` |
+
+**Parametres :**
+- `facteur` - Multiplicateur de dilatation du temps (0.01 a 4.0)
+
+**Notes :**
+- Les valeurs superieures a 1.0 font passer le temps plus vite
+- Les valeurs inferieures a 1.0 font passer le temps plus lentement
+
+**Exemples :**
+```
+/time dilation 2.0
+/time dilation 0.5
+```
+
+---
+
+## Commandes Meteo
+
+Commandes pour gerer la meteo du monde.
+
+### weather
+
+Commande parente pour la gestion de la meteo.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/weather <sous-commande>` |
+
+**Sous-commandes :**
+- `set` - Definir la meteo actuelle
+- `get` - Obtenir la meteo actuelle
+- `reset` - Reinitialiser la meteo a la progression naturelle
+
+---
+
+### weather set
+
+Definit la meteo forcee pour le monde.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/weather set <meteo>` |
+
+**Parametres :**
+- `meteo` - ID d'asset de meteo a definir
+
+**Exemples :**
+```
+/weather set Clear
+/weather set Rain
+/weather set Storm
+```
+
+---
+
+### weather get
+
+Affiche la meteo forcee actuelle.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/weather get` |
+
+**Informations affichees :**
+- Meteo forcee actuelle (ou "not locked" si la meteo est naturelle)
+
+**Exemples :**
+```
+/weather get
+```
+
+---
+
+### weather reset
+
+Reinitialise la meteo a la progression naturelle.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/weather reset` |
+
+**Exemples :**
+```
+/weather reset
+```
+
+---
+
+## Commandes Gestion des Mondes
+
+Commandes pour gerer les mondes et leur configuration.
+
+### world
+
+Commande parente pour la gestion des mondes.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/world <sous-commande>` |
+| **Alias** | `worlds` |
+
+**Sous-commandes :**
+- `list` - Lister tous les mondes
+- `add` - Creer un nouveau monde
+- `remove` - Supprimer un monde
+- `load` - Charger un monde
+- `save` - Sauvegarder un monde
+- `setdefault` - Definir le monde par defaut
+- `pause` - Mettre en pause la simulation du monde
+- `config` - Configurer les parametres du monde
+- `settings` - Voir/modifier les parametres du monde
+- `perf` - Statistiques de performance
+- `tps` - Definir le taux de tick
+- `prune` - Supprimer les chunks inutilises
+
+---
+
+### world list
+
+Liste tous les mondes charges.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/world list` |
+| **Alias** | `ls` |
+
+**Exemples :**
+```
+/world list
+/world ls
+```
+
+---
+
+### world save
+
+Sauvegarde les donnees du monde sur le disque.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/world save [monde] [--all]` |
+
+**Parametres :**
+- `monde` (optionnel) - Monde specifique a sauvegarder
+- `--all` (drapeau) - Sauvegarder tous les mondes
+
+**Exemples :**
+```
+/world save MonMonde
+/world save --all
+```
+
+---
+
+### world tps
+
+Obtient ou definit le taux de tick du monde.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/world tps <taux>` |
+| **Alias** | `tickrate` |
+
+**Parametres :**
+- `taux` - Taux de tick en ticks par seconde (1-2048)
+
+**Sous-commandes :**
+- `reset` - Reinitialiser le taux de tick par defaut
+
+**Exemples :**
+```
+/world tps 20
+/world tps 60
+/world tps reset
+```
+
+---
+
+### world config setspawn
+
+Definit le point d'apparition du monde.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/world config setspawn [position] [rotation]` |
+
+**Parametres :**
+- `position` (optionnel) - Coordonnees d'apparition (utilise la position du joueur si non specifie)
+- `rotation` (optionnel) - Rotation d'apparition (utilise la rotation du joueur si non specifie)
+
+**Sous-commandes :**
+- `default` - Reinitialiser au fournisseur d'apparition par defaut
+
+**Exemples :**
+```
+/world config setspawn
+/world config setspawn 0 100 0
+/world config setspawn 0 100 0 0,0,0
+```
+
+---
+
+### world config pvp
+
+Active ou desactive le PvP dans le monde.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/world config pvp <active>` |
+
+**Parametres :**
+- `active` - Valeur booleenne (true/false)
+
+**Exemples :**
+```
+/world config pvp true
+/world config pvp false
+```
+
+---
+
+## Commandes Controle d'Acces
+
+Commandes pour gerer les bans et listes blanches des joueurs.
+
+### ban
+
+Bannit un joueur du serveur.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/ban <nomUtilisateur> [raison]` |
+
+**Parametres :**
+- `nomUtilisateur` - Nom d'utilisateur du joueur a bannir
+- `raison` (optionnel) - Raison du ban (defaut: "No reason.")
+
+**Notes :**
+- Non disponible en mode solo
+- Si le joueur est en ligne, il sera deconnecte immediatement
+
+**Exemples :**
+```
+/ban NomJoueur
+/ban NomJoueur Grief de la zone de spawn
+```
+
+---
+
+### unban
+
+Retire un ban d'un joueur.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/unban <nomUtilisateur>` |
+
+**Parametres :**
+- `nomUtilisateur` - Nom d'utilisateur du joueur a debannir
+
+**Notes :**
+- Non disponible en mode solo
+
+**Exemples :**
+```
+/unban NomJoueur
+```
+
+---
+
+### whitelist
+
+Commande parente pour la gestion de la liste blanche.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/whitelist <sous-commande>` |
+
+**Sous-commandes :**
+- `add` - Ajouter un joueur a la liste blanche
+- `remove` - Retirer un joueur de la liste blanche
+- `enable` - Activer la liste blanche
+- `disable` - Desactiver la liste blanche
+- `clear` - Vider la liste blanche
+- `status` - Verifier le statut de la liste blanche
+- `list` - Lister les joueurs sur liste blanche
+
+---
+
+### whitelist add
+
+Ajoute un joueur a la liste blanche.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/whitelist add <nomUtilisateur>` |
+
+**Parametres :**
+- `nomUtilisateur` - Nom d'utilisateur du joueur a ajouter
+
+**Exemples :**
+```
+/whitelist add NomJoueur
+```
+
+---
+
+### whitelist remove
+
+Retire un joueur de la liste blanche.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/whitelist remove <nomUtilisateur>` |
+
+**Parametres :**
+- `nomUtilisateur` - Nom d'utilisateur du joueur a retirer
+
+**Exemples :**
+```
+/whitelist remove NomJoueur
+```
+
+---
+
+### whitelist enable
+
+Active la liste blanche.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/whitelist enable` |
+
+**Exemples :**
+```
+/whitelist enable
+```
+
+---
+
+### whitelist disable
+
+Desactive la liste blanche.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/whitelist disable` |
+
+**Exemples :**
+```
+/whitelist disable
+```
+
+---
+
+### whitelist status
+
+Affiche le statut actuel de la liste blanche.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/whitelist status` |
+
+**Exemples :**
+```
+/whitelist status
+```
+
+---
+
+### whitelist list
+
+Liste tous les joueurs sur liste blanche.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/whitelist list` |
+
+**Exemples :**
+```
+/whitelist list
+```
+
+---
+
+## Commandes Bloc
+
+Commandes pour manipuler les blocs dans le monde.
+
+### block
+
+Commande parente pour la manipulation des blocs.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/block <sous-commande>` |
+| **Alias** | `blocks` |
+| **Mode de jeu** | Creative |
+
+**Sous-commandes :**
+- `set` - Placer un bloc a une position
+- `get` - Obtenir les informations d'un bloc a une position
+- `getstate` - Obtenir l'etat d'un bloc a une position
+- `setstate` - Definir l'etat d'un bloc a une position
+- `setticking` - Definir l'etat de tick d'un bloc
+- `row` - Placer une rangee de blocs
+- `bulk` - Operations de blocs en masse
+- `inspectphysics` - Inspecter la physique des blocs
+- `inspectfiller` - Inspecter les blocs de remplissage
+- `inspectrotation` - Inspecter la rotation des blocs
+
+---
+
+### block set
+
+Place un bloc a une position.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/block set <bloc> <x> <y> <z>` |
+
+**Parametres :**
+- `bloc` - Type de bloc a placer
+- `x y z` - Coordonnees du bloc (supporte les coordonnees relatives avec ~)
+
+**Exemples :**
+```
+/block set Stone 100 64 200
+/block set Glass ~ ~1 ~
+```
+
+---
+
+### block get
+
+Obtient des informations sur un bloc a une position.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/block get <x> <y> <z>` |
+
+**Parametres :**
+- `x y z` - Coordonnees du bloc (supporte les coordonnees relatives avec ~)
+
+**Exemples :**
+```
+/block get 100 64 200
+/block get ~ ~-1 ~
+```
+
+---
+
+## Commandes Particule
+
+Commandes pour faire apparaitre des effets de particules.
+
+### particle spawn
+
+Fait apparaitre un effet de particules a l'emplacement du joueur.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/particle spawn <particule> [joueur]` |
+
+**Parametres :**
+- `particule` - ID d'asset du systeme de particules
+- `joueur` (optionnel) - Joueur cible
+
+**Notes :**
+- Sans argument de particule, ouvre la page d'interface d'apparition de particules
+
+**Exemples :**
+```
+/particle spawn Fire_Burst
+/particle spawn Smoke_Puff NomJoueur
+```
+
+---
+
+## Commandes Plugin
+
+Commandes pour gerer les plugins du serveur.
+
+### plugin
+
+Commande parente pour la gestion des plugins.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/plugin <sous-commande>` |
+| **Alias** | `plugins`, `pl` |
+
+**Sous-commandes :**
+- `list` - Lister tous les plugins charges
+- `load` - Charger un plugin
+- `unload` - Decharger un plugin
+- `reload` - Recharger un plugin
+- `manage` - Ouvrir l'interface de gestion des plugins
+
+---
+
+### plugin list
+
+Liste tous les plugins charges.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/plugin list` |
+| **Alias** | `ls` |
+
+**Exemples :**
+```
+/plugin list
+/plugin ls
+```
+
+---
+
+### plugin load
+
+Charge un plugin.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/plugin load <nomPlugin> [--boot]` |
+| **Alias** | `l` |
+
+**Parametres :**
+- `nomPlugin` - Identifiant du plugin a charger
+- `--boot` (drapeau) - Ajouter uniquement a la liste de demarrage sans charger immediatement
+
+**Exemples :**
+```
+/plugin load com.example.monplugin
+/plugin load mon-plugin --boot
+```
+
+---
+
+### plugin unload
+
+Decharge un plugin.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/plugin unload <nomPlugin> [--boot]` |
+| **Alias** | `u` |
+
+**Parametres :**
+- `nomPlugin` - Identifiant du plugin a decharger
+- `--boot` (drapeau) - Retirer uniquement de la liste de demarrage sans decharger immediatement
+
+**Exemples :**
+```
+/plugin unload com.example.monplugin
+```
+
+---
+
+### plugin reload
+
+Recharge un plugin.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/plugin reload <nomPlugin>` |
+| **Alias** | `r` |
+
+**Parametres :**
+- `nomPlugin` - Identifiant du plugin a recharger
+
+**Exemples :**
+```
+/plugin reload com.example.monplugin
+```
+
+---
+
+## Commandes Communication
+
+Commandes pour la communication a l'echelle du serveur.
+
+### say
+
+Diffuse un message a tous les joueurs.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/say <message>` |
+| **Alias** | `broadcast` |
+
+**Parametres :**
+- `message` - Message a diffuser (supporte les messages formates avec `{...}`)
+
+**Exemples :**
+```
+/say Bonjour a tous !
+/say Redemarrage du serveur dans 5 minutes
+/say {"text": "Message formate", "color": "red"}
+```
+
+---
+
+## Commandes Emote
+
+Commandes pour les emotes des joueurs.
+
+### emote
+
+Joue une animation d'emote.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/emote <emote>` |
+| **Mode de jeu** | Adventure |
+
+**Parametres :**
+- `emote` - ID de l'emote a jouer
+
+**Exemples :**
+```
+/emote wave
+/emote dance
+```
+
+---
+
+## Commandes Forme de Debogage
+
+Commandes pour dessiner des formes de debogage dans le monde.
+
+### debug shape
+
+Commande parente pour la visualisation des formes de debogage.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/debug shape <sous-commande>` |
+
+**Sous-commandes :**
+- `sphere` - Dessiner une sphere de debogage
+- `cube` - Dessiner un cube de debogage
+- `cylinder` - Dessiner un cylindre de debogage
+- `cone` - Dessiner un cone de debogage
+- `arrow` - Dessiner une fleche de debogage
+- `showforce` - Afficher la visualisation de force de debogage
+- `clear` - Effacer toutes les formes de debogage
+
+---
+
+## Commandes Apparition d'Objet
+
+Commandes pour faire apparaitre des entites d'objet dans le monde.
+
+### spawnitem
+
+Fait apparaitre des entites d'objet dans le monde.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/spawnitem <objet> [qte] [--n=<nombre>] [--x=<force>]` |
+| **Permission** | `spawnitem` |
+
+**Parametres :**
+- `objet` - ID d'asset de l'objet a faire apparaitre
+- `qte` (optionnel) - Quantite par pile d'objets (defaut: 1)
+- `--n` / `nombre` (optionnel) - Nombre d'entites d'objet a faire apparaitre
+- `--x` / `force` (optionnel) - Multiplicateur de force de lancer (defaut: 1.0)
+
+**Exemples :**
+```
+/spawnitem Sword_Iron
+/spawnitem Apple 10
+/spawnitem Gold_Ingot 5 --n=10
+/spawnitem Arrow 64 --x=2.0
+```
+
+---
+
+## Commandes Interaction
+
+Commandes pour gerer les interactions des joueurs.
+
+### interaction
+
+Commande parente pour la gestion des interactions.
+
+| Propriete | Valeur |
+|-----------|--------|
+| **Syntaxe** | `/interaction <sous-commande>` |
+| **Alias** | `interact` |
+
+**Sous-commandes :**
+- `run` - Executer une interaction
+- `snapshotsource` - Definir la source d'instantane pour les interactions
+- `clear` - Effacer l'interaction actuelle

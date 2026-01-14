@@ -122,6 +122,8 @@ export const sidebarConfig: SidebarItem[] = [
           { titleKey: "prefabSystem", href: "/docs/modding/plugins/prefab-system" },
           { titleKey: "entityUI", href: "/docs/modding/plugins/entity-ui" },
           { titleKey: "effectsSystem", href: "/docs/modding/plugins/effects-system" },
+          { titleKey: "audioSystem", href: "/docs/modding/plugins/audio-system" },
+          { titleKey: "entitySpawning", href: "/docs/modding/plugins/entity-spawning" },
           {
             titleKey: "events",
             items: [
@@ -161,6 +163,7 @@ export const sidebarConfig: SidebarItem[] = [
                   { titleKey: "startWorldEvent", href: "/docs/modding/plugins/events/world/start-world-event" },
                   { titleKey: "allWorldsLoadedEvent", href: "/docs/modding/plugins/events/world/all-worlds-loaded-event" },
                   { titleKey: "moonPhaseChangeEvent", href: "/docs/modding/plugins/events/world/moon-phase-change-event" },
+                  { titleKey: "worldPathChangedEvent", href: "/docs/modding/plugins/events/world/world-path-changed-event" },
                 ],
               },
               {
@@ -232,6 +235,11 @@ export const sidebarConfig: SidebarItem[] = [
                   { titleKey: "removedAssetsEvent", href: "/docs/modding/plugins/events/asset/removed-assets-event" },
                   { titleKey: "generateAssetsEvent", href: "/docs/modding/plugins/events/asset/generate-assets-event" },
                   { titleKey: "assetStoreMonitorEvent", href: "/docs/modding/plugins/events/asset/asset-store-monitor-event" },
+                  { titleKey: "assetPackRegisterEvent", href: "/docs/modding/plugins/events/asset/asset-pack-register-event" },
+                  { titleKey: "assetPackUnregisterEvent", href: "/docs/modding/plugins/events/asset/asset-pack-unregister-event" },
+                  { titleKey: "loadAssetEvent", href: "/docs/modding/plugins/events/asset/load-asset-event" },
+                  { titleKey: "generateSchemaEvent", href: "/docs/modding/plugins/events/asset/generate-schema-event" },
+                  { titleKey: "sendCommonAssetsEvent", href: "/docs/modding/plugins/events/asset/send-common-assets-event" },
                 ],
               },
               {
@@ -243,6 +251,26 @@ export const sidebarConfig: SidebarItem[] = [
                   { titleKey: "blockEventView", href: "/docs/modding/plugins/events/npc/block-event-view" },
                   { titleKey: "eventNotification", href: "/docs/modding/plugins/events/npc/event-notification" },
                   { titleKey: "entityEventNotification", href: "/docs/modding/plugins/events/npc/entity-event-notification" },
+                  { titleKey: "allNpcsLoadedEvent", href: "/docs/modding/plugins/events/npc/all-npcs-loaded-event" },
+                  { titleKey: "loadedNpcEvent", href: "/docs/modding/plugins/events/npc/loaded-npc-event" },
+                ],
+              },
+              {
+                titleKey: "adventureEvents",
+                items: [
+                  { titleKey: "treasureChestOpeningEvent", href: "/docs/modding/plugins/events/adventure/treasure-chest-opening-event" },
+                ],
+              },
+              {
+                titleKey: "i18nEvents",
+                items: [
+                  { titleKey: "generateDefaultLanguageEvent", href: "/docs/modding/plugins/events/i18n/generate-default-language-event" },
+                ],
+              },
+              {
+                titleKey: "singleplayerEvents",
+                items: [
+                  { titleKey: "singleplayerRequestAccessEvent", href: "/docs/modding/plugins/events/singleplayer/singleplayer-request-access-event" },
                 ],
               },
             ],

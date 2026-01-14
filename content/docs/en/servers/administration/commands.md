@@ -3128,3 +3128,1039 @@ Displays garbage collection statistics.
 ```
 /server stats gc
 ```
+
+---
+
+## Teleportation Commands
+
+Commands for teleporting players to different locations and worlds.
+
+### tp
+
+Teleports players to coordinates or other players.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/tp <x> <y> <z> [yaw] [pitch] [roll]` |
+| **Aliases** | `teleport` |
+| **Permission** | `teleport.*` |
+| **Game Mode** | Creative |
+
+**Usage variants:**
+- `/tp <x> <y> <z>` - Teleport yourself to coordinates
+- `/tp <player> <x> <y> <z>` - Teleport a player to coordinates
+- `/tp <player>` - Teleport yourself to a player
+- `/tp <player1> <player2>` - Teleport player1 to player2
+
+**Parameters:**
+- `x y z` - Target coordinates (supports relative coordinates with ~)
+- `yaw` (optional) - Horizontal rotation angle
+- `pitch` (optional) - Vertical rotation angle
+- `roll` (optional) - Roll rotation angle
+
+**Examples:**
+```
+/tp 100 64 200
+/tp ~ ~10 ~
+/tp PlayerName
+/tp PlayerName 0 100 0
+```
+
+---
+
+### tp all
+
+Teleports all players in a world to specified coordinates.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/tp all <x> <y> <z> [yaw] [pitch] [roll] [world]` |
+| **Permission** | `teleport.all` |
+
+**Parameters:**
+- `x y z` - Target coordinates (supports relative coordinates with ~)
+- `yaw` (optional) - Horizontal rotation angle
+- `pitch` (optional) - Vertical rotation angle
+- `roll` (optional) - Roll rotation angle
+- `world` (optional) - Target world (uses sender's world if not specified)
+
+**Examples:**
+```
+/tp all 0 100 0
+/tp all ~ ~ ~ 90 0 0
+/tp all 100 64 200 0 0 0 MyWorld
+```
+
+---
+
+### tp home
+
+Teleports the player to their spawn point.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/tp home` |
+| **Permission** | `teleport.home` |
+
+**Examples:**
+```
+/tp home
+```
+
+---
+
+### tp top
+
+Teleports the player to the highest block at their current position.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/tp top` |
+| **Permission** | `teleport.top` |
+
+**Notes:**
+- Useful for escaping underground areas
+- Chunk must be loaded at the player's position
+
+**Examples:**
+```
+/tp top
+```
+
+---
+
+### tp back
+
+Returns the player to their previous location.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/tp back [count]` |
+| **Permission** | `teleport.back` |
+
+**Parameters:**
+- `count` (optional) - Number of positions to go back in history (default: 1)
+
+**Examples:**
+```
+/tp back
+/tp back 3
+```
+
+---
+
+### tp forward
+
+Advances the player forward in their teleport history.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/tp forward [count]` |
+| **Permission** | `teleport.forward` |
+
+**Parameters:**
+- `count` (optional) - Number of positions to go forward in history (default: 1)
+
+**Examples:**
+```
+/tp forward
+/tp forward 2
+```
+
+---
+
+### tp history
+
+Displays the player's teleport history.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/tp history` |
+| **Permission** | `teleport.history` |
+
+**Examples:**
+```
+/tp history
+```
+
+---
+
+### tp world
+
+Teleports the player to another world's spawn point.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/tp world <worldName>` |
+| **Permission** | `teleport.world` |
+
+**Parameters:**
+- `worldName` - Name of the target world
+
+**Examples:**
+```
+/tp world Nether
+/tp world MyCustomWorld
+```
+
+---
+
+## Warp Commands
+
+Commands for managing and using warp points (saved locations).
+
+### warp
+
+Teleports to a saved warp location.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/warp <name>` |
+
+**Parameters:**
+- `name` - Name of the warp point
+
+**Subcommands:**
+- `go` - Go to a warp point
+- `set` - Create a new warp point
+- `list` - List all warp points
+- `remove` - Remove a warp point
+- `reload` - Reload warp configuration
+
+**Examples:**
+```
+/warp spawn
+/warp town_center
+```
+
+---
+
+### warp set
+
+Creates a new warp point at the current location.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/warp set <name>` |
+| **Permission** | `warp.set` |
+
+**Parameters:**
+- `name` - Name for the new warp point
+
+**Notes:**
+- Reserved keywords (reload, remove, set, list, go) cannot be used as warp names
+
+**Examples:**
+```
+/warp set spawn
+/warp set arena
+```
+
+---
+
+### warp list
+
+Lists all available warp points.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/warp list` |
+
+**Examples:**
+```
+/warp list
+```
+
+---
+
+### warp remove
+
+Removes a warp point.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/warp remove <name>` |
+| **Permission** | `warp.remove` |
+
+**Parameters:**
+- `name` - Name of the warp point to remove
+
+**Examples:**
+```
+/warp remove old_spawn
+```
+
+---
+
+### warp reload
+
+Reloads the warp configuration from disk.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/warp reload` |
+
+**Examples:**
+```
+/warp reload
+```
+
+---
+
+## Time Commands
+
+Commands for managing world time.
+
+### time
+
+Displays or sets the current world time.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/time [hours]` |
+| **Aliases** | `daytime` |
+| **Game Mode** | Creative |
+
+**Parameters:**
+- `hours` (optional) - Time of day in hours (0-24). If not specified, displays current time.
+
+**Subcommands:**
+- `set` - Set time to specific value
+- `Dawn` / `day` / `morning` - Set time to dawn
+- `Midday` / `noon` - Set time to midday
+- `Dusk` / `night` - Set time to dusk
+- `Midnight` - Set time to midnight
+- `pause` / `stop` - Pause time progression
+- `dilation` - Set time dilation factor
+
+**Examples:**
+```
+/time
+/time 12
+/time set 6
+/time Dawn
+/time Midnight
+```
+
+---
+
+### time pause
+
+Pauses or resumes time progression.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/time pause` |
+| **Aliases** | `stop` |
+
+**Examples:**
+```
+/time pause
+/time stop
+```
+
+---
+
+### time dilation
+
+Sets the time dilation factor (how fast time passes).
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/time dilation <factor>` |
+
+**Parameters:**
+- `factor` - Time dilation multiplier (0.01 to 4.0)
+
+**Notes:**
+- Values greater than 1.0 make time pass faster
+- Values less than 1.0 make time pass slower
+
+**Examples:**
+```
+/time dilation 2.0
+/time dilation 0.5
+```
+
+---
+
+## Weather Commands
+
+Commands for managing world weather.
+
+### weather
+
+Parent command for weather management.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/weather <subcommand>` |
+
+**Subcommands:**
+- `set` - Set the current weather
+- `get` - Get the current weather
+- `reset` - Reset weather to natural progression
+
+---
+
+### weather set
+
+Sets the forced weather for the world.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/weather set <weather>` |
+
+**Parameters:**
+- `weather` - Weather asset ID to set
+
+**Examples:**
+```
+/weather set Clear
+/weather set Rain
+/weather set Storm
+```
+
+---
+
+### weather get
+
+Displays the current forced weather.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/weather get` |
+
+**Information displayed:**
+- Current forced weather (or "not locked" if weather is natural)
+
+**Examples:**
+```
+/weather get
+```
+
+---
+
+### weather reset
+
+Resets weather to natural progression.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/weather reset` |
+
+**Examples:**
+```
+/weather reset
+```
+
+---
+
+## World Management Commands
+
+Commands for managing worlds and world configuration.
+
+### world
+
+Parent command for world management.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/world <subcommand>` |
+| **Aliases** | `worlds` |
+
+**Subcommands:**
+- `list` - List all worlds
+- `add` - Create a new world
+- `remove` - Remove a world
+- `load` - Load a world
+- `save` - Save a world
+- `setdefault` - Set the default world
+- `pause` - Pause world simulation
+- `config` - Configure world settings
+- `settings` - View/edit world settings
+- `perf` - Performance statistics
+- `tps` - Set tick rate
+- `prune` - Remove unused chunks
+
+---
+
+### world list
+
+Lists all loaded worlds.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/world list` |
+| **Aliases** | `ls` |
+
+**Examples:**
+```
+/world list
+/world ls
+```
+
+---
+
+### world save
+
+Saves world data to disk.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/world save [world] [--all]` |
+
+**Parameters:**
+- `world` (optional) - Specific world to save
+- `--all` (flag) - Save all worlds
+
+**Examples:**
+```
+/world save MyWorld
+/world save --all
+```
+
+---
+
+### world tps
+
+Gets or sets the world tick rate.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/world tps <rate>` |
+| **Aliases** | `tickrate` |
+
+**Parameters:**
+- `rate` - Tick rate in ticks per second (1-2048)
+
+**Subcommands:**
+- `reset` - Reset tick rate to default
+
+**Examples:**
+```
+/world tps 20
+/world tps 60
+/world tps reset
+```
+
+---
+
+### world config setspawn
+
+Sets the world spawn point.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/world config setspawn [position] [rotation]` |
+
+**Parameters:**
+- `position` (optional) - Spawn coordinates (uses player position if not specified)
+- `rotation` (optional) - Spawn rotation (uses player rotation if not specified)
+
+**Subcommands:**
+- `default` - Reset to default spawn provider
+
+**Examples:**
+```
+/world config setspawn
+/world config setspawn 0 100 0
+/world config setspawn 0 100 0 0,0,0
+```
+
+---
+
+### world config pvp
+
+Enables or disables PvP in the world.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/world config pvp <enabled>` |
+
+**Parameters:**
+- `enabled` - Boolean value (true/false)
+
+**Examples:**
+```
+/world config pvp true
+/world config pvp false
+```
+
+---
+
+## Access Control Commands
+
+Commands for managing player bans and whitelists.
+
+### ban
+
+Bans a player from the server.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/ban <username> [reason]` |
+
+**Parameters:**
+- `username` - Username of the player to ban
+- `reason` (optional) - Reason for the ban (default: "No reason.")
+
+**Notes:**
+- Not available in singleplayer mode
+- If the player is online, they will be disconnected immediately
+
+**Examples:**
+```
+/ban PlayerName
+/ban PlayerName Griefing the spawn area
+```
+
+---
+
+### unban
+
+Removes a ban from a player.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/unban <username>` |
+
+**Parameters:**
+- `username` - Username of the player to unban
+
+**Notes:**
+- Not available in singleplayer mode
+
+**Examples:**
+```
+/unban PlayerName
+```
+
+---
+
+### whitelist
+
+Parent command for whitelist management.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/whitelist <subcommand>` |
+
+**Subcommands:**
+- `add` - Add a player to the whitelist
+- `remove` - Remove a player from the whitelist
+- `enable` - Enable the whitelist
+- `disable` - Disable the whitelist
+- `clear` - Clear the whitelist
+- `status` - Check whitelist status
+- `list` - List whitelisted players
+
+---
+
+### whitelist add
+
+Adds a player to the whitelist.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/whitelist add <username>` |
+
+**Parameters:**
+- `username` - Username of the player to add
+
+**Examples:**
+```
+/whitelist add PlayerName
+```
+
+---
+
+### whitelist remove
+
+Removes a player from the whitelist.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/whitelist remove <username>` |
+
+**Parameters:**
+- `username` - Username of the player to remove
+
+**Examples:**
+```
+/whitelist remove PlayerName
+```
+
+---
+
+### whitelist enable
+
+Enables the whitelist.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/whitelist enable` |
+
+**Examples:**
+```
+/whitelist enable
+```
+
+---
+
+### whitelist disable
+
+Disables the whitelist.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/whitelist disable` |
+
+**Examples:**
+```
+/whitelist disable
+```
+
+---
+
+### whitelist status
+
+Displays the current whitelist status.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/whitelist status` |
+
+**Examples:**
+```
+/whitelist status
+```
+
+---
+
+### whitelist list
+
+Lists all whitelisted players.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/whitelist list` |
+
+**Examples:**
+```
+/whitelist list
+```
+
+---
+
+## Block Commands
+
+Commands for manipulating blocks in the world.
+
+### block
+
+Parent command for block manipulation.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/block <subcommand>` |
+| **Aliases** | `blocks` |
+| **Game Mode** | Creative |
+
+**Subcommands:**
+- `set` - Set a block at a position
+- `get` - Get block information at a position
+- `getstate` - Get block state at a position
+- `setstate` - Set block state at a position
+- `setticking` - Set block ticking state
+- `row` - Place a row of blocks
+- `bulk` - Bulk block operations
+- `inspectphysics` - Inspect block physics
+- `inspectfiller` - Inspect filler blocks
+- `inspectrotation` - Inspect block rotation
+
+---
+
+### block set
+
+Places a block at a position.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/block set <block> <x> <y> <z>` |
+
+**Parameters:**
+- `block` - Block type to place
+- `x y z` - Block coordinates (supports relative coordinates with ~)
+
+**Examples:**
+```
+/block set Stone 100 64 200
+/block set Glass ~ ~1 ~
+```
+
+---
+
+### block get
+
+Gets information about a block at a position.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/block get <x> <y> <z>` |
+
+**Parameters:**
+- `x y z` - Block coordinates (supports relative coordinates with ~)
+
+**Examples:**
+```
+/block get 100 64 200
+/block get ~ ~-1 ~
+```
+
+---
+
+## Particle Commands
+
+Commands for spawning particle effects.
+
+### particle spawn
+
+Spawns a particle effect at the player's location.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/particle spawn <particle> [player]` |
+
+**Parameters:**
+- `particle` - Particle system asset ID
+- `player` (optional) - Target player
+
+**Notes:**
+- Without a particle argument, opens the particle spawn UI page
+
+**Examples:**
+```
+/particle spawn Fire_Burst
+/particle spawn Smoke_Puff PlayerName
+```
+
+---
+
+## Plugin Commands
+
+Commands for managing server plugins.
+
+### plugin
+
+Parent command for plugin management.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/plugin <subcommand>` |
+| **Aliases** | `plugins`, `pl` |
+
+**Subcommands:**
+- `list` - List all loaded plugins
+- `load` - Load a plugin
+- `unload` - Unload a plugin
+- `reload` - Reload a plugin
+- `manage` - Open plugin management UI
+
+---
+
+### plugin list
+
+Lists all loaded plugins.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/plugin list` |
+| **Aliases** | `ls` |
+
+**Examples:**
+```
+/plugin list
+/plugin ls
+```
+
+---
+
+### plugin load
+
+Loads a plugin.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/plugin load <pluginName> [--boot]` |
+| **Aliases** | `l` |
+
+**Parameters:**
+- `pluginName` - Plugin identifier to load
+- `--boot` (flag) - Only add to boot list without loading immediately
+
+**Examples:**
+```
+/plugin load com.example.myplugin
+/plugin load my-plugin --boot
+```
+
+---
+
+### plugin unload
+
+Unloads a plugin.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/plugin unload <pluginName> [--boot]` |
+| **Aliases** | `u` |
+
+**Parameters:**
+- `pluginName` - Plugin identifier to unload
+- `--boot` (flag) - Only remove from boot list without unloading immediately
+
+**Examples:**
+```
+/plugin unload com.example.myplugin
+```
+
+---
+
+### plugin reload
+
+Reloads a plugin.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/plugin reload <pluginName>` |
+| **Aliases** | `r` |
+
+**Parameters:**
+- `pluginName` - Plugin identifier to reload
+
+**Examples:**
+```
+/plugin reload com.example.myplugin
+```
+
+---
+
+## Communication Commands
+
+Commands for server-wide communication.
+
+### say
+
+Broadcasts a message to all players.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/say <message>` |
+| **Aliases** | `broadcast` |
+
+**Parameters:**
+- `message` - Message to broadcast (supports formatted messages with `{...}`)
+
+**Examples:**
+```
+/say Hello everyone!
+/say Server restart in 5 minutes
+/say {"text": "Formatted message", "color": "red"}
+```
+
+---
+
+## Emote Commands
+
+Commands for player emotes.
+
+### emote
+
+Plays an emote animation.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/emote <emote>` |
+| **Game Mode** | Adventure |
+
+**Parameters:**
+- `emote` - Emote ID to play
+
+**Examples:**
+```
+/emote wave
+/emote dance
+```
+
+---
+
+## Debug Shape Commands
+
+Commands for drawing debug shapes in the world.
+
+### debug shape
+
+Parent command for debug shape visualization.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/debug shape <subcommand>` |
+
+**Subcommands:**
+- `sphere` - Draw a debug sphere
+- `cube` - Draw a debug cube
+- `cylinder` - Draw a debug cylinder
+- `cone` - Draw a debug cone
+- `arrow` - Draw a debug arrow
+- `showforce` - Show force debug visualization
+- `clear` - Clear all debug shapes
+
+---
+
+## Spawn Item Commands
+
+Commands for spawning item entities in the world.
+
+### spawnitem
+
+Spawns item entities in the world.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/spawnitem <item> [qty] [--n=<count>] [--x=<force>]` |
+| **Permission** | `spawnitem` |
+
+**Parameters:**
+- `item` - Item asset ID to spawn
+- `qty` (optional) - Quantity per item stack (default: 1)
+- `--n` / `count` (optional) - Number of item entities to spawn
+- `--x` / `force` (optional) - Throw force multiplier (default: 1.0)
+
+**Examples:**
+```
+/spawnitem Sword_Iron
+/spawnitem Apple 10
+/spawnitem Gold_Ingot 5 --n=10
+/spawnitem Arrow 64 --x=2.0
+```
+
+---
+
+## Interaction Commands
+
+Commands for managing player interactions.
+
+### interaction
+
+Parent command for interaction management.
+
+| Property | Value |
+|----------|-------|
+| **Syntax** | `/interaction <subcommand>` |
+| **Aliases** | `interact` |
+
+**Subcommands:**
+- `run` - Run an interaction
+- `snapshotsource` - Set snapshot source for interactions
+- `clear` - Clear current interaction

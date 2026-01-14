@@ -3878,3 +3878,925 @@ if (skinComp.consumeNetworkOutdated()) {
 - Changes to skin trigger network sync to other players
 - Used by model/effect systems when applying visual changes
 - Can be temporarily overridden by effects (e.g., disguise)
+
+---
+
+## Inventory and Item Systems
+
+The inventory and item systems handle player inventories, item containers, item stacks, windows, and armor slots. These are core gameplay systems that manage items throughout the game.
+
+### Inventory
+
+**Package:** `com.hypixel.hytale.server.core.inventory`
+
+The `Inventory` class manages a living entity's complete inventory, including storage, armor, hotbar, utility slots, tools, and backpack. It provides methods for moving items between sections, smart item placement, and serialization.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/inventory/Inventory.java`
+
+```java
+public class Inventory implements NetworkSerializable<UpdatePlayerInventory> {
+   public static final short DEFAULT_HOTBAR_CAPACITY = 9;
+   public static final short DEFAULT_UTILITY_CAPACITY = 4;
+   public static final short DEFAULT_TOOLS_CAPACITY = 23;
+   public static final short DEFAULT_ARMOR_CAPACITY = (short)ItemArmorSlot.VALUES.length;  // 4
+   public static final short DEFAULT_STORAGE_ROWS = 4;
+   public static final short DEFAULT_STORAGE_COLUMNS = 9;
+   public static final short DEFAULT_STORAGE_CAPACITY = 36;
+
+   // Section IDs (negative values for internal sections)
+   public static final int HOTBAR_SECTION_ID = -1;
+   public static final int STORAGE_SECTION_ID = -2;
+   public static final int ARMOR_SECTION_ID = -3;
+   public static final int UTILITY_SECTION_ID = -5;
+   public static final int TOOLS_SECTION_ID = -8;
+   public static final int BACKPACK_SECTION_ID = -9;
+
+   private ItemContainer storage;
+   private ItemContainer armor;
+   private ItemContainer hotbar;
+   private ItemContainer utility;
+   private ItemContainer tools;
+   private ItemContainer backpack;
+   private byte activeHotbarSlot;
+   private byte activeUtilitySlot = -1;
+   private byte activeToolsSlot = -1;
+
+   // Combined containers for searching/moving items
+   private CombinedItemContainer combinedHotbarFirst;
+   private CombinedItemContainer combinedStorageFirst;
+   private CombinedItemContainer combinedBackpackStorageHotbar;
+   private CombinedItemContainer combinedEverything;
+}
+```
+
+**Inventory Sections:**
+
+| Section | ID | Default Capacity | Description |
+|---------|----|--------------------|-------------|
+| Hotbar | -1 | 9 | Quick access item slots |
+| Storage | -2 | 36 | Main inventory storage (4x9 grid) |
+| Armor | -3 | 4 | Equipment slots (Head, Chest, Hands, Legs) |
+| Utility | -5 | 4 | Consumable item slots |
+| Tools | -8 | 23 | Tool storage (deprecated) |
+| Backpack | -9 | 0 | Expandable backpack storage |
+
+**Key Methods:**
+
+```java
+// Move item between sections
+void moveItem(int fromSectionId, int fromSlotId, int quantity, int toSectionId, int toSlotId);
+
+// Smart move with auto-equip and stack merging
+void smartMoveItem(int fromSectionId, int fromSlotId, int quantity, SmartMoveType moveType);
+
+// Get active slot items
+ItemStack getItemInHand();           // Active hotbar or tool item
+ItemStack getActiveHotbarItem();     // Active hotbar slot item
+ItemStack getUtilityItem();          // Active utility slot item
+ItemStack getToolsItem();            // Active tools slot item
+
+// Slot management
+void setActiveHotbarSlot(byte slot);
+void setActiveUtilitySlot(byte slot);
+void setActiveToolsSlot(byte slot);
+
+// Container access
+ItemContainer getContainerForItemPickup(Item item, PlayerSettings settings);
+ItemContainer getSectionById(int id);
+
+// Bulk operations
+List<ItemStack> dropAllItemStacks();
+void clear();
+```
+
+**SmartMoveType enum:**
+
+| Value | Description |
+|-------|-------------|
+| `EquipOrMergeStack` | Auto-equip armor or merge with existing stacks |
+| `PutInHotbarOrWindow` | Move to hotbar, or open container window |
+| `PutInHotbarOrBackpack` | Move to hotbar, storage, or backpack |
+
+**Usage Examples:**
+
+```java
+// Get player inventory
+Player player = store.getComponent(playerRef, Player.getComponentType());
+Inventory inventory = player.getInventory();
+
+// Move item from storage to hotbar
+inventory.moveItem(
+    Inventory.STORAGE_SECTION_ID, 5,   // From storage slot 5
+    64,                                 // Move 64 items
+    Inventory.HOTBAR_SECTION_ID, 0     // To hotbar slot 0
+);
+
+// Smart equip armor
+inventory.smartMoveItem(
+    Inventory.STORAGE_SECTION_ID, 10,
+    1,
+    SmartMoveType.EquipOrMergeStack
+);
+
+// Get item in hand
+ItemStack heldItem = inventory.getItemInHand();
+if (heldItem != null && heldItem.getItem().getWeapon() != null) {
+    // Player is holding a weapon
+}
+
+// Add items to player inventory (respects pickup location preferences)
+PlayerSettings settings = store.getComponent(playerRef, PlayerSettings.getComponentType());
+ItemContainer targetContainer = inventory.getContainerForItemPickup(item, settings);
+targetContainer.addItemStack(itemStack);
+```
+
+---
+
+### ItemStack
+
+**Package:** `com.hypixel.hytale.server.core.inventory`
+
+The `ItemStack` class represents a stack of items with quantity, durability, and optional metadata. ItemStacks are immutable by design - modification methods return new instances.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/inventory/ItemStack.java`
+
+```java
+public class ItemStack implements NetworkSerializable<ItemWithAllMetadata> {
+   public static final ItemStack EMPTY = new ItemStack() { /* itemId = "Empty" */ };
+   public static final ItemStack[] EMPTY_ARRAY = new ItemStack[0];
+
+   protected String itemId;
+   protected int quantity = 1;
+   protected double durability;
+   protected double maxDurability;
+   protected boolean overrideDroppedItemAnimation;
+   protected BsonDocument metadata;
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `itemId` | String | Asset ID of the item (e.g., "hytale:diamond_sword") |
+| `quantity` | int | Number of items in the stack (>0) |
+| `durability` | double | Current durability (0 = broken) |
+| `maxDurability` | double | Maximum durability (0 = unbreakable) |
+| `metadata` | BsonDocument | Custom data attached to the item |
+| `overrideDroppedItemAnimation` | boolean | Override default drop animation |
+
+**Immutable Modifier Methods:**
+
+```java
+// All methods return new ItemStack instances
+ItemStack withQuantity(int quantity);           // Returns null if quantity == 0
+ItemStack withDurability(double durability);
+ItemStack withMaxDurability(double maxDurability);
+ItemStack withIncreasedDurability(double inc);
+ItemStack withRestoredDurability(double maxDurability);
+ItemStack withState(String state);
+ItemStack withMetadata(BsonDocument metadata);
+ItemStack withMetadata(String key, Codec<T> codec, T data);
+```
+
+**Stack Operations:**
+
+```java
+// Check if items can stack together
+boolean isStackableWith(ItemStack other);   // Same id, durability, metadata
+boolean isEquivalentType(ItemStack other);  // Same id and metadata (ignores durability)
+
+// Static utility methods
+static boolean isEmpty(ItemStack itemStack);           // null or "Empty" id
+static boolean isStackableWith(ItemStack a, ItemStack b);
+static boolean isSameItemType(ItemStack a, ItemStack b);  // Same item id only
+```
+
+**Durability:**
+
+```java
+boolean isUnbreakable();  // maxDurability <= 0
+boolean isBroken();       // durability == 0 (and breakable)
+```
+
+**Usage Examples:**
+
+```java
+// Create a new item stack
+ItemStack sword = new ItemStack("hytale:iron_sword", 1);
+ItemStack blocks = new ItemStack("hytale:stone", 64);
+
+// Modify item stack (returns new instance)
+ItemStack damagedSword = sword.withDurability(sword.getDurability() - 10);
+ItemStack halfStack = blocks.withQuantity(32);
+
+// Add custom metadata
+ItemStack enchantedSword = sword.withMetadata("Enchantments", enchantCodec, enchantData);
+
+// Check if stackable
+if (stackA.isStackableWith(stackB)) {
+    // Can merge these stacks
+    int newQuantity = stackA.getQuantity() + stackB.getQuantity();
+    int maxStack = stackA.getItem().getMaxStack();
+    // ...
+}
+
+// Check durability
+if (sword.isBroken()) {
+    // Tool is broken, cannot use
+}
+```
+
+---
+
+### ItemContainer
+
+**Package:** `com.hypixel.hytale.server.core.inventory.container`
+
+The `ItemContainer` is the abstract base class for all item storage containers. It provides comprehensive methods for adding, removing, moving, and querying item stacks with filter support.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/inventory/container/ItemContainer.java`
+
+```java
+public abstract class ItemContainer {
+   // Core abstract methods
+   public abstract short getCapacity();
+   public abstract void setGlobalFilter(FilterType globalFilter);
+   public abstract void setSlotFilter(FilterActionType actionType, short slot, SlotFilter filter);
+   public abstract ItemContainer clone();
+
+   // Internal operations (protected)
+   protected abstract ItemStack internal_getSlot(short slot);
+   protected abstract ItemStack internal_setSlot(short slot, ItemStack itemStack);
+   protected abstract ItemStack internal_removeSlot(short slot);
+   protected abstract boolean cantAddToSlot(short slot, ItemStack itemStack, ItemStack slotItemStack);
+   protected abstract boolean cantRemoveFromSlot(short slot);
+   protected abstract boolean cantDropFromSlot(short slot);
+}
+```
+
+**Main Container Types:**
+
+| Type | Description |
+|------|-------------|
+| `SimpleItemContainer` | Basic fixed-size container |
+| `EmptyItemContainer` | Zero-capacity placeholder (singleton) |
+| `CombinedItemContainer` | Combines multiple containers virtually |
+
+**Key Methods:**
+
+```java
+// Single slot operations
+ItemStack getItemStack(short slot);
+ItemStackSlotTransaction addItemStackToSlot(short slot, ItemStack itemStack);
+ItemStackSlotTransaction setItemStackForSlot(short slot, ItemStack itemStack);
+SlotTransaction removeItemStackFromSlot(short slot);
+ItemStackSlotTransaction removeItemStackFromSlot(short slot, int quantity);
+
+// Bulk operations
+ItemStackTransaction addItemStack(ItemStack itemStack);
+ListTransaction<ItemStackTransaction> addItemStacks(List<ItemStack> itemStacks);
+ItemStackTransaction removeItemStack(ItemStack itemStack);
+ListTransaction<ItemStackTransaction> removeItemStacks(List<ItemStack> itemStacks);
+
+// Move operations
+MoveTransaction<ItemStackTransaction> moveItemStackFromSlot(short slot, ItemContainer containerTo);
+MoveTransaction<SlotTransaction> moveItemStackFromSlotToSlot(short slot, int quantity,
+    ItemContainer containerTo, short slotTo);
+ListTransaction<MoveTransaction<ItemStackTransaction>> moveAllItemStacksTo(ItemContainer... containerTo);
+
+// Query operations
+boolean canAddItemStack(ItemStack itemStack);
+boolean canRemoveItemStack(ItemStack itemStack);
+boolean containsItemStacksStackableWith(ItemStack itemStack);
+int countItemStacks(Predicate<ItemStack> itemPredicate);
+boolean isEmpty();
+
+// Resource/Material operations
+ResourceTransaction removeResource(ResourceQuantity resource);
+MaterialTransaction removeMaterial(MaterialQuantity material);
+TagTransaction removeTag(int tagIndex, int quantity);
+
+// Utility
+List<ItemStack> dropAllItemStacks();
+ClearTransaction clear();
+ListTransaction<SlotTransaction> sortItems(SortType sort);
+void forEach(ShortObjectConsumer<ItemStack> action);
+
+// Events
+EventRegistration registerChangeEvent(Consumer<ItemContainerChangeEvent> consumer);
+```
+
+**Transactions:**
+
+All container operations return transaction objects that indicate success/failure and provide before/after state:
+
+```java
+// Check if operation succeeded
+ItemStackTransaction transaction = container.addItemStack(itemStack);
+if (transaction.succeeded()) {
+    ItemStack remainder = transaction.getRemainder();
+    if (remainder != null) {
+        // Partial add - some items couldn't fit
+    }
+}
+```
+
+**Usage Examples:**
+
+```java
+// Create a container
+SimpleItemContainer chest = new SimpleItemContainer((short)27);  // 27 slots
+
+// Add items
+ItemStackTransaction result = chest.addItemStack(new ItemStack("hytale:gold_ingot", 10));
+if (!result.succeeded()) {
+    // Container is full
+}
+
+// Move items between containers
+MoveTransaction<ItemStackTransaction> moveResult = sourceContainer.moveItemStackFromSlot(
+    (short)5,           // From slot 5
+    destContainer       // To this container
+);
+
+// Check container contents
+int goldCount = chest.countItemStacks(item ->
+    item.getItemId().equals("hytale:gold_ingot"));
+
+// Register for changes
+chest.registerChangeEvent(event -> {
+    Transaction transaction = event.transaction();
+    // Handle container change
+});
+```
+
+---
+
+### CombinedItemContainer
+
+**Package:** `com.hypixel.hytale.server.core.inventory.container`
+
+The `CombinedItemContainer` virtually combines multiple `ItemContainer` instances into a single searchable container. Operations iterate through child containers in order, allowing priority-based item placement.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/inventory/container/CombinedItemContainer.java`
+
+```java
+public class CombinedItemContainer extends ItemContainer {
+   protected final ItemContainer[] containers;
+
+   public CombinedItemContainer(ItemContainer... containers);
+
+   public ItemContainer getContainer(int index);
+   public int getContainersSize();
+   public ItemContainer getContainerForSlot(short slot);
+
+   @Override
+   public short getCapacity();  // Sum of all child capacities
+}
+```
+
+**Slot Mapping:**
+
+Slots are mapped sequentially across child containers:
+- Container 0: slots 0 to (capacity0 - 1)
+- Container 1: slots capacity0 to (capacity0 + capacity1 - 1)
+- And so on...
+
+**Usage Examples:**
+
+```java
+// Create combined container (hotbar first for item placement)
+CombinedItemContainer hotbarFirst = new CombinedItemContainer(hotbar, storage);
+
+// Items added will first try hotbar, then storage
+hotbarFirst.addItemStack(new ItemStack("hytale:apple", 5));
+
+// Create storage-first for different behavior
+CombinedItemContainer storageFirst = new CombinedItemContainer(storage, hotbar);
+
+// Get the underlying container for a slot
+ItemContainer container = hotbarFirst.getContainerForSlot((short)15);
+// If hotbar has 9 slots, slot 15 would be in storage (slot 6 within storage)
+
+// Inventory uses these for item pickup preferences
+Inventory inventory = player.getInventory();
+CombinedItemContainer pickupContainer = inventory.getCombinedHotbarFirst();
+pickupContainer.addItemStack(pickedUpItem);
+```
+
+---
+
+### SlotFilter and ArmorSlotAddFilter
+
+**Package:** `com.hypixel.hytale.server.core.inventory.container.filter`
+
+Slot filters control which items can be added to or removed from specific container slots. They are used for armor restrictions, utility slot requirements, and custom container rules.
+
+**Source files:**
+- `server-analyzer/decompiled/com/hypixel/hytale/server/core/inventory/container/filter/SlotFilter.java`
+- `server-analyzer/decompiled/com/hypixel/hytale/server/core/inventory/container/filter/ArmorSlotAddFilter.java`
+
+```java
+public interface SlotFilter {
+   SlotFilter ALLOW = (actionType, container, slot, itemStack) -> true;
+   SlotFilter DENY = (actionType, container, slot, itemStack) -> false;
+
+   boolean test(FilterActionType actionType, ItemContainer container, short slot, ItemStack itemStack);
+}
+
+// Filter for armor slots - restricts by armor type
+public class ArmorSlotAddFilter implements ItemSlotFilter {
+   private final ItemArmorSlot itemArmorSlot;
+
+   public ArmorSlotAddFilter(ItemArmorSlot itemArmorSlot);
+
+   @Override
+   public boolean test(Item item) {
+      return item == null ||
+             (item.getArmor() != null && item.getArmor().getArmorSlot() == this.itemArmorSlot);
+   }
+}
+```
+
+**FilterActionType enum:**
+
+| Value | Description |
+|-------|-------------|
+| `ADD` | Adding items to the slot |
+| `REMOVE` | Removing items from the slot |
+| `DROP` | Dropping items from the slot |
+
+**Usage Examples:**
+
+```java
+// Apply armor filter to a container
+container.setSlotFilter(FilterActionType.ADD, (short)0, new ArmorSlotAddFilter(ItemArmorSlot.Head));
+container.setSlotFilter(FilterActionType.ADD, (short)1, new ArmorSlotAddFilter(ItemArmorSlot.Chest));
+container.setSlotFilter(FilterActionType.ADD, (short)2, new ArmorSlotAddFilter(ItemArmorSlot.Hands));
+container.setSlotFilter(FilterActionType.ADD, (short)3, new ArmorSlotAddFilter(ItemArmorSlot.Legs));
+
+// Make a slot read-only
+container.setSlotFilter(FilterActionType.REMOVE, (short)5, SlotFilter.DENY);
+
+// Custom filter for usable items only
+container.setSlotFilter(FilterActionType.ADD, (short)0,
+    (type, cont, slot, item) -> item == null || item.getItem().getUtility().isUsable());
+```
+
+---
+
+### ItemArmorSlot
+
+**Package:** `com.hypixel.hytale.protocol`
+
+The `ItemArmorSlot` enum defines the four armor slot types available for player equipment.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/protocol/ItemArmorSlot.java`
+
+```java
+public enum ItemArmorSlot {
+   Head(0),
+   Chest(1),
+   Hands(2),
+   Legs(3);
+
+   public static final ItemArmorSlot[] VALUES = values();
+   private final int value;
+
+   public int getValue();
+   public static ItemArmorSlot fromValue(int value);
+}
+```
+
+**Usage Examples:**
+
+```java
+// Get armor slot from item
+Item item = itemStack.getItem();
+ItemArmor armor = item.getArmor();
+if (armor != null) {
+    ItemArmorSlot slot = armor.getArmorSlot();
+    // Place in appropriate inventory slot
+    inventory.getArmor().setItemStackForSlot((short)slot.getValue(), itemStack);
+}
+
+// Check if item is helmet
+if (armor.getArmorSlot() == ItemArmorSlot.Head) {
+    // Apply helmet-specific logic
+}
+```
+
+---
+
+### UniqueItemUsagesComponent
+
+**Package:** `com.hypixel.hytale.server.core.entity.entities.player.data`
+
+The `UniqueItemUsagesComponent` tracks which unique/one-time-use items a player has already used. This prevents players from using the same unique item multiple times.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/entity/entities/player/data/UniqueItemUsagesComponent.java`
+
+```java
+public class UniqueItemUsagesComponent implements Component<EntityStore> {
+   public static final BuilderCodec<UniqueItemUsagesComponent> CODEC = BuilderCodec.builder(...)
+      .append(new KeyedCodec<>("UniqueItemUsed", new ArrayCodec<>(Codec.STRING, String[]::new)), ...)
+      .build();
+
+   private final Set<String> usedUniqueItems = new HashSet<>();
+
+   public static ComponentType<EntityStore, UniqueItemUsagesComponent> getComponentType();
+
+   public boolean hasUsedUniqueItem(String itemId);
+   public void recordUniqueItemUsage(String itemId);
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `usedUniqueItems` | `Set<String>` | Set of item IDs that have been used |
+
+**Usage Examples:**
+
+```java
+// Check if player has used a unique item
+UniqueItemUsagesComponent usages = store.getComponent(playerRef,
+    UniqueItemUsagesComponent.getComponentType());
+
+String itemId = "hytale:special_scroll";
+if (usages.hasUsedUniqueItem(itemId)) {
+    // Already used, cannot use again
+    return;
+}
+
+// Use the item and record it
+performUniqueItemEffect(player, itemId);
+usages.recordUniqueItemUsage(itemId);
+```
+
+---
+
+## Window System
+
+The window system manages UI windows that players can open, such as containers, crafting tables, shops, and other interactive interfaces.
+
+### Window
+
+**Package:** `com.hypixel.hytale.server.core.entity.entities.player.windows`
+
+The `Window` class is the abstract base for all UI windows. It handles window lifecycle (open/close), data serialization, and player interaction.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/entity/entities/player/windows/Window.java`
+
+```java
+public abstract class Window {
+   public static final Map<WindowType, Supplier<? extends Window>> CLIENT_REQUESTABLE_WINDOW_TYPES;
+
+   protected final WindowType windowType;
+   protected final AtomicBoolean isDirty = new AtomicBoolean();
+   protected final AtomicBoolean needRebuild = new AtomicBoolean();
+   private int id;
+   private WindowManager manager;
+   private PlayerRef playerRef;
+
+   public Window(WindowType windowType);
+
+   // Lifecycle
+   public void init(PlayerRef playerRef, WindowManager manager);
+   protected abstract boolean onOpen0();
+   protected abstract void onClose0();
+   public void close();
+
+   // Data
+   public abstract JsonObject getData();
+   public void handleAction(Ref<EntityStore> ref, Store<EntityStore> store, WindowAction action);
+
+   // State
+   protected void invalidate();
+   protected void setNeedRebuild();
+   protected boolean consumeIsDirty();
+
+   // Events
+   public EventRegistration registerCloseEvent(Consumer<WindowCloseEvent> consumer);
+
+   // Getters
+   public WindowType getType();
+   public int getId();
+   public PlayerRef getPlayerRef();
+}
+```
+
+**Window Types:**
+
+Subclasses of `Window` include:
+- `ItemContainerWindow` - Windows with item containers
+- `ContainerWindow` - Base for container windows
+- `BlockWindow` - Windows attached to blocks
+- `ContainerBlockWindow` - Block-based container windows
+- `ItemStackContainerWindow` - Windows for item stack containers
+- `MaterialContainerWindow` - Windows with material resources
+- `ValidatedWindow` - Windows with validation logic
+
+**Window Lifecycle:**
+
+1. Window is created with `WindowType`
+2. `init()` is called with player reference
+3. `onOpen0()` is called - return false to cancel opening
+4. Window is active and handles `handleAction()` calls
+5. `onClose0()` is called on close
+6. Close event is dispatched
+
+**Usage Examples:**
+
+```java
+// Create a custom window
+public class ChestWindow extends Window implements ItemContainerWindow {
+    private final ItemContainer container;
+
+    public ChestWindow(ItemContainer container) {
+        super(WindowType.Chest);
+        this.container = container;
+    }
+
+    @Override
+    public ItemContainer getItemContainer() {
+        return container;
+    }
+
+    @Override
+    protected boolean onOpen0() {
+        // Initialize window, return true to open
+        return true;
+    }
+
+    @Override
+    protected void onClose0() {
+        // Cleanup when window closes
+    }
+
+    @Override
+    public JsonObject getData() {
+        JsonObject data = new JsonObject();
+        data.addProperty("rows", 3);
+        return data;
+    }
+}
+
+// Register close handler
+window.registerCloseEvent(event -> {
+    // Window was closed
+    saveContainerContents();
+});
+```
+
+---
+
+### WindowManager
+
+**Package:** `com.hypixel.hytale.server.core.entity.entities.player.windows`
+
+The `WindowManager` manages all open windows for a player. It handles window IDs, opening/closing, updating, and validation.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/entity/entities/player/windows/WindowManager.java`
+
+```java
+public class WindowManager {
+   private final AtomicInteger windowId = new AtomicInteger(1);
+   private final Int2ObjectConcurrentHashMap<Window> windows = new Int2ObjectConcurrentHashMap<>();
+   private final Int2ObjectConcurrentHashMap<EventRegistration> windowChangeEvents;
+   private PlayerRef playerRef;
+
+   public void init(PlayerRef playerRef);
+
+   // Opening windows
+   public UpdateWindow clientOpenWindow(Window window);   // For client-requested windows (id=0)
+   public OpenWindow openWindow(Window window);           // Server-opened windows
+   public List<OpenWindow> openWindows(Window... windows);
+
+   // Window access
+   public Window getWindow(int id);
+   public List<Window> getWindows();
+
+   // Closing
+   public Window closeWindow(int id);
+   public void closeAllWindows();
+
+   // Updates
+   public void updateWindow(Window window);
+   public void updateWindows();          // Updates all dirty windows
+   public void validateWindows();        // Validates ValidatedWindows
+   public void markWindowChanged(int id);
+}
+```
+
+**Window IDs:**
+- ID `0` is reserved for client-requested windows
+- ID `-1` is invalid
+- Server-opened windows get incrementing IDs starting from 1
+
+**Usage Examples:**
+
+```java
+// Get player's window manager
+Player player = store.getComponent(playerRef, Player.getComponentType());
+WindowManager windowManager = player.getWindowManager();
+
+// Open a container window
+ChestWindow chestWindow = new ChestWindow(chestContainer);
+OpenWindow packet = windowManager.openWindow(chestWindow);
+if (packet != null) {
+    playerRef.getPacketHandler().write(packet);
+}
+
+// Close a specific window
+windowManager.closeWindow(windowId);
+
+// Get all open windows
+for (Window window : windowManager.getWindows()) {
+    if (window instanceof ItemContainerWindow icw) {
+        ItemContainer container = icw.getItemContainer();
+        // Process container
+    }
+}
+
+// Close all windows (e.g., on disconnect)
+windowManager.closeAllWindows();
+```
+
+---
+
+### ItemContainerWindow Interface
+
+**Package:** `com.hypixel.hytale.server.core.entity.entities.player.windows`
+
+The `ItemContainerWindow` interface is implemented by windows that contain item containers. This enables the window manager to automatically sync container changes.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/entity/entities/player/windows/ItemContainerWindow.java`
+
+```java
+public interface ItemContainerWindow {
+   @Nonnull
+   ItemContainer getItemContainer();
+}
+```
+
+**Usage Examples:**
+
+```java
+// Check if window has items
+Window window = windowManager.getWindow(windowId);
+if (window instanceof ItemContainerWindow icw) {
+    ItemContainer container = icw.getItemContainer();
+
+    // Move items from player inventory to container
+    player.getInventory().getStorage().moveItemStackFromSlot(
+        (short)0, container
+    );
+}
+```
+
+---
+
+## HUD Components
+
+The HUD (Heads-Up Display) system manages on-screen UI elements that show player status, inventory, and game information.
+
+### HudComponent
+
+**Package:** `com.hypixel.hytale.protocol.packets.interface_`
+
+The `HudComponent` enum defines all available HUD elements that can be shown or hidden on the client.
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/protocol/packets/interface_/HudComponent.java`
+
+```java
+public enum HudComponent {
+   Hotbar(0),
+   StatusIcons(1),
+   Reticle(2),
+   Chat(3),
+   Requests(4),
+   Notifications(5),
+   KillFeed(6),
+   InputBindings(7),
+   PlayerList(8),
+   EventTitle(9),
+   Compass(10),
+   ObjectivePanel(11),
+   PortalPanel(12),
+   BuilderToolsLegend(13),
+   Speedometer(14),
+   UtilitySlotSelector(15),
+   BlockVariantSelector(16),
+   BuilderToolsMaterialSlotSelector(17),
+   Stamina(18),
+   AmmoIndicator(19),
+   Health(20),
+   Mana(21),
+   Oxygen(22),
+   Sleep(23);
+
+   public static final HudComponent[] VALUES = values();
+
+   public int getValue();
+   public static HudComponent fromValue(int value);
+}
+```
+
+**HUD Components Description:**
+
+| Component | Description |
+|-----------|-------------|
+| `Hotbar` | Quick access item slots at bottom of screen |
+| `StatusIcons` | Buff/debuff icons |
+| `Reticle` | Crosshair/targeting reticle |
+| `Chat` | Chat window |
+| `Requests` | Friend/party requests |
+| `Notifications` | System notifications |
+| `KillFeed` | Recent kills/deaths display |
+| `InputBindings` | Control hints |
+| `PlayerList` | Tab player list |
+| `EventTitle` | Large event title text |
+| `Compass` | Directional compass |
+| `ObjectivePanel` | Quest/objective display |
+| `PortalPanel` | Portal information |
+| `BuilderToolsLegend` | Creative mode tool legend |
+| `Speedometer` | Vehicle speed display |
+| `UtilitySlotSelector` | Utility item selector |
+| `BlockVariantSelector` | Block variant picker |
+| `BuilderToolsMaterialSlotSelector` | Creative material picker |
+| `Stamina` | Stamina bar |
+| `AmmoIndicator` | Ammunition counter |
+| `Health` | Health bar |
+| `Mana` | Mana bar |
+| `Oxygen` | Underwater oxygen bar |
+| `Sleep` | Sleep progress indicator |
+
+**Usage Examples:**
+
+```java
+// Hide HUD components (e.g., during cutscene)
+Set<HudComponent> hiddenComponents = EnumSet.of(
+    HudComponent.Hotbar,
+    HudComponent.Health,
+    HudComponent.Stamina,
+    HudComponent.Chat
+);
+
+UpdateVisibleHudComponents packet = new UpdateVisibleHudComponents();
+packet.hiddenComponents = hiddenComponents;
+playerRef.getPacketHandler().write(packet);
+
+// Show all components again
+packet.hiddenComponents = EnumSet.noneOf(HudComponent.class);
+playerRef.getPacketHandler().write(packet);
+```
+
+---
+
+### EntityUIComponent
+
+**Package:** `com.hypixel.hytale.server.core.modules.entityui.asset`
+
+The `EntityUIComponent` is an abstract asset class for UI elements displayed above entities (like nameplates, health bars, or custom indicators).
+
+**Source file:** `server-analyzer/decompiled/com/hypixel/hytale/server/core/modules/entityui/asset/EntityUIComponent.java`
+
+```java
+public abstract class EntityUIComponent
+    implements JsonAssetWithMap<String, IndexedLookupTableAssetMap<String, EntityUIComponent>>,
+               NetworkSerializable<com.hypixel.hytale.protocol.EntityUIComponent> {
+
+   protected String id;
+   protected AssetExtraInfo.Data data;
+   private Vector2f hitboxOffset = new Vector2f(0.0F, 0.0F);
+
+   public static AssetStore<String, EntityUIComponent, ...> getAssetStore();
+   public static IndexedLookupTableAssetMap<String, EntityUIComponent> getAssetMap();
+   public static EntityUIComponent getUnknownFor(String id);
+
+   public String getId();
+   public EntityUIComponent toPacket();
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `id` | String | Asset identifier |
+| `hitboxOffset` | Vector2f | Offset from entity hitbox center |
+| `data` | AssetExtraInfo.Data | Additional asset metadata |
+
+**Usage Examples:**
+
+```java
+// Get entity UI component from assets
+EntityUIComponent healthBar = EntityUIComponent.getAssetMap()
+    .getAsset("hytale:health_bar");
+
+// Create packet for entity UI
+com.hypixel.hytale.protocol.EntityUIComponent packet = healthBar.toPacket();
+```

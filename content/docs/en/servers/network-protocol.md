@@ -1974,3 +1974,343 @@ Effect packets manage entity status effects and buffs/debuffs.
 | 1 | effects | EffectData[] | Variable | Array of effect definitions |
 
 **Max Size:** 1,677,721,600 bytes
+
+---
+
+## Server Administration
+
+This section documents server administration, player moderation, and permissions management. Unlike most gameplay features, Hytale's administration system is primarily **command-based** rather than packet-based. Administrative actions are executed through console commands or chat commands, which then use existing network packets for enforcement.
+
+### Architecture Overview
+
+```
++-------------------+     +-------------------+     +-------------------+
+| Console/Chat      | --> | Command Handler   | --> | Network Packets   |
+| Commands          |     | (Server-side)     |     | (Enforcement)     |
++-------------------+     +-------------------+     +-------------------+
+        |                         |                         |
+   /kick player             KickCommand.java           Disconnect (ID 1)
+   /ban player              BanCommand.java            Disconnect (ID 1)
+   /op add player           OpAddCommand.java          (Permission change)
+   /whitelist add           WhitelistAddCommand.java   (Access check)
+```
+
+### Console System
+
+The server console provides direct administrative access without authentication. Console commands are processed by `ConsoleModule` (`com.hypixel.hytale.server.core.console.ConsoleModule`).
+
+**Key Characteristics:**
+- Console sender (`ConsoleSender`) has **all permissions** by default
+- Uses JLine library for terminal handling
+- Supports both dumb and color terminals
+- Commands can be prefixed with `/` but it's optional
+
+**Source:** `com/hypixel/hytale/server/core/console/ConsoleModule.java`
+
+```java
+// Console sender always returns true for permission checks
+@Override
+public boolean hasPermission(@Nonnull String id) {
+    return true;
+}
+```
+
+### Player Moderation Commands
+
+#### Kick Command
+
+**Command:** `/kick <player>`
+**Permission:** `hytale.command.kick`
+**Description:** Immediately disconnects a player from the server.
+
+**Implementation:** Uses the `Disconnect` packet (ID 1) with reason "You were kicked."
+
+| Field | Value |
+|-------|-------|
+| reason | "You were kicked." |
+| type | DisconnectType.Disconnect (0) |
+
+**Source:** `com/hypixel/hytale/server/core/command/commands/server/KickCommand.java`
+
+#### Ban Command
+
+**Command:** `/ban <username> [reason]`
+**Permission:** `hytale.command.ban`
+**Availability:** Multiplayer only (unavailable in singleplayer)
+**Description:** Permanently bans a player from the server.
+
+**Ban Types:**
+
+| Type | Class | Description |
+|------|-------|-------------|
+| `infinite` | `InfiniteBan` | Permanent ban with no expiration |
+| `timed` | `TimedBan` | Temporary ban with expiration timestamp |
+
+**Ban Data Structure (JSON):**
+
+```json
+{
+  "type": "infinite",
+  "target": "player-uuid",
+  "by": "admin-uuid",
+  "timestamp": 1234567890000,
+  "reason": "Violation of server rules"
+}
+```
+
+**TimedBan Additional Field:**
+
+```json
+{
+  "expiresOn": 1234567890000
+}
+```
+
+**Disconnect Message Format:**
+- Infinite: `"You are permanently banned! Reason: <reason>"`
+- Timed: `"You are temporarily banned for <duration>! Reason: <reason>"`
+
+**Source:** `com/hypixel/hytale/server/core/modules/accesscontrol/commands/BanCommand.java`
+
+#### Unban Command
+
+**Command:** `/unban <username>`
+**Permission:** `hytale.command.unban`
+**Availability:** Multiplayer only
+**Description:** Removes a ban from a player.
+
+**Source:** `com/hypixel/hytale/server/core/modules/accesscontrol/commands/UnbanCommand.java`
+
+### Whitelist Commands
+
+The whitelist system controls server access before authentication.
+
+**Command:** `/whitelist <subcommand>`
+**Permission:** `hytale.command.whitelist.*`
+
+| Subcommand | Description |
+|------------|-------------|
+| `add <username>` | Add player to whitelist |
+| `remove <username>` | Remove player from whitelist |
+| `enable` | Enable whitelist enforcement |
+| `disable` | Disable whitelist enforcement |
+| `status` | Show whitelist status |
+| `list` | List whitelisted players |
+| `clear` | Remove all players from whitelist |
+
+**Access Check Flow:**
+
+```
+Player Connect --> AccessControlModule --> WhitelistProvider --> Allow/Deny
+                                      --> BanProvider --------> Allow/Deny
+```
+
+**Source:** `com/hypixel/hytale/server/core/modules/accesscontrol/AccessControlModule.java`
+
+### Permissions System
+
+Hytale implements a hierarchical permission system with support for wildcards and negation.
+
+#### Permission Format
+
+| Pattern | Description |
+|---------|-------------|
+| `hytale.command.kick` | Specific permission |
+| `hytale.command.*` | Wildcard (all command permissions) |
+| `*` | All permissions |
+| `-hytale.command.ban` | Negated permission (explicitly denied) |
+| `-*` | Deny all permissions |
+
+#### Default Permission Nodes
+
+| Permission | Description |
+|------------|-------------|
+| `hytale.command` | Base permission for all commands |
+| `hytale.command.<name>` | Permission for specific command |
+| `hytale.editor.asset` | Asset editor access |
+| `hytale.editor.builderTools` | Builder tools access |
+| `hytale.editor.brush.use` | Brush tool usage |
+| `hytale.editor.brush.config` | Brush configuration |
+| `hytale.editor.prefab.use` | Prefab placement |
+| `hytale.editor.prefab.manage` | Prefab management |
+| `hytale.editor.selection.use` | Selection tool usage |
+| `hytale.editor.selection.clipboard` | Clipboard operations |
+| `hytale.editor.selection.modify` | Selection modification |
+| `hytale.editor.history` | Undo/redo history |
+| `hytale.camera.flycam` | Fly camera mode |
+
+**Source:** `com/hypixel/hytale/server/core/permissions/HytalePermissions.java`
+
+#### Operator Commands
+
+**Command:** `/op <subcommand>`
+**Description:** Manages operator (admin) status for players.
+
+| Subcommand | Permission | Description |
+|------------|------------|-------------|
+| `self` | (console only) | Grant OP to command sender |
+| `add <player>` | `hytale.command.op.add` | Grant OP status to player |
+| `remove <player>` | `hytale.command.op.remove` | Revoke OP status from player |
+
+**OP Group:** Players granted OP status are added to the `"OP"` permission group.
+
+**Source:** `com/hypixel/hytale/server/core/permissions/commands/op/OpCommand.java`
+
+#### Permission Management Commands
+
+**Command:** `/perm <subcommand>`
+**Description:** Direct permission manipulation.
+
+**User Subcommands:**
+
+| Command | Description |
+|---------|-------------|
+| `/perm user list <uuid>` | List user's permissions |
+| `/perm user add <uuid> <permissions...>` | Add permissions to user |
+| `/perm user remove <uuid> <permissions...>` | Remove permissions from user |
+| `/perm user group list <uuid>` | List user's groups |
+| `/perm user group add <uuid> <group>` | Add user to group |
+| `/perm user group remove <uuid> <group>` | Remove user from group |
+
+**Group Subcommands:**
+
+| Command | Description |
+|---------|-------------|
+| `/perm group list <group>` | List group's permissions |
+| `/perm group add <group> <permissions...>` | Add permissions to group |
+| `/perm group remove <group> <permissions...>` | Remove permissions from group |
+
+**Source:** `com/hypixel/hytale/server/core/permissions/commands/PermCommand.java`
+
+### Server Access Control (Singleplayer)
+
+For singleplayer worlds opened to LAN or friends, access is controlled via the `ServerAccess` packets.
+
+#### UpdateServerAccess (ID 251)
+
+**Direction:** Server -> Client
+**Description:** Notifies clients of server access level changes.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | access | byte | 1 | Access enum value |
+
+**Access Values:**
+
+| Value | Name | Description |
+|-------|------|-------------|
+| 0 | Private | No external access (singleplayer only) |
+| 1 | LAN | Local network players can join |
+| 2 | Friend | Friends can join via invite |
+| 3 | Open | Anyone can join |
+
+**Fixed Size:** 1 byte
+
+#### SetServerAccess (ID 252)
+
+**Direction:** Client -> Server
+**Description:** Host requests to change server access level.
+
+| Offset | Field | Type | Size | Description |
+|--------|-------|------|------|-------------|
+| 0 | access | byte | 1 | Desired Access enum value |
+
+**Fixed Size:** 1 byte
+
+### Broadcast Command
+
+**Command:** `/say <message>` or `/broadcast <message>`
+**Permission:** `hytale.command.say`
+**Description:** Sends a message to all players on the server.
+
+**Message Format:** Uses `ServerMessage` packet (ID 210) with cyan color styling.
+
+**Source:** `com/hypixel/hytale/server/core/console/command/SayCommand.java`
+
+### World Configuration Commands
+
+**Command:** `/world config <subcommand>`
+**Description:** Manages world-specific settings.
+
+| Subcommand | Description |
+|------------|-------------|
+| `pausetime` | Toggle time progression |
+| `seed` | Display world seed |
+| `setpvp <enabled>` | Enable/disable PvP |
+| `setspawn` | Set world spawn point |
+
+**Source:** `com/hypixel/hytale/server/core/universe/world/commands/worldconfig/WorldConfigCommand.java`
+
+### Access Control Module
+
+The `AccessControlModule` manages both bans and whitelist through a provider system.
+
+**Provider Registry:**
+1. `HytaleWhitelistProvider` - Manages whitelist entries
+2. `HytaleBanProvider` - Manages ban entries
+
+**Connection Check Flow:**
+
+```
+PlayerSetupConnectEvent
+    |
+    v
+AccessControlModule.getDisconnectReason(uuid)
+    |
+    +---> WhitelistProvider.getDisconnectReason(uuid)
+    |         |
+    |         +---> If whitelist enabled and player not whitelisted:
+    |                   Return "You are not whitelisted!"
+    |
+    +---> BanProvider.getDisconnectReason(uuid)
+              |
+              +---> If player banned and ban in effect:
+                        Return ban message
+    |
+    v
+If any reason returned: Cancel connection, send Disconnect packet
+```
+
+**Source:** `com/hypixel/hytale/server/core/modules/accesscontrol/AccessControlModule.java`
+
+### Related Network Packets
+
+| Packet | ID | Usage in Administration |
+|--------|-----|------------------------|
+| Disconnect | 1 | Enforces kick/ban by terminating connection |
+| ServerMessage | 210 | Broadcasts admin messages to players |
+| UpdateServerAccess | 251 | Notifies access level changes |
+| SetServerAccess | 252 | Requests access level changes |
+| UpdateServerPlayerList | 226 | Updates player list after kick/ban |
+
+### RCON (Remote Console)
+
+As of the analyzed version, Hytale does not implement a traditional RCON protocol. Server administration is performed through:
+
+1. **Local Console** - Direct terminal access to the server process
+2. **In-game Commands** - Chat commands with appropriate permissions
+3. **Plugin API** - Programmatic access for server plugins
+
+**Note:** Future versions may implement RCON or similar remote administration protocols.
+
+---
+
+## Administration Source Files Reference
+
+| Component | Source File |
+|-----------|-------------|
+| Console Module | `com/hypixel/hytale/server/core/console/ConsoleModule.java` |
+| Console Sender | `com/hypixel/hytale/server/core/console/ConsoleSender.java` |
+| Access Control | `com/hypixel/hytale/server/core/modules/accesscontrol/AccessControlModule.java` |
+| Ban Provider | `com/hypixel/hytale/server/core/modules/accesscontrol/provider/HytaleBanProvider.java` |
+| Whitelist Provider | `com/hypixel/hytale/server/core/modules/accesscontrol/provider/HytaleWhitelistProvider.java` |
+| Ban Command | `com/hypixel/hytale/server/core/modules/accesscontrol/commands/BanCommand.java` |
+| Unban Command | `com/hypixel/hytale/server/core/modules/accesscontrol/commands/UnbanCommand.java` |
+| Kick Command | `com/hypixel/hytale/server/core/command/commands/server/KickCommand.java` |
+| Whitelist Commands | `com/hypixel/hytale/server/core/modules/accesscontrol/commands/WhitelistCommand.java` |
+| Permissions Module | `com/hypixel/hytale/server/core/permissions/PermissionsModule.java` |
+| Permission Constants | `com/hypixel/hytale/server/core/permissions/HytalePermissions.java` |
+| OP Commands | `com/hypixel/hytale/server/core/permissions/commands/op/OpCommand.java` |
+| Permission Commands | `com/hypixel/hytale/server/core/permissions/commands/PermCommand.java` |
+| Say Command | `com/hypixel/hytale/server/core/console/command/SayCommand.java` |
+| World Config | `com/hypixel/hytale/server/core/universe/world/commands/worldconfig/WorldConfigCommand.java` |
