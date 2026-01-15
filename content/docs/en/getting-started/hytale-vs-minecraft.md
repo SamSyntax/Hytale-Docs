@@ -24,7 +24,7 @@ The Hypixel Minecraft server is known for popular minigames like SkyWars, BedWar
 | Aspect | Hytale | Minecraft |
 |--------|--------|-----------|
 | **Price** | $19.99 - $69.99 | ~$30 |
-| **Platforms** | PC (Windows only at launch) | PC, Console, Mobile |
+| **Platforms** | PC (Windows, macOS, Linux) | PC, Console, Mobile |
 | **Release** | Early Access January 2026 | Released 2011 |
 | **Developer** | Hypixel Studios | Mojang Studios (Microsoft) |
 | **Combat System** | Tactical with stamina | Simple click-based |
@@ -241,7 +241,7 @@ Each zone features:
 
 ### Can I Play Hytale on Console or Mobile?
 
-Currently, Hytale is **Windows only** during Early Access. Mac, Linux, and potentially console versions are planned for the future, but no mobile version has been announced.
+Hytale is available on **Windows, macOS (M1+ required), and Linux** (native Flatpak). Console versions may come in the future, but no mobile version has been announced.
 
 ### Will My Minecraft Mods Work in Hytale?
 

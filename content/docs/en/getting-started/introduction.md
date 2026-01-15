@@ -16,7 +16,7 @@ Hytale launched in Early Access on **January 13, 2026**, developed by Hypixel St
 
 ### Availability
 
-- **Platforms:** Windows only at launch (Mac and Linux support coming later)
+- **Platforms:** Windows, macOS (M1+ with macOS Tahoe), and Linux (native Flatpak)
 - **Distribution:** Available exclusively via the official launcher at [hytale.com](https://hytale.com) (not on Steam)
 - **Pricing:** Standard ($19.99), Supporter ($34.99), Cursebreaker Founders ($69.99)
 - **Players:** Over 1 million players expected at launch

@@ -24,7 +24,7 @@ Le serveur Minecraft Hypixel est connu pour ses mini-jeux populaires comme SkyWa
 | Aspect | Hytale | Minecraft |
 |--------|--------|-----------|
 | **Prix** | 19,99 $ - 69,99 $ | ~30 $ |
-| **Plateformes** | PC (Windows uniquement au lancement) | PC, Console, Mobile |
+| **Plateformes** | PC (Windows, macOS, Linux) | PC, Console, Mobile |
 | **Sortie** | Early Access janvier 2026 | Sorti en 2011 |
 | **Developpeur** | Hypixel Studios | Mojang Studios (Microsoft) |
 | **Systeme de Combat** | Tactique avec endurance | Simple clic |
@@ -241,7 +241,7 @@ Chaque zone propose :
 
 ### Puis-je Jouer a Hytale sur Console ou Mobile ?
 
-Actuellement, Hytale est **Windows uniquement** pendant l'Early Access. Des versions Mac, Linux et potentiellement console sont prevues pour l'avenir, mais aucune version mobile n'a ete annoncee.
+Hytale est disponible sur **Windows, macOS (M1+ requis) et Linux** (Flatpak natif). Des versions console pourraient arriver à l'avenir, mais aucune version mobile n'a été annoncée.
 
 ### Mes Mods Minecraft Fonctionneront-ils dans Hytale ?
 

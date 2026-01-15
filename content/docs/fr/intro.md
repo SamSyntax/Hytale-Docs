@@ -21,7 +21,7 @@ Hytale est un RPG sandbox développé par Hypixel Studios qui a été lancé en 
 ### Détails du Lancement
 
 - **Date de sortie :** 13 janvier 2026 (Early Access)
-- **Plateformes :** Windows uniquement au lancement (support Mac et Linux à venir)
+- **Plateformes :** Windows, macOS (M1+ avec macOS Tahoe) et Linux (Flatpak natif)
 - **Distribution :** Disponible exclusivement via le launcher officiel sur [hytale.com](https://hytale.com) (pas sur Steam)
 - **Tarifs :**
   - Édition Standard : 19,99 $

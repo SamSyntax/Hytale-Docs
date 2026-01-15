@@ -38,7 +38,7 @@ Toutes les éditions donnent accès au jeu complet. Les éditions supérieures i
 
 ### Sur quelles plateformes Hytale est-il disponible ?
 
-Au lancement, Hytale est disponible sur **Windows uniquement**. Le support Mac et Linux est prévu pour une future mise à jour, mais aucun calendrier spécifique n'a été annoncé.
+Hytale est disponible sur **Windows, macOS et Linux**. La version macOS nécessite une puce M1 ou plus récente avec macOS Tahoe. La version Linux est distribuée en Flatpak natif avec support Wayland complet.
 
 ### Hytale est-il free-to-play ?
 
