@@ -74,11 +74,7 @@ The Custom UI system allows plugins to create interactive player interfaces. The
 ```
 
 :::danger Critical: Layout Files are Client-Side
-**Layout files (`.ui`) are CLIENT assets.** If you reference a layout that doesn't exist on the client, you'll get:
-```
-Could not find document Pages/MyPage.ui for Custom UI Append command
-```
-The client will disconnect. **Only use layouts that are guaranteed to exist.**
+**Layout files (`.ui`) are CLIENT assets.** If you reference a layout that doesn't exist on the client, you'll get an error like `Could not find document Pages/MyPage.ui for Custom UI Append command` and the client will disconnect. **Only use layouts that are guaranteed to exist.**
 :::
 
 ## Available Layout Files
