@@ -5,11 +5,6 @@ import { Link, usePathname } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { ChevronRight, BadgeCheck } from "lucide-react";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -86,14 +81,10 @@ function SidebarLink({
     >
       <span className="truncate">{title}</span>
       {item.verified && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-[--color-hytale-green]" />
-          </TooltipTrigger>
-          <TooltipContent side="right" className="text-xs">
-            {t("verified")}
-          </TooltipContent>
-        </Tooltip>
+        <BadgeCheck
+          className="h-3.5 w-3.5 shrink-0 text-[--color-hytale-green]"
+          aria-label={t("verified")}
+        />
       )}
     </Link>
   );
