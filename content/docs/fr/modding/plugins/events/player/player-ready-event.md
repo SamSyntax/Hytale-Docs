@@ -43,47 +43,27 @@ public class PlayerReadyEvent extends PlayerEvent<String> {
 
 ## Exemple d'utilisation
 
+> **Testé** - Ce code a été vérifié avec un plugin fonctionnel.
+
+Puisque `PlayerReadyEvent` étend `PlayerEvent<String>` (type de clé non-Void), vous devez utiliser `registerGlobal()` pour capturer tous les événements ready, peu importe leur clé.
+
 ```java
-// Enregistrer un handler pour quand les joueurs sont complètement prets
-eventBus.register(PlayerReadyEvent.class, event -> {
+// Enregistrer un handler global pour quand les joueurs sont complètement prets
+eventBus.registerGlobal(PlayerReadyEvent.class, event -> {
     Player player = event.getPlayer();
+    String playerName = player != null ? player.getDisplayName() : "Unknown";
     int readyId = event.getReadyId();
 
     // Le joueur est maintenant pret a recevoir les donnees de gameplay
-    logger.info("Player " + player.getName() + " is ready (readyId: " + readyId + ")");
-
-    // Envoyer un message de bienvenue
-    player.sendMessage("Welcome to the server!");
+    logger.info("Player " + playerName + " is ready (readyId: " + readyId + ")");
 
     // Initialiser les systemes spécifiques au joueur qui necessitent un client pret
     initializePlayerUI(player);
     sendInitialInventory(player);
-    showTutorialIfFirstTime(player);
-});
-
-// Demarrer des minuteries spécifiques au joueur apres qu'il soit pret
-eventBus.register(PlayerReadyEvent.class, event -> {
-    Player player = event.getPlayer();
-
-    // Demarrer le minuteur d'inactivite
-    startAfkTimer(player);
-
-    // Commencer les mises a jour periodiques des statistiques
-    scheduleStatUpdates(player);
-});
-
-// Déclenchér une logique cote serveur qui depend de la preparation du client
-eventBus.register(PlayerReadyEvent.class, event -> {
-    Player player = event.getPlayer();
-
-    // Maintenant sur de synchroniser un etat complexe vers le client
-    syncPlayerQuests(player);
-    syncPlayerAchievements(player);
-    syncPlayerFriendsList(player);
 });
 
 // Gerer differents etats de preparation
-eventBus.register(PlayerReadyEvent.class, event -> {
+eventBus.registerGlobal(PlayerReadyEvent.class, event -> {
     int readyId = event.getReadyId();
     Player player = event.getPlayer();
 
@@ -101,6 +81,10 @@ eventBus.register(PlayerReadyEvent.class, event -> {
     }
 });
 ```
+
+**Important:**
+- Utilisez `player.getDisplayName()` pour obtenir le nom du joueur (pas `getName()` ou `getUsername()`)
+- Utiliser `register()` au lieu de `registerGlobal()` ne fonctionnera pas pour cet événement car il a un type de clé `String`.
 
 ## Cas d'utilisation courants
 

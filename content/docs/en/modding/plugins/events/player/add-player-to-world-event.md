@@ -49,27 +49,28 @@ public class AddPlayerToWorldEvent implements IEvent<String> {
 
 ## Usage Example
 
-```java
-// Register a handler for when players are added to worlds
-eventBus.register(AddPlayerToWorldEvent.class, event -> {
-    World world = event.getWorld();
-    Holder<EntityStore> holder = event.getHolder();
+> **Tested** - This code has been verified with a working plugin.
 
-    // Get player info from the holder
-    logger.info("Player being added to world: " + world.getName());
+Since `AddPlayerToWorldEvent` implements `IEvent<String>` (non-Void key type), you must use `registerGlobal()` to catch all events regardless of their key.
+
+```java
+// Register a global handler for when players are added to worlds
+eventBus.registerGlobal(AddPlayerToWorldEvent.class, event -> {
+    World world = event.getWorld();
+    String worldName = world != null ? world.getName() : "Unknown";
+
+    // Log the event
+    logger.info("Player being added to world: " + worldName);
 
     // Conditionally suppress join message
-    if (world.getName().equals("minigame_lobby")) {
+    if ("minigame_lobby".equals(worldName)) {
         // Don't broadcast in minigame lobbies
         event.setBroadcastJoinMessage(false);
     }
-
-    // Perform world-specific setup
-    setupPlayerForWorld(holder, world);
 });
 
 // Silent joins for staff
-eventBus.register(EventPriority.EARLY, AddPlayerToWorldEvent.class, event -> {
+eventBus.registerGlobal(EventPriority.EARLY, AddPlayerToWorldEvent.class, event -> {
     Holder<EntityStore> holder = event.getHolder();
 
     // Check if player is staff with vanish enabled
@@ -78,44 +79,16 @@ eventBus.register(EventPriority.EARLY, AddPlayerToWorldEvent.class, event -> {
     }
 });
 
-// World-specific welcome messages
-eventBus.register(AddPlayerToWorldEvent.class, event -> {
-    World world = event.getWorld();
-    Holder<EntityStore> holder = event.getHolder();
-
-    // Suppress default message and send custom one
-    event.setBroadcastJoinMessage(false);
-
-    String worldType = getWorldType(world);
-    switch (worldType) {
-        case "survival":
-            broadcastToWorld(world, "A new adventurer has entered the realm!");
-            break;
-        case "creative":
-            broadcastToWorld(world, "A builder has joined the creative world!");
-            break;
-        case "minigame":
-            // No announcement for minigames
-            break;
-        default:
-            // Use default announcement
-            event.setBroadcastJoinMessage(true);
-    }
-});
-
 // Track world population
-eventBus.register(AddPlayerToWorldEvent.class, event -> {
+eventBus.registerGlobal(AddPlayerToWorldEvent.class, event -> {
     World world = event.getWorld();
 
     // Update world statistics
     incrementWorldPopulation(world);
-
-    // Check if world is getting crowded
-    if (getWorldPopulation(world) > getWorldCapacity(world) * 0.9) {
-        notifyAdmins("World " + world.getName() + " is nearly full!");
-    }
 });
 ```
+
+**Important:** Using `register()` instead of `registerGlobal()` will not work for this event because it has a `String` key type.
 
 ## Common Use Cases
 

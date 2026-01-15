@@ -60,48 +60,40 @@ public class PlayerChatEvent implements IAsyncEvent<String>, ICancellable {
 
 ## Usage Example
 
+> **Tested** - This code has been verified with a working plugin.
+
+Since `PlayerChatEvent` implements `IAsyncEvent<String>` (non-Void key type), you must use `registerGlobal()` to catch all chat events regardless of their key.
+
 ```java
-// Register an async handler for chat events
-eventBus.registerAsync(PlayerChatEvent.class, event -> {
+// Register a global handler for chat events (required for non-Void key types)
+eventBus.registerGlobal(PlayerChatEvent.class, event -> {
+    String playerName = event.getSender() != null ? event.getSender().getUsername() : "Unknown";
     String message = event.getContent();
-    PlayerRef sender = event.getSender();
+
+    // Log the chat message
+    logger.info("[Chat] " + playerName + ": " + message);
 
     // Filter profanity
     if (containsProfanity(message)) {
         event.setCancelled(true);
-        sender.sendMessage("Your message contains inappropriate content.");
-        return CompletableFuture.completedFuture(null);
+        return;
     }
 
-    // Modify the message format
+    // Modify the message content
     event.setContent(message.toUpperCase()); // Example: make all caps
-
-    return CompletableFuture.completedFuture(null);
 });
 
 // Custom formatter example
-eventBus.register(PlayerChatEvent.class, event -> {
+eventBus.registerGlobal(PlayerChatEvent.class, event -> {
     event.setFormatter((sender, content) -> {
         return Message.translation("chat.format")
             .param("sender", sender.getUsername())
             .param("message", content);
     });
 });
-
-// Limit chat to specific players (private message)
-eventBus.register(PlayerChatEvent.class, event -> {
-    if (event.getContent().startsWith("/pm ")) {
-        String[] parts = event.getContent().split(" ", 3);
-        if (parts.length >= 3) {
-            PlayerRef target = findPlayer(parts[1]);
-            if (target != null) {
-                event.setTargets(List.of(target, event.getSender()));
-                event.setContent(parts[2]);
-            }
-        }
-    }
-});
 ```
+
+**Important:** Using `register()` instead of `registerGlobal()` will not work for this event because it has a `String` key type.
 
 ## Common Use Cases
 

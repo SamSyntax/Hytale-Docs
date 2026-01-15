@@ -99,48 +99,38 @@ This class inherits all fields and methods from `PlayerGroupEvent` without addin
 
 ## Usage Example
 
+> **Tested** - This code has been verified with a working plugin.
+
+Since `PlayerGroupEvent` extends `PlayerPermissionChangeEvent` which implements `IEvent<Void>`, you can use the standard `register()` method.
+
 ### Basic Group Membership Tracking
 
 ```java
 import com.hypixel.hytale.server.core.event.events.permissions.PlayerGroupEvent;
-import com.hypixel.hytale.event.EventBus;
+import com.hypixel.hytale.event.EventRegistry;
 import java.util.UUID;
 
-public class GroupMembershipPlugin extends PluginBase {
+public class GroupMembershipPlugin extends JavaPlugin {
 
     @Override
-    public void onEnable(EventBus eventBus) {
+    protected void setup() {
+        EventRegistry eventBus = getEventRegistry();
+
         // Listen for players joining groups
-        eventBus.register(
-            PlayerGroupEvent.Added.class,
-            this::onPlayerAddedToGroup
-        );
+        eventBus.register(PlayerGroupEvent.Added.class, event -> {
+            UUID playerId = event.getPlayerUuid();
+            String groupName = event.getGroupName();
+
+            logger.info("Player " + playerId + " joined group '" + groupName + "'");
+        });
 
         // Listen for players leaving groups
-        eventBus.register(
-            PlayerGroupEvent.Removed.class,
-            this::onPlayerRemovedFromGroup
-        );
-    }
+        eventBus.register(PlayerGroupEvent.Removed.class, event -> {
+            UUID playerId = event.getPlayerUuid();
+            String groupName = event.getGroupName();
 
-    private void onPlayerAddedToGroup(PlayerGroupEvent.Added event) {
-        UUID playerId = event.getPlayerUuid();
-        String groupName = event.getGroupName();
-
-        getLogger().info(String.format(
-            "Player %s joined group '%s'",
-            playerId, groupName
-        ));
-    }
-
-    private void onPlayerRemovedFromGroup(PlayerGroupEvent.Removed event) {
-        UUID playerId = event.getPlayerUuid();
-        String groupName = event.getGroupName();
-
-        getLogger().info(String.format(
-            "Player %s left group '%s'",
-            playerId, groupName
-        ));
+            logger.info("Player " + playerId + " left group '" + groupName + "'");
+        });
     }
 }
 ```

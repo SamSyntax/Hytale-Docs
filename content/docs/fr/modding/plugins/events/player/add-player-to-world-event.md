@@ -49,27 +49,28 @@ public class AddPlayerToWorldEvent implements IEvent<String> {
 
 ## Exemple d'utilisation
 
-```java
-// Enregistrer un handler pour quand les joueurs sont ajoutes aux mondes
-eventBus.register(AddPlayerToWorldEvent.class, event -> {
-    World world = event.getWorld();
-    Holder<EntityStore> holder = event.getHolder();
+> **Testé** - Ce code a été vérifié avec un plugin fonctionnel.
 
-    // Obtenir les informations du joueur depuis le conteneur
-    logger.info("Player being added to world: " + world.getName());
+Puisque `AddPlayerToWorldEvent` implémente `IEvent<String>` (type de clé non-Void), vous devez utiliser `registerGlobal()` pour capturer tous les événements, peu importe leur clé.
+
+```java
+// Enregistrer un handler global pour quand les joueurs sont ajoutes aux mondes
+eventBus.registerGlobal(AddPlayerToWorldEvent.class, event -> {
+    World world = event.getWorld();
+    String worldName = world != null ? world.getName() : "Unknown";
+
+    // Journaliser l'événement
+    logger.info("Player being added to world: " + worldName);
 
     // Supprimer conditionnellement le message de connexion
-    if (world.getName().equals("minigame_lobby")) {
+    if ("minigame_lobby".equals(worldName)) {
         // Ne pas diffuser dans les lobbies de mini-jeux
         event.setBroadcastJoinMessage(false);
     }
-
-    // Effectuer une configuration spécifique au monde
-    setupPlayerForWorld(holder, world);
 });
 
 // Connexions silencieuses pour le staff
-eventBus.register(EventPriority.EARLY, AddPlayerToWorldEvent.class, event -> {
+eventBus.registerGlobal(EventPriority.EARLY, AddPlayerToWorldEvent.class, event -> {
     Holder<EntityStore> holder = event.getHolder();
 
     // Verifier si le joueur est staff avec mode invisible active
@@ -78,44 +79,16 @@ eventBus.register(EventPriority.EARLY, AddPlayerToWorldEvent.class, event -> {
     }
 });
 
-// Messages de bienvenue spécifiques au monde
-eventBus.register(AddPlayerToWorldEvent.class, event -> {
-    World world = event.getWorld();
-    Holder<EntityStore> holder = event.getHolder();
-
-    // Supprimer le message par defaut et envoyer un personnalise
-    event.setBroadcastJoinMessage(false);
-
-    String worldType = getWorldType(world);
-    switch (worldType) {
-        case "survival":
-            broadcastToWorld(world, "A new adventurer has entered the realm!");
-            break;
-        case "creative":
-            broadcastToWorld(world, "A builder has joined the creative world!");
-            break;
-        case "minigame":
-            // Pas d'annonce pour les mini-jeux
-            break;
-        default:
-            // Utiliser l'annonce par defaut
-            event.setBroadcastJoinMessage(true);
-    }
-});
-
 // Suivre la population des mondes
-eventBus.register(AddPlayerToWorldEvent.class, event -> {
+eventBus.registerGlobal(AddPlayerToWorldEvent.class, event -> {
     World world = event.getWorld();
 
     // Mettre a jour les statistiques du monde
     incrementWorldPopulation(world);
-
-    // Verifier si le monde devient surpeuple
-    if (getWorldPopulation(world) > getWorldCapacity(world) * 0.9) {
-        notifyAdmins("World " + world.getName() + " is nearly full!");
-    }
 });
 ```
+
+**Important:** Utiliser `register()` au lieu de `registerGlobal()` ne fonctionnera pas pour cet événement car il a un type de clé `String`.
 
 ## Cas d'utilisation courants
 

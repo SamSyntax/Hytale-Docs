@@ -60,48 +60,40 @@ public class PlayerChatEvent implements IAsyncEvent<String>, ICancellable {
 
 ## Exemple d'utilisation
 
+> **Testé** - Ce code a été vérifié avec un plugin fonctionnel.
+
+Puisque `PlayerChatEvent` implémente `IAsyncEvent<String>` (type de clé non-Void), vous devez utiliser `registerGlobal()` pour capturer tous les événements de chat, peu importe leur clé.
+
 ```java
-// Enregistrer un handler asynchrone pour les événements de chat
-eventBus.registerAsync(PlayerChatEvent.class, event -> {
+// Enregistrer un handler global pour les événements de chat (requis pour les types de clé non-Void)
+eventBus.registerGlobal(PlayerChatEvent.class, event -> {
+    String playerName = event.getSender() != null ? event.getSender().getUsername() : "Unknown";
     String message = event.getContent();
-    PlayerRef sender = event.getSender();
+
+    // Journaliser le message
+    logger.info("[Chat] " + playerName + ": " + message);
 
     // Filtrer les grossieretes
     if (containsProfanity(message)) {
         event.setCancelled(true);
-        sender.sendMessage("Your message contains inappropriate content.");
-        return CompletableFuture.completedFuture(null);
+        return;
     }
 
-    // Modifier le format du message
+    // Modifier le contenu du message
     event.setContent(message.toUpperCase()); // Exemple: tout en majuscules
-
-    return CompletableFuture.completedFuture(null);
 });
 
 // Exemple de formateur personnalise
-eventBus.register(PlayerChatEvent.class, event -> {
+eventBus.registerGlobal(PlayerChatEvent.class, event -> {
     event.setFormatter((sender, content) -> {
         return Message.translation("chat.format")
             .param("sender", sender.getUsername())
             .param("message", content);
     });
 });
-
-// Limiter le chat a des joueurs specifiques (message prive)
-eventBus.register(PlayerChatEvent.class, event -> {
-    if (event.getContent().startsWith("/pm ")) {
-        String[] parts = event.getContent().split(" ", 3);
-        if (parts.length >= 3) {
-            PlayerRef target = findPlayer(parts[1]);
-            if (target != null) {
-                event.setTargets(List.of(target, event.getSender()));
-                event.setContent(parts[2]);
-            }
-        }
-    }
-});
 ```
+
+**Important:** Utiliser `register()` au lieu de `registerGlobal()` ne fonctionnera pas pour cet événement car il a un type de clé `String`.
 
 ## Cas d'utilisation courants
 

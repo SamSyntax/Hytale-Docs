@@ -56,6 +56,8 @@ Key differences:
 
 ## Usage Example
 
+> **Tested** - This code has been verified with a working plugin.
+
 ### Step 1: Create the EntityEventSystem
 
 Create a class that extends `EntityEventSystem<EntityStore, PlaceBlockEvent>`:

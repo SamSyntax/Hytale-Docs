@@ -53,13 +53,19 @@ public class PlayerConnectEvent implements IEvent<Void> {
 
 ## Usage Example
 
+> **Tested** - This code has been verified with a working plugin.
+
+Since `PlayerConnectEvent` implements `IEvent<Void>`, you can use the standard `register()` method.
+
 ```java
 // Register a handler for when players connect
 eventBus.register(PlayerConnectEvent.class, event -> {
-    PlayerRef player = event.getPlayerRef();
+    PlayerRef playerRef = event.getPlayerRef();
+    String playerName = playerRef != null ? playerRef.getUsername() : "Unknown";
+    String worldName = event.getWorld() != null ? event.getWorld().getName() : "null";
 
     // Log the connection
-    logger.info("Player connected: " + player.getUsername());
+    logger.info("Player connected: " + playerName + " to world: " + worldName);
 
     // Optionally set a specific spawn world
     World lobbyWorld = worldManager.getWorld("lobby");
@@ -75,6 +81,8 @@ eventBus.register(EventPriority.FIRST, PlayerConnectEvent.class, event -> {
     // Initialize player data
 });
 ```
+
+**Note:** Use `playerRef.getUsername()` to get the player's name from `PlayerRef`.
 
 ## Common Use Cases
 

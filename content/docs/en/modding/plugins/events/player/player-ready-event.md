@@ -43,47 +43,27 @@ public class PlayerReadyEvent extends PlayerEvent<String> {
 
 ## Usage Example
 
+> **Tested** - This code has been verified with a working plugin.
+
+Since `PlayerReadyEvent` extends `PlayerEvent<String>` (non-Void key type), you must use `registerGlobal()` to catch all ready events regardless of their key.
+
 ```java
-// Register a handler for when players are fully ready
-eventBus.register(PlayerReadyEvent.class, event -> {
+// Register a global handler for when players are fully ready
+eventBus.registerGlobal(PlayerReadyEvent.class, event -> {
     Player player = event.getPlayer();
+    String playerName = player != null ? player.getDisplayName() : "Unknown";
     int readyId = event.getReadyId();
 
     // Player is now ready to receive gameplay data
-    logger.info("Player " + player.getName() + " is ready (readyId: " + readyId + ")");
-
-    // Send welcome message
-    player.sendMessage("Welcome to the server!");
+    logger.info("Player " + playerName + " is ready (readyId: " + readyId + ")");
 
     // Initialize player-specific systems that require a ready client
     initializePlayerUI(player);
     sendInitialInventory(player);
-    showTutorialIfFirstTime(player);
-});
-
-// Start player-specific timers after they're ready
-eventBus.register(PlayerReadyEvent.class, event -> {
-    Player player = event.getPlayer();
-
-    // Start AFK timer
-    startAfkTimer(player);
-
-    // Begin periodic stat updates
-    scheduleStatUpdates(player);
-});
-
-// Trigger server-side logic that depends on client readiness
-eventBus.register(PlayerReadyEvent.class, event -> {
-    Player player = event.getPlayer();
-
-    // Now safe to sync complex state to the client
-    syncPlayerQuests(player);
-    syncPlayerAchievements(player);
-    syncPlayerFriendsList(player);
 });
 
 // Handle different ready states
-eventBus.register(PlayerReadyEvent.class, event -> {
+eventBus.registerGlobal(PlayerReadyEvent.class, event -> {
     int readyId = event.getReadyId();
     Player player = event.getPlayer();
 
@@ -101,6 +81,10 @@ eventBus.register(PlayerReadyEvent.class, event -> {
     }
 });
 ```
+
+**Important:**
+- Use `player.getDisplayName()` to get the player's name (not `getName()` or `getUsername()`)
+- Using `register()` instead of `registerGlobal()` will not work for this event because it has a `String` key type.
 
 ## Common Use Cases
 
