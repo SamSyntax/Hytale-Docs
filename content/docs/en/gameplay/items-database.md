@@ -3,350 +3,251 @@ id: items-database
 title: Items & Blocks Database
 sidebar_label: Items Database
 sidebar_position: 5
-description: Complete list of all items and blocks in Hytale Early Access
+description: Documented items and blocks from Hytale Early Access decompiled server code
 ---
 
 # Items & Blocks Database
 
-Welcome to the comprehensive database of items and blocks available in Hytale. This page catalogs all known materials, tools, weapons, and resources that players can find, craft, and use throughout their adventures on Orbis.
+This database documents items and blocks confirmed from analyzing the decompiled Hytale server code. Items in Hytale are defined through JSON asset files loaded at runtime, making this list representative of the block types and item structures found in the codebase rather than a complete inventory list.
 
-:::info Early Access Notice
-Hytale is currently in Early Access. This database is being continuously updated as new content is discovered and added to the game. Some items may be subject to change during development.
+:::warning Verified Data Only
+This page only contains information verified from decompiled server code. Speculative or unconfirmed content has been removed. The actual game contains many more items defined in external asset files.
 :::
 
-## Natural Blocks
+## Item System Overview
 
-These are the foundational blocks found naturally throughout the world of Orbis.
+Items in Hytale use a component-based system with the following properties:
 
-### Terrain Blocks
+| Property | Description |
+|----------|-------------|
+| `id` | Unique identifier string |
+| `icon` | UI icon reference |
+| `maxStack` | Maximum stack size (default varies) |
+| `qualityId` | Item quality tier reference |
+| `categories` | Array of category assignments |
+| `tool` | Tool configuration (if applicable) |
+| `weapon` | Weapon configuration (if applicable) |
+| `armor` | Armor configuration (if applicable) |
+| `glider` | Glider configuration (if applicable) |
+| `utility` | Utility item configuration |
+| `consumable` | Whether the item is consumed on use |
+| `maxDurability` | Maximum durability value |
 
-| Block | Zone | Description | Uses |
-|-------|------|-------------|------|
-| Dirt | All Zones | Basic earth block | Construction, farming |
-| Grass Block | All Zones | Dirt covered with grass | Decoration, landscaping |
-| Stone | All Zones | Standard gray stone | Construction, tool crafting |
-| Cobblestone | All Zones | Broken stone fragments | Building, pathways |
-| Sand | Howling Sands | Desert sand | Glass crafting, construction |
-| Red Sand | Howling Sands | Reddish desert sand | Decoration, construction |
-| Sandstone | Howling Sands | Compressed sand block | Building, decoration |
-| Snow | Borea | Frozen precipitation | Decoration, snowballs |
-| Ice | Borea | Frozen water block | Decoration, sliding surfaces |
-| Packed Ice | Borea | Dense ice formation | Construction, decoration |
-| Clay | All Zones | Soft moldable earth | Pottery, bricks |
-| Gravel | All Zones | Loose stone fragments | Pathways, concrete |
-| Mud | Zone 1 | Wet earth | Agriculture |
-| Obsite | Zone 4 | Volcanic stone | Advanced construction |
-| Volcanic Rock | Zone 4 | Dark ignite formation | Heat-resistant building |
-| Ash Block | Zone 4 | Volcanic ash deposit | Decoration |
-| Crystal Block | Various | Translucent mineral | Decoration, magic items |
-| Mossy Stone | Zone 1 | Overgrown stone | Decoration |
+## Armor System
 
-### Cave Blocks
+Hytale uses a 4-slot armor system:
 
-| Block | Rarity | Description | Uses |
-|-------|--------|-------------|------|
-| Stalactite | Common | Hanging cave formation | Decoration |
-| Stalagmite | Common | Rising cave formation | Decoration |
-| Glowing Mushroom Block | Uncommon | Bioluminescent fungus | Light source |
-| Cave Moss | Common | Underground vegetation | Decoration |
+| Slot | Index | Description |
+|------|-------|-------------|
+| Head | 0 | Helmet/headgear slot |
+| Chest | 1 | Chestplate/body armor |
+| Hands | 2 | Gloves/gauntlets |
+| Legs | 3 | Leggings/pants |
 
-## Ores & Minerals
+### Armor Properties
 
-Mining is essential for progression in Hytale. Here are the known ores and minerals.
+Armor items can have the following configurations:
 
-### Common Ores
+- **ArmorSlot**: Which slot the armor occupies
+- **BaseDamageResistance**: Flat damage reduction value
+- **DamageResistance**: Map of damage types to resistance modifiers
+- **DamageEnhancement**: Map of damage types to enhancement modifiers
+- **KnockbackResistances**: Resistance to knockback by damage type
+- **StatModifiers**: Entity stat modifications when worn
+- **CosmeticsToHide**: Which cosmetic elements to hide when equipped
 
-| Ore | Rarity | Zone | Primary Use |
-|-----|--------|------|-------------|
-| Coal | Common | All Zones | Fuel, torches |
-| Copper | Common | All Zones | Early tools, wiring |
-| Iron | Common | All Zones | Tools, armor, weapons |
-| Tin | Common | Zone 1-2 | Bronze alloy |
+## Tool System
 
-### Rare Ores
+Tools use a specification-based system with "GatherType" determining what blocks they can interact with:
 
-| Ore | Rarity | Zone | Primary Use |
-|-----|--------|------|-------------|
-| Gold | Rare | All Zones | Decoration, trading, enchanting |
-| Silver | Rare | Zone 2+ | Decoration, magic items |
-| Cobalt | Rare | Zone 3+ | Advanced tools and weapons |
-| Ruby | Very Rare | Zone 3+ | Jewelry, enchanting |
-| Sapphire | Very Rare | Zone 2+ | Jewelry, magic |
-| Emerald | Very Rare | Zone 1+ | Trading, decoration |
-| Diamond | Very Rare | Deep caves | High-tier equipment |
+| Property | Description |
+|----------|-------------|
+| GatherType | Type of gathering this tool spec applies to |
+| Power | Mining/gathering power value |
+| Quality | Quality tier of the tool spec |
+| Speed | Speed modifier for the tool |
+| DurabilityLossBlockTypes | Durability loss rates per block type |
 
-### Zone-Specific Minerals
+## Weapon System
 
-| Mineral | Zone | Description | Uses |
-|---------|------|-------------|------|
-| Desert Quartz | Howling Sands | Clear crystal | Glass, decoration |
-| Frost Crystal | Borea | Ice-infused gem | Cold resistance items |
-| Fire Opal | Zone 4 | Heat crystal | Fire resistance items |
-| Void Shard | Zone 4 | Dark energy crystal | Advanced magic |
+Weapons can modify entity stats when equipped:
 
-## Wood & Vegetation
+| Property | Description |
+|----------|-------------|
+| StatModifiers | Map of stat types to modifiers |
+| EntityStatsToClear | Stats to clear when weapon is unequipped |
+| RenderDualWielded | Whether to render as dual-wielded |
 
-Each zone has unique flora that provides different types of wood and plant materials.
+## Confirmed Block Types
+
+### Rock & Stone Blocks
+
+From migration files and code references:
+
+| Block ID | Category | Notes |
+|----------|----------|-------|
+| `Rock_Stone` | Terrain | Standard stone |
+| `Rock_Marble` | Terrain | Marble variant |
+| `Rock_Quartzite` | Terrain | Quartzite variant |
+| `Rock_Shale` | Terrain | Shale/dark stone |
+| `Rock_Volcanic` | Terrain | Volcanic rock |
+| `Rock_Basalt_Brick_Half` | Building | Half slab basalt brick |
+| `Rock_Sandstone_Brick_Red` | Building | Red sandstone brick |
+| `Rock_Stone_Cobble` | Terrain | Cobblestone |
+| `Rock_Stone_Cobble_Mossy_Half` | Building | Mossy cobblestone half |
+| `Rock_Shale_Brick` | Building | Dark stone brick |
+
+### Crystal Blocks
+
+| Block ID | Variants | Notes |
+|----------|----------|-------|
+| `Rock_Crystal_Blue_Big` | Big, Medium, Small | Blue crystal formations |
+| `Rock_Crystal_Green_Big` | Big, Medium, Small | Green crystal formations |
+| `Rock_Crystal_Pink_Big` | Big, Medium, Small | Pink crystal formations |
+| `Rock_Crystal_Purple_Big` | Big, Medium, Small | Purple crystal formations |
+| `Rock_Crystal_Red_Big` | Big, Medium, Small | Red crystal formations |
+| `Rock_Crystal_Yellow_Big` | Big, Medium, Small | Yellow crystal formations |
+
+### Soil Types
+
+| Block ID | Description |
+|----------|-------------|
+| `Soil_Grass` | Grass-covered soil |
+| `Soil_Dirt` | Basic dirt |
+| `Soil_Clay` | Clay soil |
+| `Soil_Gravel` | Gravel terrain |
+| `Soil_Mud` | Mud terrain |
+| `Soil_Needles` | Pine needle covered soil |
 
 ### Wood Types
 
-| Wood Type | Zone | Color | Special Properties |
-|-----------|------|-------|-------------------|
-| Oak | Zone 1 | Brown | Standard wood |
-| Birch | Zone 1 | White/Pale | Light-colored builds |
-| Pine | Borea | Dark Brown | Cold-resistant builds |
-| Palm | Howling Sands | Tan | Desert construction |
-| Jungle Wood | Zone 3 | Rich Brown | Dense, durable |
-| Charred Wood | Zone 4 | Black | Fire-resistant |
-| Dead Wood | Zone 4 | Gray | Decoration |
-| Cherry Blossom | Zone 1 | Pink tint | Decorative builds |
+The game features various wood types with branches, trunks, and planks:
 
-### Plants & Flowers
+| Wood Type | Branch Variants | Plank Color |
+|-----------|-----------------|-------------|
+| Ash | Corner, Long, Short | - |
+| Aspen | Corner, Long, Short | - |
+| Azure | Corner, Long, Short | - |
+| Beech | Corner, Long, Short | - |
+| Birch | Corner, Long, Short | Light |
+| Burnt | Corner, Long, Short | Black |
+| Cedar | Corner, Long, Short | Red |
+| CrimsonMaple | Corner, Long, Short | - |
+| Crystal | Corner, Long, Short | - |
+| Dry | Corner, Long, Short | Beige |
+| Gumboab | Corner, Long, Short | - |
+| Oak | Corner, Long, Short | Soft |
+| Palm | Corner, Long, Short | Golden |
+| Redwood | Corner, Long, Short | - |
+| Sand | Corner, Long, Short | - |
+| Spruce | Corner, Long, Short | Dark |
 
-| Plant | Zone | Description | Uses |
-|-------|------|-------------|------|
-| Tall Grass | Zone 1 | Common vegetation | Seeds, decoration |
-| Wheat | Zone 1 | Farm crop | Food, animal feed |
-| Berry Bush | Zone 1 | Fruit-bearing shrub | Food, dyes |
-| Cactus | Howling Sands | Desert plant | Defense, green dye |
-| Frost Flower | Borea | Cold-resistant bloom | Potions, decoration |
-| Fire Lily | Zone 4 | Heat-resistant flower | Potions, decoration |
-| Mushrooms | All Zones | Various fungi | Food, potions |
-| Vines | Zone 3 | Climbing plants | Climbing, decoration |
-| Seaweed | Underwater | Aquatic plant | Food, decoration |
-| Lotus | Zone 1 | Water flower | Decoration, potions |
+### Plants & Vegetation
 
-## Tools
+| Block ID | Description |
+|----------|-------------|
+| `Plant_Boomshroom_Large` | Large explosive mushroom |
+| `Plant_Boomshroom_Small` | Small explosive mushroom |
+| `Plant_Mushroom_Red` | Red toadstool mushroom |
 
-Essential equipment for gathering resources and building.
+### Bones & Fossils
 
-### Pickaxes
-
-| Material | Durability | Mining Speed | Ore Capability |
-|----------|------------|--------------|----------------|
-| Wood | Low | Slow | Stone only |
-| Stone | Medium | Medium | Coal, Copper |
-| Copper | Medium | Medium | Iron, Tin |
-| Iron | High | Fast | Gold, Silver |
-| Cobalt | Very High | Very Fast | All ores |
-| Diamond | Highest | Fastest | All ores |
-
-### Axes
-
-| Material | Durability | Chopping Speed | Damage |
-|----------|------------|----------------|--------|
-| Wood | Low | Slow | Low |
-| Stone | Medium | Medium | Medium |
-| Iron | High | Fast | High |
-| Cobalt | Very High | Very Fast | Very High |
-
-### Other Tools
-
-| Tool | Materials | Primary Use |
-|------|-----------|-------------|
-| Shovel | Wood/Stone/Iron/Cobalt | Digging dirt, sand, gravel |
-| Hoe | Wood/Stone/Iron | Farming, tilling soil |
-| Hammer | Stone/Iron/Cobalt | Crafting, construction |
-| Saw | Iron/Cobalt | Woodworking |
-| Chisel | Iron/Cobalt | Stone carving |
-
-## Weapons
-
-Combat equipment for fighting the creatures of Orbis.
-
-### Melee Weapons
-
-| Weapon Type | Materials Available | Attack Style | Special |
-|-------------|--------------------|--------------|---------|
-| Sword | Wood/Stone/Iron/Cobalt/Diamond | Slash, Thrust | Balanced damage and speed |
-| Longsword | Iron/Cobalt/Diamond | Wide slash | Extended reach |
-| Dagger | Iron/Cobalt | Quick stab | Fast attacks, low damage |
-| Battle Axe | Iron/Cobalt | Heavy swing | High damage, slow |
-| Mace | Stone/Iron/Cobalt | Crushing blow | Armor penetration |
-| Spear | Wood/Iron/Cobalt | Thrust | Long reach |
-| Halberd | Iron/Cobalt | Slash/Thrust | Very long reach |
-
-### Ranged Weapons
-
-| Weapon | Ammo Type | Range | Special |
-|--------|-----------|-------|---------|
-| Bow | Arrows | Long | Standard ranged |
-| Crossbow | Bolts | Very Long | High damage, slow reload |
-| Throwing Knife | None (consumable) | Medium | Quick throw |
-| Javelin | None (consumable) | Medium-Long | High damage throw |
-
-### Magic Weapons
-
-| Weapon | Magic Type | Effect |
-|--------|-----------|--------|
-| Fire Staff | Fire | Ranged fire damage |
-| Ice Staff | Frost | Slow enemies, frost damage |
-| Lightning Staff | Electric | Chain lightning |
-| Nature Staff | Earth | Vine entanglement |
-| Void Staff | Dark | Dark energy projectiles |
-
-## Armor
-
-Protection equipment organized by material tier.
-
-### Armor Sets
-
-| Material | Defense | Durability | Special Properties |
-|----------|---------|------------|-------------------|
-| Leather | Low | Low | Lightweight, quiet |
-| Padded | Low-Medium | Medium | Comfortable |
-| Chainmail | Medium | Medium | Balanced protection |
-| Iron | High | High | Standard heavy armor |
-| Cobalt | Very High | Very High | Excellent protection |
-| Diamond | Highest | Highest | Maximum protection |
-
-### Armor Pieces
-
-Each set consists of:
-- **Helmet** - Head protection
-- **Chestplate** - Torso protection
-- **Leggings** - Leg protection
-- **Boots** - Foot protection
-- **Gloves** - Hand protection (optional slot)
-- **Cape/Cloak** - Back slot (optional, often cosmetic)
-
-### Special Armor
-
-| Armor | Zone/Source | Special Effect |
-|-------|-------------|----------------|
-| Frost Armor | Borea | Cold resistance |
-| Desert Robes | Howling Sands | Heat resistance |
-| Volcanic Plate | Zone 4 | Fire resistance |
-| Kweebec Outfit | Zone 1 | Stealth bonus |
-
-## Crafting Materials
-
-Basic materials used in item creation.
-
-### Processed Materials
-
-| Material | Source | Used For |
-|----------|--------|----------|
-| Planks | Wood logs | Building, tools |
-| Sticks | Planks | Tool handles, arrows |
-| String | Spider drops, plants | Bows, fishing |
-| Leather | Animal hides | Armor, bags |
-| Cloth | Plant fibers | Clothing, banners |
-| Ingots | Smelted ores | Tools, weapons, armor |
-| Glass | Smelted sand | Windows, bottles |
-| Brick | Fired clay | Building |
-| Paper | Plant pulp | Books, maps |
-| Rope | Fibers | Climbing, crafting |
-
-### Mob Drops
-
-| Drop | Source | Uses |
-|------|--------|------|
-| Bone | Skeletons | Bonemeal, decoration |
-| Slime | Slimes | Sticky items, potions |
-| Feather | Birds | Arrows, decoration |
-| Scale | Reptiles | Armor reinforcement |
-| Silk | Spiders | String, cloth |
-| Trork Tusk | Trorks | Trophies, trading |
-| Kweebec Charm | Kweebecs | Magic items |
-
-## Special Items
-
-Unique and quest-related items.
-
-### Consumables
-
-| Item | Effect | Source |
-|------|--------|--------|
-| Health Potion | Restore health | Crafting, loot |
-| Stamina Potion | Restore stamina | Crafting, loot |
-| Antidote | Cure poison | Crafting |
-| Cooked Meat | Restore hunger | Cooking |
-| Bread | Restore hunger | Cooking |
-| Fruit | Light hunger restore | Gathering |
-
-### Utility Items
-
-| Item | Function | Notes |
-|------|----------|-------|
-| Torch | Light source | Essential for caves |
-| Lantern | Portable light | Better than torches |
-| Map | Navigation | Reveals explored areas |
-| Compass | Direction finding | Points to spawn |
-| Bucket | Carry liquids | Water, lava |
-| Fishing Rod | Catch fish | Requires water |
-
-### Rare Items
-
-| Item | Rarity | Location | Notes |
-|------|--------|----------|-------|
-| Ancient Artifact | Legendary | Dungeons | Lore items |
-| Magic Scroll | Rare | Dungeons, trading | Spell learning |
-| Rune Stone | Rare | Altars | Enchanting |
-| Treasure Map | Uncommon | Chests | Leads to loot |
-
-## Building Blocks
-
-Decorative and structural blocks for construction.
-
-### Crafted Blocks
-
-| Block | Recipe Base | Variants |
-|-------|-------------|----------|
-| Brick | Clay | Red, White, Gray |
-| Stone Brick | Stone | Normal, Mossy, Cracked |
-| Wood Planks | Logs | All wood types |
-| Glass | Sand | Clear, Stained (colors) |
-| Terracotta | Clay | Multiple colors |
-| Concrete | Gravel + Dye | Multiple colors |
-| Tiles | Clay | Floor patterns |
+| Block ID | Description |
+|----------|-------------|
+| `Bone_Spine` | Spine bone block |
+| `Bone_Stalagtite_Big` | Large bone stalactite |
+| `Bone_Stalagtite_Small` | Small bone stalactite |
+| `Bone_Ribs_Long` | Long rib bones |
 
 ### Decorative Blocks
 
-| Block | Category | Uses |
-|-------|----------|------|
-| Carpet | Flooring | Decoration, sound dampening |
-| Banner | Wall decor | Customizable patterns |
-| Painting | Wall decor | Art display |
-| Flower Pot | Container | Plant display |
-| Shelf | Storage/Decor | Item display |
-| Chandelier | Lighting | Elegant light source |
-| Fence | Barrier | Animal pens, decoration |
-| Gate | Access | Fenced area entry |
-| Stairs | Traversal | All block materials |
-| Slab | Building | All block materials |
-| Wall | Barrier | Stone, brick variants |
+| Block ID | Description |
+|----------|-------------|
+| `Deco_Iron_Bars` | Iron bar decoration |
+| `Deco_Iron_Brazier` | Iron brazier |
+| `Deco_Bronze_Brazier` | Bronze brazier |
+| `Deco_Stone_Brazier` | Stone brazier |
+| `Deco_Cauldron` | Cauldron block |
+| `Deco_Iron_Stack` | Stacked iron decoration |
+| `Deco_EggSacks_Medium` | Egg sack decoration |
+| `Container_Coffin` | Coffin container |
 
-### Functional Blocks
+### Ice Formations
 
-| Block | Function | Notes |
-|-------|----------|-------|
-| Crafting Table | Item crafting | Essential station |
-| Furnace | Smelting | Ore processing |
-| Anvil | Tool repair | Equipment maintenance |
-| Enchanting Table | Enchanting | Magic enhancement |
-| Chest | Storage | Item storage |
-| Bed | Spawn point | Rest, respawn |
-| Door | Access | Wood, iron variants |
-| Trapdoor | Access | Vertical entry |
-| Ladder | Climbing | Vertical movement |
-| Sign | Information | Text display |
-| Lever | Redstone | Mechanism trigger |
-| Button | Redstone | Momentary trigger |
-| Pressure Plate | Redstone | Detection |
+| Block ID | Description |
+|----------|-------------|
+| `Rock_Ice_Stalagtite_Small` | Small ice stalactite |
+
+### Structures
+
+| Block ID | Description |
+|----------|-------------|
+| `WindMill_Wing` | Windmill wing block |
+| `Wood_Platform_Kweebec` | Kweebec wooden platform |
+
+## Fluids
+
+Hytale has a fluid system with 6 confirmed fluid types:
+
+| Fluid ID | Source Block | Flow Block | Properties |
+|----------|--------------|------------|------------|
+| `Fluid_Water` | `Water_Source` | `Water` | Standard water |
+| `Fluid_Water_Test` | `Water_Finite` | - | Test/finite water |
+| `Fluid_Lava` | `Lava_Source` | `Lava` | Damaging lava |
+| `Fluid_Tar` | `Tar_Source` | `Tar` | Sticky tar |
+| `Fluid_Slime` | `Slime_Source` | `Slime` | Bouncy slime |
+| `Fluid_Poison` | `Poison_Source` | `Poison` | Damaging poison |
+
+## Item Quality System
+
+Items have quality tiers that affect their appearance and potentially their stats. The system includes:
+
+- Quality ID reference
+- Quality value (numeric tier)
+- Visual indicators (background textures in `UI/ItemQualities/`)
+
+## Item Categories
+
+Items are organized into categories for inventory display:
+
+- Categories have hierarchical structure (parent/children)
+- Each category has an ID, name, icon, and display order
+- Icons are stored in `Icons/ItemCategories/`
+
+## Editor & Debug Items
+
+The game includes special items for world editing:
+
+| Item ID | Purpose |
+|---------|---------|
+| `Editor_Block` | Block editing tool |
+| `Editor_Empty` | Empty editor placeholder |
+| `Editor_Anchor` | Anchor point tool |
+| `EditorTool_Paste` | Paste tool |
+| `EditorTool_PrefabEditing_SelectPrefab` | Prefab selection |
+| `Debug_Cube` | Debug cube |
+| `Debug_Model` | Debug model |
+
+## Sound System
+
+Items reference sound events for interactions:
+
+| Sound Event | Description |
+|-------------|-------------|
+| `SFX_Player_Craft_Item_Inventory` | Crafting completion |
+| `SFX_Player_Drop_Item` | Dropping item |
+| `SFX_Player_Pickup_Item` | Picking up item |
+| `SFX_Item_Break` | Item breaking |
+| `SFX_Item_Repair` | Item repair |
 
 ---
-
-:::tip Contributing
-Found an item not listed here? The Hytale community is always discovering new content. Check back regularly for updates as the game develops during Early Access.
-:::
 
 ## See Also
 
-- [Crafting Guide](/docs/gameplay/crafting-guide)
-- [World Regions](/docs/gameplay/world/regions)
-- [Combat Overview](/docs/gameplay/combat/overview)
+- [Item Types](/docs/modding/data-assets/items/item-types) - Item configuration schema
+- [Block Types](/docs/api/server-internals/modules/blocks) - Block system documentation
+- [Crafting Guide](/docs/gameplay/crafting-guide) - How to craft items
 
 ---
 
-*This database is maintained by the community and updated regularly as new information becomes available.*
+*This database is generated from decompiled Hytale server code analysis. For the complete item list, refer to the game's asset files.*
