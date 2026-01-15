@@ -309,6 +309,7 @@ export const sidebarConfig: SidebarItem[] = [
           { titleKey: "dataTypes", href: "/docs/api/server-internals/types" },
           { titleKey: "networkPackets", href: "/docs/api/server-internals/packets" },
           { titleKey: "customUI", href: "/docs/api/server-internals/custom-ui", verified: true },
+          { titleKey: "uiReference", href: "/docs/api/server-internals/ui-reference", verified: true },
         ],
       },
       {

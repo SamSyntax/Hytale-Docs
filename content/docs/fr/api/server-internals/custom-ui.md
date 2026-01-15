@@ -942,6 +942,131 @@ Les noms de champs dans le codec **doivent correspondre** aux cles dans `EventDa
 
 ---
 
+## Patterns d'UI Dynamique
+
+Cette section couvre comment creer des listes dynamiques, mettre a jour l'UI en temps reel et travailler avec les templates.
+
+### Creer une liste dynamique
+
+**Fichier template** (`VotrePlugin/ElementListe.ui`) :
+```
+$C = "../Common.ui";
+
+$C.@SecondaryTextButton {
+  @Text = "Element";
+  Anchor: (Height: 40);
+}
+```
+
+**Fichier layout** (`VotrePlugin/MaPage.ui`) :
+```
+$C = "../Common.ui";
+
+Group {
+  Anchor: (Width: 400, Height: 300);
+  Background: #141c26(0.98);
+  LayoutMode: Top;
+  Padding: (Full: 20);
+
+  Label {
+    Text: "Selectionnez un element:";
+    Anchor: (Height: 30);
+    Style: (FontSize: 16, TextColor: #ffffff);
+  }
+
+  Group #ListeElements {
+    FlexWeight: 1;
+    LayoutMode: Top;
+    Background: #0d1218(0.5);
+    Padding: (Full: 8);
+  }
+}
+```
+
+**Code Java** :
+```java
+@Override
+public void build(...) {
+    cmd.append(LAYOUT);
+
+    String[] elements = {"Pomme", "Banane", "Cerise"};
+
+    for (int i = 0; i < elements.length; i++) {
+        // Ajouter le template - ceci cree l'element a l'index i
+        cmd.append("#ListeElements", "VotrePlugin/ElementListe.ui");
+
+        // Le template EST l'element a l'index i
+        String selecteur = "#ListeElements[" + i + "]";
+
+        // Definir le texte directement sur l'element
+        cmd.set(selecteur + ".Text", elements[i]);
+
+        // Lier l'evenement directement a l'element
+        evt.addEventBinding(
+            CustomUIEventBindingType.Activating,
+            selecteur,
+            new EventData().append("Action", "selectionner").append("Index", String.valueOf(i)),
+            false
+        );
+    }
+}
+```
+
+### Regles cles pour les templates dynamiques
+
+1. **Template ajoute = element a l'index**
+   ```java
+   cmd.append("#Conteneur", "template.ui");
+   // Cree #Conteneur[0], puis #Conteneur[1], etc.
+   ```
+
+2. **Acceder aux proprietes directement**
+   ```java
+   cmd.set("#Conteneur[0].Text", "valeur");    // CORRECT
+   cmd.set("#Conteneur[0] #ID.Text", "valeur"); // INCORRECT (sauf si le template a des IDs imbriques)
+   ```
+
+3. **Les liaisons d'evenements ciblent l'element**
+   ```java
+   evt.addEventBinding(..., "#Conteneur[0]", ...);  // CORRECT
+   ```
+
+4. **Vider avant de reconstruire**
+   ```java
+   cmd.clear("#Conteneur");  // Supprime tous les enfants
+   // Puis re-ajouter
+   ```
+
+### Mettre a jour l'UI sans reconstruire
+
+Vous pouvez envoyer des mises a jour incrementales :
+
+```java
+@Override
+public void handleDataEvent(...) {
+    UICommandBuilder cmd = new UICommandBuilder();
+
+    // Mettre a jour des elements specifiques
+    cmd.set("#LabelStatut.Text", "Mis a jour !");
+    cmd.set("#Compteur.Text", String.valueOf(compteur++));
+
+    // Envoyer la mise a jour sans effacer
+    this.sendUpdate(cmd, false);
+}
+```
+
+### Vider et rafraichir
+
+```java
+// Vider un conteneur
+cmd.clear("#ListeElements");
+
+// Ou reconstruire toute la page
+this.rebuild();
+```
+
+---
+
 ## Reference complete Common.ui
 
 Cette section documente **tous** les composants et styles disponibles dans le fichier `Common.ui` du jeu.
@@ -1136,6 +1261,62 @@ Padding: (
 1. Verifiez que l'ID d'element existe dans votre fichier `.ui`
 2. Verifiez l'orthographe : `#MonBouton` dans Java doit correspondre a `#MonBouton` dans `.ui`
 3. Pour les composants Common.ui, l'ID va apres le composant : `$C.@TextButton #MonBouton`
+
+### "Selected element in CustomUI command was not found"
+
+**Cause** : Pattern de selecteur incorrect pour les templates ajoutes dynamiquement.
+
+**Comprendre** : Quand vous ajoutez un template a un conteneur, le template lui-meme **devient** l'element a cet index. Vous ne naviguez pas vers un enfant a l'interieur.
+
+**Incorrect :**
+```java
+// Ceci cherche #Button A L'INTERIEUR de l'element a l'index 0
+cmd.set("#Conteneur[0] #Button.Text", "Bonjour");  // INCORRECT !
+```
+
+**Correct :**
+```java
+// L'element a l'index 0 EST le bouton
+cmd.set("#Conteneur[0].Text", "Bonjour");  // CORRECT !
+```
+
+**Pattern complet :**
+```java
+// Ajouter le template
+cmd.append("#ConteneurBoutons", "VotrePlugin/BoutonMonde.ui");
+
+// Le template ajoute EST #ConteneurBoutons[0]
+String selecteur = "#ConteneurBoutons[0]";
+cmd.set(selecteur + ".Text", "Nom du monde");
+
+// La liaison d'evenement cible l'element directement
+evt.addEventBinding(
+    CustomUIEventBindingType.Activating,
+    selecteur,  // PAS selecteur + " #Button"
+    new EventData().append("Action", "clic"),
+    false
+);
+```
+
+### Parametres de template vs Proprietes
+
+Les **parametres de template** (`@Text`) sont definis lors de l'instanciation d'un composant et definissent les valeurs initiales.
+
+Les **proprietes** (`.Text`) sont les proprietes reelles a l'execution que vous modifiez depuis Java.
+
+| Contexte | Syntaxe | Exemple |
+|----------|---------|---------|
+| Dans le fichier `.ui` | `@Parametre` | `@Text = "Defaut";` |
+| En Java (definir valeur) | `.Propriete` | `cmd.set("#Bouton.Text", "Nouveau");` |
+
+**Important** : Vous ne pouvez pas utiliser `@Text` dans les selecteurs Java. Utilisez toujours `.Text` :
+```java
+// INCORRECT
+cmd.set("#Bouton.@Text", "Bonjour");
+
+// CORRECT
+cmd.set("#Bouton.Text", "Bonjour");
+```
 
 ### Le joueur se deconnecte a l'ouverture de la page
 

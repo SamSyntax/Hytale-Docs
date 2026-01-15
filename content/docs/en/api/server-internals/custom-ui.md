@@ -963,6 +963,62 @@ The field names in the codec **must match** the keys in `EventData.append()`.
 2. Check spelling: `#MyButton` in Java must match `#MyButton` in `.ui`
 3. For Common.ui components, the ID goes after the component: `$C.@TextButton #MyButton`
 
+### "Selected element in CustomUI command was not found"
+
+**Cause**: Incorrect selector pattern for dynamically appended templates.
+
+**Understanding**: When you append a template to a container, the template itself **becomes** the element at that index. You don't navigate to a child inside it.
+
+**Wrong:**
+```java
+// This looks for #Button INSIDE the element at index 0
+cmd.set("#Container[0] #Button.Text", "Hello");  // WRONG!
+```
+
+**Correct:**
+```java
+// The element at index 0 IS the button
+cmd.set("#Container[0].Text", "Hello");  // CORRECT!
+```
+
+**Full pattern:**
+```java
+// Append template
+cmd.append("#WorldButtonsContainer", "YourPlugin/WorldButton.ui");
+
+// The appended template IS #WorldButtonsContainer[0]
+String selector = "#WorldButtonsContainer[0]";
+cmd.set(selector + ".Text", "World Name");
+
+// Event binding targets the element directly
+evt.addEventBinding(
+    CustomUIEventBindingType.Activating,
+    selector,  // NOT selector + " #Button"
+    new EventData().append("Action", "click"),
+    false
+);
+```
+
+### Template parameters vs Properties
+
+**Template parameters** (`@Text`) are set when instantiating a component and define initial values.
+
+**Properties** (`.Text`) are the actual runtime properties you modify from Java.
+
+| Context | Syntax | Example |
+|---------|--------|---------|
+| In `.ui` file | `@Parameter` | `@Text = "Default";` |
+| In Java (set value) | `.Property` | `cmd.set("#Button.Text", "New");` |
+
+**Important**: You cannot use `@Text` in Java selectors. Always use `.Text`:
+```java
+// WRONG
+cmd.set("#Button.@Text", "Hello");
+
+// CORRECT
+cmd.set("#Button.Text", "Hello");
+```
+
 ### Player disconnects when opening page
 
 **Cause**: The `.ui` file has a parse error or doesn't exist.
@@ -980,6 +1036,131 @@ The field names in the codec **must match** the keys in `EventData.append()`.
 1. Ensure `evt.addEventBinding()` is called in `build()`
 2. Verify the selector matches the element ID: `"#MyButton"`
 3. Check that `handleDataEvent()` handles the action value
+
+---
+
+## Dynamic UI Patterns
+
+This section covers how to create dynamic lists, update UI at runtime, and work with templates.
+
+### Creating a Dynamic List
+
+**Template file** (`YourPlugin/ListItem.ui`):
+```
+$C = "../Common.ui";
+
+$C.@SecondaryTextButton {
+  @Text = "Item";
+  Anchor: (Height: 40);
+}
+```
+
+**Layout file** (`YourPlugin/MyPage.ui`):
+```
+$C = "../Common.ui";
+
+Group {
+  Anchor: (Width: 400, Height: 300);
+  Background: #141c26(0.98);
+  LayoutMode: Top;
+  Padding: (Full: 20);
+
+  Label {
+    Text: "Select an item:";
+    Anchor: (Height: 30);
+    Style: (FontSize: 16, TextColor: #ffffff);
+  }
+
+  Group #ItemList {
+    FlexWeight: 1;
+    LayoutMode: Top;
+    Background: #0d1218(0.5);
+    Padding: (Full: 8);
+  }
+}
+```
+
+**Java code**:
+```java
+@Override
+public void build(...) {
+    cmd.append(LAYOUT);
+
+    String[] items = {"Apple", "Banana", "Cherry"};
+
+    for (int i = 0; i < items.length; i++) {
+        // Append template - this creates element at index i
+        cmd.append("#ItemList", "YourPlugin/ListItem.ui");
+
+        // The template IS the element at index i
+        String selector = "#ItemList[" + i + "]";
+
+        // Set text directly on the element
+        cmd.set(selector + ".Text", items[i]);
+
+        // Bind event directly to the element
+        evt.addEventBinding(
+            CustomUIEventBindingType.Activating,
+            selector,
+            new EventData().append("Action", "select").append("Index", String.valueOf(i)),
+            false
+        );
+    }
+}
+```
+
+### Key Rules for Dynamic Templates
+
+1. **Appended template = element at index**
+   ```java
+   cmd.append("#Container", "template.ui");
+   // Creates #Container[0], then #Container[1], etc.
+   ```
+
+2. **Access properties directly**
+   ```java
+   cmd.set("#Container[0].Text", "value");    // CORRECT
+   cmd.set("#Container[0] #ID.Text", "value"); // WRONG (unless template has nested IDs)
+   ```
+
+3. **Event bindings target the element**
+   ```java
+   evt.addEventBinding(..., "#Container[0]", ...);  // CORRECT
+   ```
+
+4. **Clear before rebuilding**
+   ```java
+   cmd.clear("#Container");  // Remove all children
+   // Then re-append
+   ```
+
+### Updating UI Without Rebuilding
+
+You can send incremental updates:
+
+```java
+@Override
+public void handleDataEvent(...) {
+    UICommandBuilder cmd = new UICommandBuilder();
+
+    // Update specific elements
+    cmd.set("#StatusLabel.Text", "Updated!");
+    cmd.set("#Counter.Text", String.valueOf(counter++));
+
+    // Send update without clearing
+    this.sendUpdate(cmd, false);
+}
+```
+
+### Clearing and Refreshing
+
+```java
+// Clear a container
+cmd.clear("#ItemList");
+
+// Or rebuild the entire page
+this.rebuild();
+```
 
 ---
 
