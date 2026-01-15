@@ -359,7 +359,7 @@ These are all the properties that can be set on UI elements via `commandBuilder.
 
 | Property | Type | Description | Example |
 |----------|------|-------------|---------|
-| `.Style` | Value<String> | Visual style reference | `set("#Tab.Style", TAB_ACTIVE_STYLE)` |
+| `.Style` | `Value<String>` | Visual style reference | `set("#Tab.Style", TAB_ACTIVE_STYLE)` |
 | `.Color` | String (hex) | Color value | `set("#Tint.Color", "#5B9E28")` |
 | `.Background` | String (asset path) | Background image | `set("#Artwork.Background", "Pages/Portals/splash.png")` |
 | `.AssetPath` | String (asset path) | Asset/icon path | `set("#Icon.AssetPath", iconPath)` |

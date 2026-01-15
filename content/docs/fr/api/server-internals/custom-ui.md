@@ -359,7 +359,7 @@ Voici toutes les proprietes qui peuvent etre definies sur les elements UI via `c
 
 | Propriete | Type | Description | Exemple |
 |-----------|------|-------------|---------|
-| `.Style` | Value<String> | Reference de style visuel | `set("#Tab.Style", TAB_ACTIVE_STYLE)` |
+| `.Style` | `Value<String>` | Reference de style visuel | `set("#Tab.Style", TAB_ACTIVE_STYLE)` |
 | `.Color` | String (hex) | Valeur couleur | `set("#Tint.Color", "#5B9E28")` |
 | `.Background` | String (chemin asset) | Image de fond | `set("#Artwork.Background", "Pages/Portals/splash.png")` |
 | `.AssetPath` | String (chemin asset) | Chemin asset/icone | `set("#Icon.AssetPath", iconPath)` |
