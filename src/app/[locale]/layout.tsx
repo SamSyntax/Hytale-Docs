@@ -98,10 +98,10 @@ export async function generateMetadata({
     icons: {
       icon: [
         { url: "/icon.png", type: "image/png" },
-        { url: "/img/favicon.ico" },
+        { url: "/img/favicon.svg", type: "image/svg+xml" },
       ],
       apple: [{ url: "/icon.png", type: "image/png" }],
-      shortcut: "/img/favicon.ico",
+      shortcut: "/icon.png",
     },
     manifest: "/manifest.json",
     appleWebApp: {
