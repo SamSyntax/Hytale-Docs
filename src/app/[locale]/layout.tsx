@@ -7,6 +7,7 @@ import { CookieConsent } from "@/components/cookie-consent";
 import { CookiePreferencesDialog } from "@/components/cookie-preferences";
 import { AdblockDetector } from "@/components/ads";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/json-ld";
+import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -96,11 +97,20 @@ export async function generateMetadata({
     },
     icons: {
       icon: [
-        { url: "/logo-h.png", type: "image/png", sizes: "512x512" },
-        { url: "/icon.png", type: "image/png" },
+        { url: "/icon-512x512.png", type: "image/png", sizes: "512x512" },
+        { url: "/icon-192x192.png", type: "image/png", sizes: "192x192" },
       ],
-      apple: [{ url: "/apple-icon.png", type: "image/png" }],
-      shortcut: "/logo-h.png",
+      apple: [{ url: "/apple-touch-icon.png", type: "image/png", sizes: "180x180" }],
+      shortcut: "/icon-192x192.png",
+    },
+    manifest: "/manifest.json",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: "HytaleDocs",
+    },
+    formatDetection: {
+      telephone: false,
     },
     openGraph: {
       title: titles[locale] || titles.en,
@@ -152,6 +162,10 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
+        {/* PWA Theme Color */}
+        <meta name="theme-color" content="#f59e0b" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#1a1a2e" media="(prefers-color-scheme: dark)" />
+        <meta name="mobile-web-app-capable" content="yes" />
         {/* Google AdSense */}
         <meta name="google-adsense-account" content="ca-pub-4389631952462736" />
         <script
@@ -197,6 +211,7 @@ export default async function LocaleLayout({
             </CookieConsentProvider>
             <AdblockDetector />
           </NextIntlClientProvider>
+          <ServiceWorkerRegister />
         </ThemeProvider>
       </body>
     </html>
