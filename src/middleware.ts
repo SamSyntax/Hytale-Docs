@@ -12,12 +12,18 @@ export default function middleware(request: NextRequest) {
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   );
 
-  // If no locale in pathname and user is on root path, check localStorage preference
+  // If no locale in pathname and user is on root path, check cookie preference
   if (!pathnameHasLocale && pathname === '/') {
     const preferredLanguage = request.cookies.get('preferredLanguage')?.value;
-    
-    if (preferredLanguage && (routing.locales as readonly string[]).includes(preferredLanguage)) {
-      // Redirect to the preferred language
+
+    // Only redirect if preferred language is valid AND different from default locale
+    // (with localePrefix: 'as-needed', the default locale doesn't have a prefix,
+    // so redirecting to /en when en is default would cause an infinite loop)
+    if (
+      preferredLanguage &&
+      preferredLanguage !== routing.defaultLocale &&
+      (routing.locales as readonly string[]).includes(preferredLanguage)
+    ) {
       const url = request.nextUrl.clone();
       url.pathname = `/${preferredLanguage}`;
       return NextResponse.redirect(url);
