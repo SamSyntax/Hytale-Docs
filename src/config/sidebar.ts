@@ -120,7 +120,7 @@ export const sidebarConfig: SidebarItem[] = [
                 titleKey: "playerEvents",
                 items: [
                   { titleKey: "playerConnectEvent", href: "/docs/modding/plugins/events/player/player-connect-event", verified: true },
-                  { titleKey: "playerDisconnectEvent", href: "/docs/modding/plugins/events/player/player-disconnect-event" },
+                  { titleKey: "playerDisconnectEvent", href: "/docs/modding/plugins/events/player/player-disconnect-event", verified: true },
                   { titleKey: "playerChatEvent", href: "/docs/modding/plugins/events/player/player-chat-event", verified: true },
                   { titleKey: "playerSetupConnectEvent", href: "/docs/modding/plugins/events/player/player-setup-connect-event" },
                   { titleKey: "playerSetupDisconnectEvent", href: "/docs/modding/plugins/events/player/player-setup-disconnect-event" },
