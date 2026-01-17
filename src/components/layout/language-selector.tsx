@@ -22,7 +22,34 @@ export function LanguageSelector() {
   const router = useRouter();
   const pathname = usePathname();
 
+  // Sync localStorage to cookie on mount
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const preferredLanguage = localStorage.getItem("preferredLanguage");
+      if (
+        preferredLanguage &&
+        (preferredLanguage === "en" || preferredLanguage === "fr")
+      ) {
+        // Set cookie for server-side access
+        document.cookie = `preferredLanguage=${preferredLanguage}; path=/; max-age=31536000; SameSite=Lax; Secure`;
+
+        // If current locale doesn't match preference, redirect
+        if (locale !== preferredLanguage) {
+          router.replace(pathname, {
+            locale: preferredLanguage as "fr" | "en",
+          });
+        }
+      }
+    }
+  }, [locale, pathname, router]);
+
   const handleLanguageChange = (newLocale: string) => {
+    // Save to localStorage and cookie
+    if (typeof window !== "undefined") {
+      localStorage.setItem("preferredLanguage", newLocale);
+      // Also set as cookie for server-side access
+      document.cookie = `preferredLanguage=${newLocale}; path=/; max-age=31536000; SameSite=Lax; Secure`;
+    }
     router.replace(pathname, { locale: newLocale as "fr" | "en" });
   };
 
@@ -43,10 +70,7 @@ export function LanguageSelector() {
           </span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="bg-popover border-border"
-      >
+      <DropdownMenuContent align="end" className="bg-popover border-border">
         {languages.map((language) => (
           <DropdownMenuItem
             key={language.code}
