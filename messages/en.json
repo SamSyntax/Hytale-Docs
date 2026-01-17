@@ -210,7 +210,8 @@
     "knownIssues": "Troubleshooting",
     "performanceOptimization": "Performance Guide",
     "verified": "Tested & Verified",
-    "nonFunctional": "Non-Functional: This event exists but is never fired by the server"
+    "nonFunctional": "Non-Functional: This event exists but is never fired by the server",
+    "untested": "Not Yet Tested: This event has not been verified with a real plugin"
   },
   "metadata": {
     "title": "HytaleDocs",

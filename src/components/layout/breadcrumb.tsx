@@ -57,15 +57,19 @@ export function DocsBreadcrumb({ items }: DocsBreadcrumbProps) {
                 <BreadcrumbPage className="text-primary font-medium max-w-[200px] truncate">
                   {item.label}
                 </BreadcrumbPage>
-              ) : (
+              ) : item.href ? (
                 <BreadcrumbLink asChild>
                   <Link
-                    href={item.href || "#"}
+                    href={item.href}
                     className="text-muted-foreground hover:text-primary transition-colors max-w-[150px] truncate"
                   >
                     {item.label}
                   </Link>
                 </BreadcrumbLink>
+              ) : (
+                <span className="text-muted-foreground max-w-[150px] truncate">
+                  {item.label}
+                </span>
               )}
             </BreadcrumbItemComponent>
           </span>

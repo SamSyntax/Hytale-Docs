@@ -13,6 +13,7 @@ import { remarkAdmonitions } from "@/lib/remark-admonitions";
 import { ArticleAd } from "@/components/ads";
 import { BreadcrumbJsonLd, ArticleJsonLd } from "@/components/seo/json-ld";
 import { DocsBreadcrumb, TableOfContents, extractHeadings, BackToTop, TocProvider } from "@/components/layout";
+import { findBreadcrumbPath } from "@/config/sidebar";
 
 const BASE_URL = "https://hytale-docs.com";
 
@@ -94,12 +95,14 @@ export default async function DocPage({ params }: DocPageProps) {
     })),
   ];
 
-  // Build breadcrumb items for the visual component
-  const visualBreadcrumbItems = actualSlug.map((segment, index) => ({
-    label: segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, " "),
-    href: index === actualSlug.length - 1
-      ? undefined
-      : `/docs/${actualSlug.slice(0, index + 1).join("/")}`,
+  // Build breadcrumb items from sidebar structure
+  const sidebarT = await getTranslations({ locale, namespace: "sidebar" });
+  const currentHref = `/docs/${actualSlug.join("/")}`;
+  const sidebarPath = findBreadcrumbPath(currentHref);
+
+  const visualBreadcrumbItems = sidebarPath.map((item, index) => ({
+    label: sidebarT(item.titleKey),
+    href: index === sidebarPath.length - 1 ? undefined : item.href,
   }));
 
   // Extract headings for table of contents
@@ -112,7 +115,7 @@ export default async function DocPage({ params }: DocPageProps) {
   return (
     <TocProvider items={tocItems}>
       <div className="flex gap-8">
-        <article id="main-content" className="max-w-4xl flex-1 min-w-0 py-6 lg:py-8">
+        <article id="main-content" className="flex-1 min-w-0 pb-6 lg:pb-8">
         {/* Structured Data */}
         <BreadcrumbJsonLd items={breadcrumbItems} />
         <ArticleJsonLd

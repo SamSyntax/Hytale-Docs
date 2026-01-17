@@ -8,6 +8,34 @@ export interface SidebarItem {
   nonFunctional?: boolean;
 }
 
+export interface BreadcrumbPath {
+  titleKey: string;
+  href?: string;
+}
+
+/**
+ * Find the breadcrumb path for a given href in the sidebar structure
+ */
+export function findBreadcrumbPath(href: string): BreadcrumbPath[] {
+  function search(items: SidebarItem[], path: BreadcrumbPath[]): BreadcrumbPath[] | null {
+    for (const item of items) {
+      const currentPath = [...path, { titleKey: item.titleKey, href: item.href }];
+
+      if (item.href === href) {
+        return currentPath;
+      }
+
+      if (item.items) {
+        const result = search(item.items, currentPath);
+        if (result) return result;
+      }
+    }
+    return null;
+  }
+
+  return search(sidebarConfig, []) || [];
+}
+
 export const sidebarConfig: SidebarItem[] = [
   { titleKey: "introduction", href: "/docs/intro" },
   {

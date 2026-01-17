@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Link, usePathname } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
-import { ChevronRight, BadgeCheck, CircleOff } from "lucide-react";
+import { ChevronRight, BadgeCheck, CircleOff, CircleHelp } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -98,7 +98,7 @@ function SidebarLink({
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="inline-flex">
-                <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-[--color-hytale-green]" />
+                <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-hytale-green" />
               </span>
             </TooltipTrigger>
             <TooltipContent side="right" className="text-xs">
@@ -121,6 +121,21 @@ function SidebarLink({
           </Tooltip>
         </TooltipProvider>
       )}
+      {/* Show untested icon for events that haven't been tested yet */}
+      {!item.verified && !item.nonFunctional && item.href?.includes("/events/") && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">
+                <CircleHelp className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs max-w-48">
+              {t("untested")}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
     </Link>
   );
 }
@@ -129,7 +144,7 @@ export function Sidebar() {
   const t = useTranslations("sidebar");
 
   return (
-    <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-64 xl:w-72 2xl:w-80 shrink-0 border-r border-border lg:block">
+    <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-72 xl:w-80 2xl:w-96 shrink-0 border-r border-border lg:block">
       <ScrollArea className="h-full py-4 pr-3">
         <nav className="space-y-0.5 pl-3">
           {sidebarConfig.map((item) => (

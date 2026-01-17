@@ -18,10 +18,10 @@ export default async function DocsLayout({
       <div className="flex min-h-screen flex-col bg-background">
         <Navbar />
         <DocsDisclaimer />
-        <div className="flex-1 w-full max-w-[1600px] mx-auto px-4 lg:px-6 pb-16 lg:pb-0">
+        <div className="flex-1 w-full px-2 pb-16 lg:pb-0">
           <div className="flex gap-6 lg:gap-8">
             <Sidebar />
-            <main className="flex-1 min-w-0 py-6">{children}</main>
+            <main className="flex-1 min-w-0 pb-6">{children}</main>
           </div>
         </div>
         <Footer />
