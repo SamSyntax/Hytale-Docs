@@ -191,8 +191,8 @@ Cet événement a été testé et vérifié comme fonctionnant correctement. Pou
 
 **Résultats du test :**
 - L'événement se déclenche correctement au démarrage du serveur : **Oui**
-- Implémentation IEvent<Void> vérifiée : **Oui**
-- Non annulable (pas de ICancellable) : **Oui**
+- Implémentation `IEvent<Void>` vérifiée : **Oui**
+- Non annulable (pas de `ICancellable`) : **Oui**
 - Événement signal (pas de champs/méthodes) : **Oui**
 
 ## Détails internes

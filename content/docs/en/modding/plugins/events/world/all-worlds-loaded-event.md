@@ -190,8 +190,8 @@ This event has been tested and verified to work correctly. To test this event yo
 
 **Test Results:**
 - Event fires correctly at server startup: **Yes**
-- IEvent<Void> implementation verified: **Yes**
-- Not cancellable (no ICancellable): **Yes**
+- `IEvent<Void>` implementation verified: **Yes**
+- Not cancellable (no `ICancellable`): **Yes**
 - Signal event (no fields/methods): **Yes**
 
 ## Internal Details
