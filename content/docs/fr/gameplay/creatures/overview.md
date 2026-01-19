@@ -200,4 +200,4 @@ Chiens, chats, renards, vaches, moutons, cerfs et cochons peuvent être gardés 
 
 ---
 
-*Sources : [Blog Officiel Hytale](https://hytale.com/news), [Wiki Hytale](https://hytale.fandom.com)*
+*Sources : [Blog Officiel Hytale](https://hytale.com/news)*

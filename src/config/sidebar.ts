@@ -13,6 +13,44 @@ export interface BreadcrumbPath {
   href?: string;
 }
 
+export interface VerificationStatus {
+  verified: boolean;
+  nonFunctional: boolean;
+  /** True if the item is in the events section (should show untested warning if not verified) */
+  isEventPage: boolean;
+  /** True if the item was found in the sidebar */
+  found: boolean;
+}
+
+/**
+ * Find the verification status for a given href in the sidebar structure
+ */
+export function getVerificationStatus(href: string): VerificationStatus {
+  function search(items: SidebarItem[], inEventsSection: boolean): VerificationStatus | null {
+    for (const item of items) {
+      const isInEvents = inEventsSection || item.titleKey === "events";
+
+      if (item.href === href) {
+        return {
+          verified: item.verified === true,
+          nonFunctional: item.nonFunctional === true,
+          isEventPage: isInEvents,
+          found: true,
+        };
+      }
+
+      if (item.items) {
+        const result = search(item.items, isInEvents);
+        if (result) return result;
+      }
+    }
+    return null;
+  }
+
+  const result = search(sidebarConfig, false);
+  return result || { verified: false, nonFunctional: false, isEventPage: false, found: false };
+}
+
 /**
  * Find the breadcrumb path for a given href in the sidebar structure
  */
@@ -41,7 +79,7 @@ export const sidebarConfig: SidebarItem[] = [
   {
     titleKey: "playerGuide",
     items: [
-      { titleKey: "overview", href: "/docs/gameplay/overview" },
+      { titleKey: "overview", href: "/docs/gameplay/overview", verified: true },
       { titleKey: "beginnersGuide", href: "/docs/guides/beginners-guide" },
       { titleKey: "faq", href: "/docs/getting-started/faq" },
       { titleKey: "systemRequirements", href: "/docs/getting-started/system-requirements" },
@@ -104,12 +142,12 @@ export const sidebarConfig: SidebarItem[] = [
   {
     titleKey: "modding",
     items: [
-      { titleKey: "overview", href: "/docs/modding/overview" },
+      { titleKey: "overview", href: "/docs/modding/overview", verified: true },
       { titleKey: "architecture", href: "/docs/modding/architecture" },
       {
         titleKey: "dataAssets",
         items: [
-          { titleKey: "overview", href: "/docs/modding/data-assets/overview" },
+          { titleKey: "overview", href: "/docs/modding/data-assets/overview", verified: true },
           {
             titleKey: "blocks",
             items: [
@@ -362,7 +400,7 @@ export const sidebarConfig: SidebarItem[] = [
   {
     titleKey: "servers",
     items: [
-      { titleKey: "overview", href: "/docs/servers/overview" },
+      { titleKey: "overview", href: "/docs/servers/overview", verified: true },
       { titleKey: "networkProtocol", href: "/docs/servers/network-protocol" },
       {
         titleKey: "setup",
@@ -395,7 +433,7 @@ export const sidebarConfig: SidebarItem[] = [
   {
     titleKey: "tools",
     items: [
-      { titleKey: "overview", href: "/docs/tools/overview" },
+      { titleKey: "overview", href: "/docs/tools/overview", verified: true },
       { titleKey: "intellijPlugin", href: "/docs/tools/intellij-plugin" },
       {
         titleKey: "blockbench",

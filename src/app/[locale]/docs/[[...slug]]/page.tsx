@@ -13,7 +13,8 @@ import { remarkAdmonitions } from "@/lib/remark-admonitions";
 import { ArticleAd } from "@/components/ads";
 import { BreadcrumbJsonLd, ArticleJsonLd } from "@/components/seo/json-ld";
 import { DocsBreadcrumb, TableOfContents, extractHeadings, BackToTop, TocProvider } from "@/components/layout";
-import { findBreadcrumbPath } from "@/config/sidebar";
+import { findBreadcrumbPath, getVerificationStatus } from "@/config/sidebar";
+import { UnverifiedContentModal } from "@/components/unverified-content-modal";
 
 const BASE_URL = "https://hytale-docs.com";
 
@@ -100,6 +101,9 @@ export default async function DocPage({ params }: DocPageProps) {
   const currentHref = `/docs/${actualSlug.join("/")}`;
   const sidebarPath = findBreadcrumbPath(currentHref);
 
+  // Get verification status for the current page
+  const verificationStatus = getVerificationStatus(currentHref);
+
   const visualBreadcrumbItems = sidebarPath.map((item, index) => ({
     label: sidebarT(item.titleKey),
     href: index === sidebarPath.length - 1 ? undefined : item.href,
@@ -113,6 +117,12 @@ export default async function DocPage({ params }: DocPageProps) {
     : `${BASE_URL}/${locale}/docs/${actualSlug.join("/")}`;
 
   return (
+    <UnverifiedContentModal
+      pageSlug={currentHref}
+      isVerified={verificationStatus.verified}
+      isNonFunctional={verificationStatus.nonFunctional}
+      isEventPage={verificationStatus.isEventPage}
+    >
     <TocProvider items={tocItems}>
       <div className="flex gap-8">
         <article id="main-content" className="flex-1 min-w-0 pb-6 lg:pb-8">
@@ -215,5 +225,6 @@ export default async function DocPage({ params }: DocPageProps) {
         <BackToTop />
       </div>
     </TocProvider>
+    </UnverifiedContentModal>
   );
 }

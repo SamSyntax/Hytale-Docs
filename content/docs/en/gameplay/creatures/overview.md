@@ -200,4 +200,4 @@ Dogs, cats, foxes, cows, sheep, deer, and pigs can be kept in enclosures for fut
 
 ---
 
-*Sources: [Hytale Official Blog](https://hytale.com/news), [Hytale Wiki](https://hytale.fandom.com)*
+*Sources: [Hytale Official Blog](https://hytale.com/news)*

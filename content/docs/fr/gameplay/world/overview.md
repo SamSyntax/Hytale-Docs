@@ -133,4 +133,4 @@ L'Ocean Profond est techniquement separe des autres zones et a ete decrit par le
 
 ---
 
-*Sources : [Spring 2025 Development Update](https://hytale.com/news/2025/3/spring-2025-development-update), [The Future of World Generation](https://hytale.com/news/2026/1/the-future-of-world-generation), [Hytale Wiki](https://hytale.fandom.com/wiki/Zones)*
+*Sources : [Spring 2025 Development Update](https://hytale.com/news/2025/3/spring-2025-development-update), [The Future of World Generation](https://hytale.com/news/2026/1/the-future-of-world-generation)*

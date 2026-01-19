@@ -716,6 +716,19 @@
       "content": "Pour toute question concernant ces Conditions d'Utilisation, veuillez nous contacter via notre depot GitHub a https://github.com/HytaleDocs/wiki-next ou par email a legal@hytale-docs.com."
     }
   },
+  "unverifiedModal": {
+    "title": "Contenu genere par IA",
+    "subtitle": "Cette page n'a pas encore ete verifiee",
+    "aiGeneratedWarning": "Cette page de documentation a ete generee automatiquement par une IA et n'a pas encore ete verifiee par un humain. Les informations presentees peuvent etre inexactes, incompletes ou obsoletes.",
+    "mayContain": "Cette page peut contenir :",
+    "issue1": "Des signatures de methodes ou parametres incorrects",
+    "issue2": "Des APIs fabriquees ou inexistantes",
+    "issue3": "Des informations obsoletes de versions anterieures du serveur",
+    "issue4": "Des details ou contextes importants manquants",
+    "verifiedPagesNote": "Les pages marquees d'une coche verte dans la barre laterale ont ete testees avec un vrai plugin et sont considerees comme fiables.",
+    "acknowledgeButton": "J'ai compris, montrez-moi le contenu",
+    "reportNote": "Vous avez trouve une erreur ? Signalez-la sur"
+  },
   "pwa": {
     "update": {
       "title": "Mise a jour disponible",
