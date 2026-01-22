@@ -60,12 +60,14 @@ export function LanguageSelector() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          size="icon"
-          className="min-h-[44px] min-w-[44px] text-muted-foreground hover:text-foreground hover:bg-muted"
+          className="min-h-[44px] min-w-[44px] md:min-w-fit md:px-3 text-muted-foreground hover:text-primary hover:bg-primary/10"
           aria-label={`Select language. Current: ${currentLanguage?.name || "Select language"}`}
         >
           <Globe className="h-5 w-5" />
-          <span className="sr-only">
+          <span className="hidden md:inline ml-1.5 text-sm font-medium">
+            {currentLanguage?.flag}
+          </span>
+          <span className="sr-only md:hidden">
             {currentLanguage?.name || "Select language"}
           </span>
         </Button>
@@ -78,7 +80,7 @@ export function LanguageSelector() {
             className={`cursor-pointer ${
               locale === language.code
                 ? "text-primary bg-primary/10"
-                : "text-popover-foreground hover:text-foreground hover:bg-muted"
+                : "text-popover-foreground hover:text-primary hover:bg-primary/10"
             }`}
           >
             <span className="mr-2 text-xs font-bold">{language.flag}</span>

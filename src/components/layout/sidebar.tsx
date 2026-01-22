@@ -23,7 +23,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { sidebarConfig, type SidebarItem } from "@/config/sidebar";
+import { sidebarConfig, type SidebarItem, getAudienceBadgeColor } from "@/config/sidebar";
+import { Badge } from "@/components/ui/badge";
 import { SidebarAd } from "@/components/ads";
 import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
 
@@ -31,10 +32,12 @@ function SidebarLink({
   item,
   level = 0,
   t,
+  badgeT,
 }: {
   item: SidebarItem;
   level?: number;
   t: (key: string) => string;
+  badgeT?: (key: string) => string;
 }) {
   const pathname = usePathname();
   const isActive = item.href === pathname;
@@ -57,24 +60,39 @@ function SidebarLink({
 
   const title = t(item.titleKey);
 
+  // Render audience badge for top-level items
+  const audienceBadge = level === 0 && item.audience && badgeT ? (
+    <Badge
+      variant="outline"
+      className={cn(
+        "ml-auto text-[10px] px-1.5 py-0 h-4 font-normal",
+        getAudienceBadgeColor(item.audience)
+      )}
+    >
+      {badgeT(item.audience)}
+    </Badge>
+  ) : null;
+
   if (hasChildren) {
     return (
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary">
+        <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary">
           <span className={cn("truncate", isChildActive && "text-primary")}>
             {title}
           </span>
+          {audienceBadge}
           <ChevronRight
             className={cn(
-              "h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200",
-              isOpen && "rotate-90"
+              "h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200 ml-auto",
+              isOpen && "rotate-90",
+              audienceBadge && "ml-0"
             )}
           />
         </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="ml-2.5 border-l border-border pl-2.5">
             {item.items?.map((child) => (
-              <SidebarLink key={child.titleKey} item={child} level={level + 1} t={t} />
+              <SidebarLink key={child.titleKey} item={child} level={level + 1} t={t} badgeT={badgeT} />
             ))}
           </div>
         </CollapsibleContent>
@@ -142,13 +160,14 @@ function SidebarLink({
 
 export function Sidebar() {
   const t = useTranslations("sidebar");
+  const badgeT = useTranslations("audienceBadges");
 
   return (
     <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-72 xl:w-80 2xl:w-96 shrink-0 border-r border-border lg:block">
       <ScrollArea className="h-full py-4 pr-3">
         <nav className="space-y-0.5 pl-3">
           {sidebarConfig.map((item) => (
-            <SidebarLink key={item.titleKey} item={item} t={t} />
+            <SidebarLink key={item.titleKey} item={item} t={t} badgeT={badgeT} />
           ))}
         </nav>
         {/* Discrete ad at bottom of sidebar */}
@@ -162,12 +181,13 @@ export function Sidebar() {
 
 export function MobileSidebar() {
   const t = useTranslations("sidebar");
+  const badgeT = useTranslations("audienceBadges");
 
   return (
     <ScrollArea className="h-[calc(100vh-8rem)]">
       <nav className="space-y-1 p-4">
         {sidebarConfig.map((item) => (
-          <SidebarLink key={item.titleKey} item={item} t={t} />
+          <SidebarLink key={item.titleKey} item={item} t={t} badgeT={badgeT} />
         ))}
       </nav>
     </ScrollArea>
@@ -176,6 +196,7 @@ export function MobileSidebar() {
 
 export function MobileSidebarDrawer() {
   const t = useTranslations("sidebar");
+  const badgeT = useTranslations("audienceBadges");
   const navT = useTranslations("nav");
   const { sidebarOpen, setSidebarOpen } = useMobileNavigation();
 
@@ -203,7 +224,7 @@ export function MobileSidebarDrawer() {
         <ScrollArea className="h-[calc(100vh-8rem)]">
           <nav className="space-y-1 p-4">
             {sidebarConfig.map((item) => (
-              <SidebarLink key={item.titleKey} item={item} t={t} />
+              <SidebarLink key={item.titleKey} item={item} t={t} badgeT={badgeT} />
             ))}
           </nav>
         </ScrollArea>

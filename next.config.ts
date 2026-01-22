@@ -115,6 +115,24 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  // Redirects for old event overview URLs to new events reference page
+  async redirects() {
+    return [
+      // Events overview redirect (old overview page to new events reference)
+      {
+        source: "/docs/modding/plugins/events/overview",
+        destination: "/docs/plugins/events",
+        permanent: true,
+      },
+      // French locale redirect
+      {
+        source: "/fr/docs/modding/plugins/events/overview",
+        destination: "/fr/docs/plugins/events",
+        permanent: true,
+      },
+    ];
+  },
+
   // Experimental features for better performance
   experimental: {
     // Optimize package imports

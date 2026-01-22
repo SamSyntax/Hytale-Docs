@@ -11,6 +11,7 @@ import { CodeBlock } from "./code-block";
 import { DocCard } from "./doc-card";
 import { Mermaid } from "./mermaid";
 import { FileTree } from "./file-tree";
+import { EventsReference } from "@/components/events-reference";
 import { cn } from "@/lib/utils";
 
 /**
@@ -152,6 +153,7 @@ export const mdxComponents: MDXComponents = {
   VersionBadge,
   DocCard,
   FileTree,
+  EventsReference,
 
   // Override div to handle Docusaurus classes
   div: ({ className, ...props }) => (

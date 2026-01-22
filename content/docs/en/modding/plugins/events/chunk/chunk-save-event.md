@@ -6,6 +6,16 @@ sidebar_label: ChunkSaveEvent
 
 # ChunkSaveEvent
 
+:::danger Not Listenable by Plugins
+**This event cannot currently be listened to by plugins.** While the event class exists and is dispatched internally, it uses `store.invoke()` instead of `commandBuffer.invoke()`, which prevents registered ECS systems from receiving the event. This is a server-side limitation discovered through testing in January 2026.
+
+**Comparison with ChunkUnloadEvent:**
+- `ChunkUnloadEvent` uses `commandBuffer.invoke()` → Works with plugin listeners
+- `ChunkSaveEvent` uses `store.invoke()` → Does NOT work with plugin listeners
+
+The code examples below show how the API *would* work if this limitation is fixed in a future update.
+:::
+
 The `ChunkSaveEvent` is fired when a chunk is about to be saved to persistent storage. This is an ECS (Entity Component System) event that extends `CancellableEcsEvent`, allowing plugins to intercept and prevent chunk saves when necessary.
 
 ## Event Information
@@ -16,8 +26,10 @@ The `ChunkSaveEvent` is fired when a chunk is about to be saved to persistent st
 | **Parent Class** | `CancellableEcsEvent` |
 | **Implements** | `ICancellableEcsEvent` (via parent) |
 | **Cancellable** | Yes |
-| **Event Type** | ECS Event |
+| **Event Type** | ECS Event (ChunkStore) |
+| **Plugin Status** | Not Listenable |
 | **Source File** | `decompiled/com/hypixel/hytale/server/core/universe/world/events/ecs/ChunkSaveEvent.java:7` |
+| **Tested** | January 2026 - Event does not reach plugin listeners |
 
 ## Declaration
 
@@ -244,9 +256,52 @@ ecsEventManager.register(ChunkSaveEvent.class, event -> {
 });
 ```
 
+## Internal Dispatch Details
+
+:::info Technical Details
+This section explains why the event is not listenable by plugins.
+:::
+
+### How ChunkSaveEvent is Dispatched
+
+The event is dispatched in `ChunkSavingSystems.java` using `store.invoke()`:
+
+```java
+// ChunkSavingSystems.java:81 (tryQueue method)
+ChunkSaveEvent event = new ChunkSaveEvent(worldChunkComponent);
+store.invoke(chunkRef, event);  // Uses Store.invoke() directly
+if (!event.isCancelled()) {
+    store.getResource(ChunkStore.SAVE_RESOURCE).push(chunkRef);
+}
+```
+
+### Why It Doesn't Work
+
+When comparing with `ChunkUnloadEvent` (which DOES work):
+
+```java
+// ChunkUnloadingSystem.java:87 (tryUnload method)
+ChunkUnloadEvent event = new ChunkUnloadEvent(worldChunkComponent);
+commandBuffer.invoke(chunkRef, event);  // Uses CommandBuffer.invoke()
+```
+
+The key difference:
+- `commandBuffer.invoke()` routes through `store.internal_invoke()` which properly dispatches to registered ECS systems
+- `store.invoke()` creates an isolated execution stack that doesn't trigger plugin-registered listeners
+
+### Dispatch Locations
+
+The event is created and dispatched in two places:
+
+1. **ChunkSavingSystems.tryQueue()** (line 81) - During normal chunk save operations
+2. **ChunkSavingSystems.tryQueueSync()** (line 100) - During synchronous save operations (e.g., server shutdown)
+
+Both use `store.invoke()` instead of `commandBuffer.invoke()`.
+
 ## Source Reference
 
 - **Event Definition:** `decompiled/com/hypixel/hytale/server/core/universe/world/events/ecs/ChunkSaveEvent.java`
 - **Parent Class:** `decompiled/com/hypixel/hytale/component/system/CancellableEcsEvent.java`
 - **EcsEvent Base:** `decompiled/com/hypixel/hytale/component/system/EcsEvent.java`
 - **Cancellable Interface:** `decompiled/com/hypixel/hytale/component/system/ICancellableEcsEvent.java`
+- **Dispatch Location:** `decompiled/com/hypixel/hytale/server/core/universe/world/storage/component/ChunkSavingSystems.java`

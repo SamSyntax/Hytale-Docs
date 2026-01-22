@@ -168,11 +168,11 @@ export function SearchDialog() {
       {/* Search trigger button */}
       <button
         onClick={() => setOpen(true)}
-        className="hidden sm:flex items-center gap-2 h-9 px-3 text-muted-foreground hover:text-foreground hover:bg-muted border border-border rounded-lg transition-colors"
+        className="hidden sm:flex items-center gap-3 h-10 min-w-[240px] px-4 bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border hover:border-primary/30 rounded-xl transition-all duration-200 hover:shadow-sm group"
       >
-        <Search className="h-4 w-4" />
-        <span className="text-sm">{t("search")}</span>
-        <kbd className="hidden md:inline-flex h-5 items-center gap-1 rounded border border-border bg-card px-1.5 font-mono text-[10px] text-muted-foreground">
+        <Search className="h-4 w-4 text-muted-foreground/70 group-hover:text-primary transition-colors" />
+        <span className="flex-1 text-sm text-left">{t("search")}</span>
+        <kbd className="hidden md:inline-flex h-6 items-center gap-1 rounded-md bg-primary/10 px-2 font-mono text-[11px] text-primary/80 border border-primary/20">
           <span className="text-xs">Ctrl</span>K
         </kbd>
       </button>
