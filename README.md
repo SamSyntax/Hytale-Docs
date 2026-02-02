@@ -6,7 +6,7 @@
 
 [![License: Code](https://img.shields.io/badge/Code-Elastic%202.0-blue?style=flat-square)](LICENSE)
 [![License: Docs](https://img.shields.io/badge/Docs-CC%20BY--NC--SA%204.0-green?style=flat-square)](LICENSE)
-[![Discord](https://img.shields.io/discord/1234567890?color=5865F2&label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/yAjaFBH4Y8)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Us-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/yAjaFBH4Y8)
 [![GitHub Stars](https://img.shields.io/github/stars/timiliris/Hytale-Docs?style=flat-square&logo=github)](https://github.com/timiliris/Hytale-Docs/stargazers)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Fhytale-docs.com&style=flat-square&label=hytale-docs.com)](https://hytale-docs.com)
 
