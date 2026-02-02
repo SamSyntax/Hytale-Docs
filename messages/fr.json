@@ -341,8 +341,9 @@
     "subtitle": "Connectez-vous avec d'autres developpeurs Hytale et contribuez au projet",
     "discordDesc": "Rejoignez notre serveur Discord pour discuter avec d'autres developpeurs",
     "githubDesc": "Contribuez au wiki et explorez le code source",
-    "ctaText": "Vous voulez contribuer au wiki ?",
-    "viewOnGithub": "Voir sur GitHub"
+    "starTitle": "Soutenez le Projet",
+    "starDescription": "Si HytaleDocs vous est utile, pensez a nous donner une etoile sur GitHub. Cela nous aide a grandir et nous motive a continuer !",
+    "starButton": "Star sur GitHub"
   },
   "footer": {
     "description": "Documentation communautaire pour Hytale. Guides, tutoriels et references pour joueurs et developpeurs.",

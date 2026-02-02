@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { Github, ExternalLink } from "lucide-react";
+import { Github, ExternalLink, Star } from "lucide-react";
 
 // Discord icon component
 const DiscordIcon = ({ className }: { className?: string }) => (
@@ -97,24 +97,33 @@ export function CommunitySection() {
           ))}
         </div>
 
-        {/* CTA */}
+        {/* Star CTA */}
         <div className="mt-12 text-center">
-          <p className="mb-4 text-muted-foreground">{t("ctaText")}</p>
-          <Button
-            variant="outline"
-            className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-            asChild
-          >
-            <a
-              href="https://github.com/timiliris/Hytale-Docs"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="gap-2"
+          <div className="inline-flex flex-col items-center gap-4 p-6 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5">
+            <div className="flex items-center gap-2 text-primary">
+              <Star className="h-5 w-5 fill-primary" />
+              <span className="font-semibold">{t("starTitle")}</span>
+              <Star className="h-5 w-5 fill-primary" />
+            </div>
+            <p className="text-sm text-muted-foreground max-w-md">
+              {t("starDescription")}
+            </p>
+            <Button
+              size="lg"
+              className="gap-2 bg-primary hover:bg-primary/90"
+              asChild
             >
-              <Github className="h-4 w-4" />
-              {t("viewOnGithub")}
-            </a>
-          </Button>
+              <a
+                href="https://github.com/timiliris/Hytale-Docs"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Star className="h-4 w-4" />
+                {t("starButton")}
+                <Github className="h-4 w-4 ml-1" />
+              </a>
+            </Button>
+          </div>
         </div>
       </div>
     </section>

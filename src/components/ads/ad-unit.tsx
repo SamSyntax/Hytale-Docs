@@ -26,7 +26,7 @@ const AD_SLOTS = {
 
 // Set to true to show placeholder boxes instead of real ads (for testing layout)
 // Change to false once AdSense is approved
-const SHOW_PLACEHOLDERS = true;
+const SHOW_PLACEHOLDERS = false;
 
 /**
  * Hook to observe when an element enters the viewport.
