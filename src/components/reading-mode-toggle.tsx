@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 export function ReadingModeToggle() {
   const { theme, setTheme } = useTheme();
@@ -25,17 +26,6 @@ export function ReadingModeToggle() {
   }
 
   const isReadingMode = theme === "reading" || theme === "reading-dark";
-
-  // Determine the base theme (light or dark) to return to
-  const getBaseTheme = () => {
-    if (theme === "reading") return "light";
-    if (theme === "reading-dark") return "dark";
-    // If in light mode, check system preference for dark
-    if (theme === "light") return "light";
-    if (theme === "dark") return "dark";
-    // For system theme, we'll default to dark reading
-    return "dark";
-  };
 
   const toggleReadingMode = () => {
     if (isReadingMode) {
@@ -63,15 +53,14 @@ export function ReadingModeToggle() {
             variant="outline"
             size="icon"
             onClick={toggleReadingMode}
-            className={`
-              fixed bottom-6 left-6 z-50
+            className={cn(
+              `fixed bottom-6 left-6 z-50
+              cursor-pointer
               h-12 w-12 rounded-full shadow-lg
-              transition-all duration-300
-              ${isReadingMode
-                ? "bg-primary text-primary-foreground hover:bg-primary/90 border-primary"
-                : "bg-card hover:bg-muted border-border"
-              }
-            `}
+              transition-all duration-300`,
+              isReadingMode ? "bg-primary text-primary-foreground hover:bg-primary/90 border-primary" : "bg-card hover:bg-muted border-border",
+              theme === "dark" ? "hover:text-muted-foreground" : "hover:text-gray-600"
+            )}
             aria-label={isReadingMode ? "Exit reading mode" : "Enter reading mode"}
           >
             {isReadingMode ? (
